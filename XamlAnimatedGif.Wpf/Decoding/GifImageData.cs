@@ -5,23 +5,24 @@ namespace XamlAnimatedGif.Decoding
     internal class GifImageData
     {
         public byte LzwMinimumCodeSize { get; set; }
-        public byte[] CompressedData { get; set; }
+        public long CompressedDataStartOffset { get; set; }
 
         private GifImageData()
         {
         }
 
-        internal static GifImageData ReadImageData(Stream stream, bool metadataOnly)
+        internal static GifImageData ReadImageData(Stream stream)
         {
             var imgData = new GifImageData();
-            imgData.Read(stream, metadataOnly);
+            imgData.Read(stream);
             return imgData;
         }
 
-        private void Read(Stream stream, bool metadataOnly)
+        private void Read(Stream stream)
         {
             LzwMinimumCodeSize = (byte)stream.ReadByte();
-            CompressedData = GifHelpers.ReadDataBlocks(stream, metadataOnly);
+            CompressedDataStartOffset = stream.Position;
+            GifHelpers.ReadDataBlocks(stream, true);
         }
     }
 }

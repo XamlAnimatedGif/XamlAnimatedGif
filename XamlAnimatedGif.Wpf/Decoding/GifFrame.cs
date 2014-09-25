@@ -22,16 +22,16 @@ namespace XamlAnimatedGif.Decoding
             get { return GifBlockKind.GraphicRendering; }
         }
 
-        internal static GifFrame ReadFrame(Stream stream, IEnumerable<GifExtension> controlExtensions, bool metadataOnly)
+        internal static GifFrame ReadFrame(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             var frame = new GifFrame();
 
-            frame.Read(stream, controlExtensions, metadataOnly);
+            frame.Read(stream, controlExtensions);
 
             return frame;
         }
 
-        private void Read(Stream stream, IEnumerable<GifExtension> controlExtensions, bool metadataOnly)
+        private void Read(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             // Note: at this point, the Image Separator (0x2C) has already been read
 
@@ -40,7 +40,7 @@ namespace XamlAnimatedGif.Decoding
             {
                 LocalColorTable = GifHelpers.ReadColorTable(stream, Descriptor.LocalColorTableSize);
             }
-            ImageData = GifImageData.ReadImageData(stream, metadataOnly);
+            ImageData = GifImageData.ReadImageData(stream);
             Extensions = controlExtensions.ToList().AsReadOnly();
         }
     }

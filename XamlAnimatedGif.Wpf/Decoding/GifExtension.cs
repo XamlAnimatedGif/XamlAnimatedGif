@@ -7,7 +7,7 @@ namespace XamlAnimatedGif.Decoding
     {
         internal const int ExtensionIntroducer = 0x21;
 
-        internal static GifExtension ReadExtension(Stream stream, IEnumerable<GifExtension> controlExtensions, bool metadataOnly)
+        internal static GifExtension ReadExtension(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             // Note: at this point, the Extension Introducer (0x21) has already been read
 
@@ -21,7 +21,7 @@ namespace XamlAnimatedGif.Decoding
                 case GifCommentExtension.ExtensionLabel:
                     return GifCommentExtension.ReadComment(stream);
                 case GifPlainTextExtension.ExtensionLabel:
-                    return GifPlainTextExtension.ReadPlainText(stream, controlExtensions, metadataOnly);
+                    return GifPlainTextExtension.ReadPlainText(stream, controlExtensions);
                 case GifApplicationExtension.ExtensionLabel:
                     return GifApplicationExtension.ReadApplication(stream);
                 default:

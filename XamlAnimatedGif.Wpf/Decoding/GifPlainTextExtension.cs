@@ -33,14 +33,14 @@ namespace XamlAnimatedGif.Decoding
             get { return GifBlockKind.GraphicRendering; }
         }
 
-        internal static GifPlainTextExtension ReadPlainText(Stream stream, IEnumerable<GifExtension> controlExtensions, bool metadataOnly)
+        internal static GifPlainTextExtension ReadPlainText(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             var plainText = new GifPlainTextExtension();
-            plainText.Read(stream, controlExtensions, metadataOnly);
+            plainText.Read(stream, controlExtensions);
             return plainText;
         }
 
-        private void Read(Stream stream, IEnumerable<GifExtension> controlExtensions, bool metadataOnly)
+        private void Read(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             // Note: at this point, the label (0x01) has already been read
 
@@ -60,7 +60,7 @@ namespace XamlAnimatedGif.Decoding
             ForegroundColorIndex = bytes[11];
             BackgroundColorIndex = bytes[12];
 
-            var dataBytes = GifHelpers.ReadDataBlocks(stream, metadataOnly);
+            var dataBytes = GifHelpers.ReadDataBlocks(stream, false);
             Text = Encoding.ASCII.GetString(dataBytes);
             Extensions = controlExtensions.ToList().AsReadOnly();
         }

@@ -16,14 +16,14 @@ namespace XamlAnimatedGif.Decoding
         {
         }
 
-        internal static GifDataStream ReadGifDataStream(Stream stream, bool metadataOnly)
+        internal static GifDataStream ReadGifDataStream(Stream stream)
         {
             var file = new GifDataStream();
-            file.Read(stream, metadataOnly);
+            file.Read(stream);
             return file;
         }
 
-        private void Read(Stream stream, bool metadataOnly)
+        private void Read(Stream stream)
         {
             Header = GifHeader.ReadHeader(stream);
 
@@ -31,27 +31,26 @@ namespace XamlAnimatedGif.Decoding
             {
                 GlobalColorTable = GifHelpers.ReadColorTable(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize);
             }
-            ReadFrames(stream, metadataOnly);
+            ReadFrames(stream);
 
             var netscapeExtension =
                             Extensions
                                 .OfType<GifApplicationExtension>()
                                 .FirstOrDefault(GifHelpers.IsNetscapeExtension);
 
-            if (netscapeExtension != null)
-                RepeatCount = GifHelpers.GetRepeatCount(netscapeExtension);
-            else
-                RepeatCount = 1;
+            RepeatCount = netscapeExtension != null
+                ? GifHelpers.GetRepeatCount(netscapeExtension)
+                : (ushort)1;
         }
 
-        private void ReadFrames(Stream stream, bool metadataOnly)
+        private void ReadFrames(Stream stream)
         {
             List<GifFrame> frames = new List<GifFrame>();
             List<GifExtension> controlExtensions = new List<GifExtension>();
             List<GifExtension> specialExtensions = new List<GifExtension>();
             while (true)
             {
-                var block = GifBlock.ReadBlock(stream, controlExtensions, metadataOnly);
+                var block = GifBlock.ReadBlock(stream, controlExtensions);
 
                 if (block.Kind == GifBlockKind.GraphicRendering)
                     controlExtensions = new List<GifExtension>();
@@ -71,9 +70,8 @@ namespace XamlAnimatedGif.Decoding
                         case GifBlockKind.SpecialPurpose:
                             specialExtensions.Add(extension);
                             break;
-                        default:
-                            // Just ignore plain text extensions, as most software don't support them.
-                            break;
+                        
+                        // Just discard plain text extensions for now, since we have no use for it
                     }
                 }
                 else if (block is GifTrailer)
