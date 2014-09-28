@@ -11,7 +11,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{FABDEB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.Wpf", "TestApp.Wpf\TestApp.Wpf.csproj", "{03020783-A76D-4749-8A42-CD20D64859D3}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "XamlAnimatedGif.Shared", "XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.shproj", "{D408EEBD-D9F1-41FB-9161-546F5BC0DAD4}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{5ecdd8e1-e176-4d9f-9278-17a313a16cb2}*SharedItemsImports = 4
+		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{d408eebd-d9f1-41fb-9161-546f5bc0dad4}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -32,5 +38,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{5ECDD8E1-E176-4D9F-9278-17A313A16CB2} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
 		{03020783-A76D-4749-8A42-CD20D64859D3} = {38553433-1849-4E69-A035-23766901DF10}
+		{D408EEBD-D9F1-41FB-9161-546F5BC0DAD4} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
 	EndGlobalSection
 EndGlobal

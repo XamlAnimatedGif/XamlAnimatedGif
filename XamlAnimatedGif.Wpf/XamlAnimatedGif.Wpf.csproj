@@ -30,6 +30,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -37,33 +38,12 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Decoding\GifApplicationExtension.cs" />
-    <Compile Include="Decoding\GifBlock.cs" />
-    <Compile Include="Decoding\GifBlockKind.cs" />
-    <Compile Include="Decoding\GifColor.cs" />
-    <Compile Include="Decoding\GifCommentExtension.cs" />
-    <Compile Include="Decoding\GifDataBlocksStream.cs" />
-    <Compile Include="Decoding\GifDecoderException.cs" />
-    <Compile Include="Decoding\GifExtension.cs" />
-    <Compile Include="Decoding\GifDataStream.cs" />
-    <Compile Include="Decoding\GifFrame.cs" />
-    <Compile Include="Decoding\GifFrameDisposalMethod.cs" />
-    <Compile Include="Decoding\GifGraphicControlExtension.cs" />
-    <Compile Include="Decoding\GifHeader.cs" />
-    <Compile Include="Decoding\GifHelpers.cs" />
-    <Compile Include="Decoding\GifImageData.cs" />
-    <Compile Include="Decoding\GifImageDescriptor.cs" />
-    <Compile Include="Decoding\GifLogicalScreenDescriptor.cs" />
-    <Compile Include="Decoding\GifPlainTextExtension.cs" />
-    <Compile Include="Decoding\GifTrailer.cs" />
-    <Compile Include="Decompression\BitReader.cs" />
-    <Compile Include="Decompression\LzwDecompressStream.cs" />
-    <Compile Include="Extensions\BitArrayExtensions.cs" />
-    <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <Import Project="..\XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems" Label="Shared" Condition="Exists('..\XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
