@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace XamlAnimatedGif.Decoding
 {
@@ -16,22 +17,22 @@ namespace XamlAnimatedGif.Decoding
         {
         }
 
-        internal static GifDataStream ReadGifDataStream(Stream stream)
+        internal static async Task<GifDataStream> ReadAsync(Stream stream)
         {
             var file = new GifDataStream();
-            file.Read(stream);
+            await file.ReadInternalAsync(stream);
             return file;
         }
 
-        private void Read(Stream stream)
+        private async Task ReadInternalAsync(Stream stream)
         {
-            Header = GifHeader.ReadHeader(stream);
+            Header = await GifHeader.ReadAsync(stream);
 
             if (Header.LogicalScreenDescriptor.HasGlobalColorTable)
             {
-                GlobalColorTable = GifHelpers.ReadColorTable(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize);
+                GlobalColorTable = await GifHelpers.ReadColorTableAsync(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize);
             }
-            ReadFrames(stream);
+            await ReadFramesAsync(stream);
 
             var netscapeExtension =
                             Extensions
@@ -43,14 +44,14 @@ namespace XamlAnimatedGif.Decoding
                 : (ushort)1;
         }
 
-        private void ReadFrames(Stream stream)
+        private async Task ReadFramesAsync(Stream stream)
         {
             List<GifFrame> frames = new List<GifFrame>();
             List<GifExtension> controlExtensions = new List<GifExtension>();
             List<GifExtension> specialExtensions = new List<GifExtension>();
             while (true)
             {
-                var block = GifBlock.ReadBlock(stream, controlExtensions);
+                var block = await GifBlock.ReadAsync(stream, controlExtensions);
 
                 if (block.Kind == GifBlockKind.GraphicRendering)
                     controlExtensions = new List<GifExtension>();

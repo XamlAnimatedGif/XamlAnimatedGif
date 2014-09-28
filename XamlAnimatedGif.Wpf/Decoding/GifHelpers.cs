@@ -1,19 +1,21 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
+using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif.Decoding
 {
     internal static class GifHelpers
     {
-        public static string ReadString(Stream stream, int length)
+        public static async Task<string> ReadStringAsync(Stream stream, int length)
         {
             byte[] bytes = new byte[length];
-            stream.ReadAll(bytes, 0, length);
+            await stream.ReadAllAsync(bytes, 0, length);
             return Encoding.ASCII.GetString(bytes);
         }
 
-        public static byte[] ReadDataBlocks(Stream stream, bool discard)
+        public static async Task<byte[]> ReadDataBlocksAsync(Stream stream, bool discard)
         {
             MemoryStream ms = discard ? null : new MemoryStream();
             using (ms)
@@ -22,7 +24,7 @@ namespace XamlAnimatedGif.Decoding
                 while ((len = stream.ReadByte()) > 0)
                 {
                     byte[] bytes = new byte[len];
-                    stream.ReadAll(bytes, 0, len);
+                    await stream.ReadAsync(bytes, 0, len);
                     if (ms != null)
                         ms.Write(bytes, 0, len);
                 }
@@ -32,11 +34,11 @@ namespace XamlAnimatedGif.Decoding
             }
         }
 
-        public static GifColor[] ReadColorTable(Stream stream, int size)
+        public static async Task<GifColor[]> ReadColorTableAsync(Stream stream, int size)
         {
             int length = 3 * size;
             byte[] bytes = new byte[length];
-            stream.ReadAll(bytes, 0, length);
+            await stream.ReadAllAsync(bytes, 0, length);
             GifColor[] colorTable = new GifColor[size];
             for (int i = 0; i < size; i++)
             {
@@ -96,15 +98,6 @@ namespace XamlAnimatedGif.Decoding
         public static Exception UnsupportedVersionException(string version)
         {
             return new GifDecoderException("Unsupported version: " + version);
-        }
-
-        public static void ReadAll(this Stream stream, byte[] buffer, int offset, int count)
-        {
-            int totalRead = 0;
-            while (totalRead < count)
-            {
-                totalRead += stream.Read(buffer, offset + totalRead, count - totalRead);
-            }
         }
     }
 }

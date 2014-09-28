@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
+using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif.Decoding
 {
@@ -23,19 +25,19 @@ namespace XamlAnimatedGif.Decoding
             get { return GifBlockKind.SpecialPurpose; }
         }
 
-        internal static GifApplicationExtension ReadApplication(Stream stream)
+        internal async static Task<GifApplicationExtension> ReadAsync(Stream stream)
         {
             var ext = new GifApplicationExtension();
-            ext.Read(stream);
+            await ext.ReadInternalAsync(stream);
             return ext;
         }
 
-        private void Read(Stream stream)
+        private async Task ReadInternalAsync(Stream stream)
         {
             // Note: at this point, the label (0xFF) has already been read
 
             byte[] bytes = new byte[12];
-            stream.ReadAll(bytes, 0, bytes.Length);
+            await stream.ReadAllAsync(bytes, 0, bytes.Length);
             BlockSize = bytes[0]; // should always be 11
             if (BlockSize != 11)
                 throw GifHelpers.InvalidBlockSizeException("Application Extension", 11, BlockSize);
@@ -44,7 +46,7 @@ namespace XamlAnimatedGif.Decoding
             byte[] authCode = new byte[3];
             Array.Copy(bytes, 9, authCode, 0, 3);
             AuthenticationCode = authCode;
-            Data = GifHelpers.ReadDataBlocks(stream, false);
+            Data = await GifHelpers.ReadDataBlocksAsync(stream, false);
         }
     }
 }

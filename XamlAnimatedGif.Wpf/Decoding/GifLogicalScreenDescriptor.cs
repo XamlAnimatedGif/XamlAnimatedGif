@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
+using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif.Decoding
 {
@@ -14,17 +16,17 @@ namespace XamlAnimatedGif.Decoding
         public int BackgroundColorIndex { get; private set; }
         public double PixelAspectRatio { get; private set; }
 
-        internal static GifLogicalScreenDescriptor ReadLogicalScreenDescriptor(Stream stream)
+        internal static async Task<GifLogicalScreenDescriptor> ReadAsync(Stream stream)
         {
             var descriptor = new GifLogicalScreenDescriptor();
-            descriptor.Read(stream);
+            await descriptor.ReadInternalAsync(stream);
             return descriptor;
         }
 
-        private void Read(Stream stream)
+        private async Task ReadInternalAsync(Stream stream)
         {
             byte[] bytes = new byte[7];
-            stream.ReadAll(bytes, 0, bytes.Length);
+            await stream.ReadAllAsync(bytes, 0, bytes.Length);
 
             Width = BitConverter.ToUInt16(bytes, 0);
             Height = BitConverter.ToUInt16(bytes, 2);

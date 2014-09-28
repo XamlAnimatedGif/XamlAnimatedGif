@@ -129,62 +129,6 @@ namespace XamlAnimatedGif.Decompression
             _reader.Dispose();
         }
 
-        struct Sequence
-        {
-            private readonly byte[] _bytes;
-            private readonly bool _isClearCode;
-            private readonly bool _isStopCode;
-
-            public Sequence(byte[] bytes) : this()
-            {
-                if (bytes == null) throw new ArgumentNullException("bytes");
-                _bytes = bytes;
-            }
-
-            private Sequence(bool isClearCode, bool isStopCode) : this()
-            {
-                _isClearCode = isClearCode;
-                _isStopCode = isStopCode;
-            }
-
-            public byte[] Bytes
-            {
-                get { return _bytes; }
-            }
-
-            public bool IsClearCode
-            {
-                get { return _isClearCode; }
-            }
-
-            public bool IsStopCode
-            {
-                get { return _isStopCode; }
-            }
-
-            private static readonly Sequence _clearCode = new Sequence(true, false);
-            public static Sequence ClearCode
-            {
-                get { return _clearCode; }
-            }
-            
-            private static readonly Sequence _stopCode = new Sequence(false, true);
-            public static Sequence StopCode
-            {
-                get { return _stopCode; }
-            }
-
-            public Sequence Append(byte b)
-            {
-                if (_bytes == null)
-                    throw new InvalidOperationException("Can't append to clear code or stop code");
-                var bytes = new byte[_bytes.Length + 1];
-                _bytes.CopyTo(bytes, 0);
-                bytes[_bytes.Length] = b;
-                return new Sequence(bytes);
-            }
-        }
-
         private void InitCodeTable()
         {
             int initialEntries = 1 << _minimumCodeLength;
@@ -232,7 +176,7 @@ namespace XamlAnimatedGif.Decompression
 
         private void FlushRemainingBytes(byte[] buffer, int offset, int count, ref int read)
         {
-            // If we read too many bytes last times, copy them first;
+            // If we read too many bytes last time, copy them first;
             if (_remainingBytes != null)
                 _remainingBytes = CopySequenceToBuffer(_remainingBytes, buffer, offset, count, ref read);
         }
@@ -279,6 +223,64 @@ namespace XamlAnimatedGif.Decompression
             }
             _prevCode = code;
             return true;
+        }
+
+        struct Sequence
+        {
+            private readonly byte[] _bytes;
+            private readonly bool _isClearCode;
+            private readonly bool _isStopCode;
+
+            public Sequence(byte[] bytes)
+                : this()
+            {
+                if (bytes == null) throw new ArgumentNullException("bytes");
+                _bytes = bytes;
+            }
+
+            private Sequence(bool isClearCode, bool isStopCode)
+                : this()
+            {
+                _isClearCode = isClearCode;
+                _isStopCode = isStopCode;
+            }
+
+            public byte[] Bytes
+            {
+                get { return _bytes; }
+            }
+
+            public bool IsClearCode
+            {
+                get { return _isClearCode; }
+            }
+
+            public bool IsStopCode
+            {
+                get { return _isStopCode; }
+            }
+
+            private static readonly Sequence _clearCode = new Sequence(true, false);
+            public static Sequence ClearCode
+            {
+                get { return _clearCode; }
+            }
+
+            private static readonly Sequence _stopCode = new Sequence(false, true);
+            public static Sequence StopCode
+            {
+                get { return _stopCode; }
+            }
+
+            public Sequence Append(byte b)
+            {
+                if (_bytes == null)
+                    throw new InvalidOperationException("Can't append to clear code or stop code");
+                var bytes = new byte[_bytes.Length + 1];
+                _bytes.CopyTo(bytes, 0);
+                bytes[_bytes.Length] = b;
+                return new Sequence(bytes);
+            }
         }
     }
 }

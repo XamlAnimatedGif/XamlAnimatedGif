@@ -61,6 +61,7 @@
     <Compile Include="Decompression\BitReader.cs" />
     <Compile Include="Decompression\LzwDecompressStream.cs" />
     <Compile Include="Extensions\BitArrayExtensions.cs" />
+    <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

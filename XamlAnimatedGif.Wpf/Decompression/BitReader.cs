@@ -43,11 +43,7 @@ namespace XamlAnimatedGif.Decompression
                     _bitPositionInBuffer = 0;
                 }
 
-                // As long as there are bits in the buffer, take them
-                while (n < count && _bitPositionInBuffer < _bufferLengthInBits)
-                {
-                    result[n++] = ReadBitFromBuffer(_bitPositionInBuffer++);
-                }
+                ReadBitsFromBuffer(result, count, ref n);
             }
             return result;
         }
@@ -65,15 +61,21 @@ namespace XamlAnimatedGif.Decompression
                     if (len == 0)
                         throw new EndOfStreamException();
                     _bufferLengthInBits = len * 8;
+                    _bitPositionInBuffer = 0;
                 }
 
-                // As long as there are bits in the buffer, take them
-                while (n < count && _bitPositionInBuffer < _bufferLengthInBits)
-                {
-                    result[n++] = ReadBitFromBuffer(_bitPositionInBuffer++);
-                }
+                ReadBitsFromBuffer(result, count, ref n);
             }
             return result;
+        }
+
+        private void ReadBitsFromBuffer(BitArray result, int count, ref int n)
+        {
+            // As long as there are bits in the buffer, take them
+            while (n < count && _bitPositionInBuffer < _bufferLengthInBits)
+            {
+                result[n++] = ReadBitFromBuffer(_bitPositionInBuffer++);
+            }
         }
 
         private bool ReadBitFromBuffer(int bitPositionInBuffer)

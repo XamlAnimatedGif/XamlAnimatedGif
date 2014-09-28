@@ -1,47 +1,76 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Microsoft.Win32;
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
 
-namespace TestDecode
+namespace TestApp.Wpf
 {
-    class Program
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow
     {
-        static void Main()
+        public MainWindow()
         {
-            const string path = @"D:\tmp\gif\monster.gif";
-            DumpFrames(path);
-            //MakeImage(path);
-            //TestLzwDecompression(path);
+            InitializeComponent();
         }
 
-        private static void TestLzwDecompression(string path)
+        private void BtnBrowse_OnClick(object sender, RoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog {Filter = "GIF files|*.gif"};
+            if (dlg.ShowDialog() == true)
+            {
+                txtFileName.Text = dlg.FileName;
+            }
+        }
+
+        private async void BtnDumpFrames_OnClick(object sender, RoutedEventArgs e)
+        {
+            string fileName = txtFileName.Text;
+            if (string.IsNullOrEmpty(fileName))
+                return;
+
+            btnDumpFrames.IsEnabled = false;
+            try
+            {
+                await DumpFramesAsync(fileName);
+            }
+            finally
+            {
+                btnDumpFrames.IsEnabled = true;
+            }
+
+        }
+
+        private static async Task TestLzwDecompressionAsync(string path)
         {
             using (var fileStream = File.OpenRead(path))
             {
-                var gif = GifDataStream.ReadGifDataStream(fileStream);
+                var gif = await GifDataStream.ReadAsync(fileStream);
                 var firstFrame = gif.Frames[0];
                 fileStream.Seek(firstFrame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                var data = GifHelpers.ReadDataBlocks(fileStream, false);
+                var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
                 File.WriteAllBytes(path + ".lzw", data);
                 using (var ms = new MemoryStream(data))
                 using (var lzwStream = new LzwDecompressStream(ms, firstFrame.ImageData.LzwMinimumCodeSize))
                 using (var ms2 = new MemoryStream())
                 {
-                    lzwStream.CopyTo(ms2);
+                    await lzwStream.CopyToAsync(ms2);
                     File.WriteAllBytes(path + ".ind", ms2.ToArray());
                 }
             }
         }
 
-        static void MakeImage(string path)
+        static async Task MakeImageAsync(string path)
         {
             using (var fileStream = File.OpenRead(path))
             {
-                var gif = GifDataStream.ReadGifDataStream(fileStream);
+                var gif = await GifDataStream.ReadAsync(fileStream);
                 var firstFrame = gif.Frames[0];
                 var colorTable = firstFrame.LocalColorTable ?? gif.GlobalColorTable;
                 var colors = colorTable.Select(gc => Color.FromRgb(gc.R, gc.G, gc.B)).ToArray();
@@ -54,12 +83,12 @@ namespace TestDecode
                     palette);
 
                 fileStream.Seek(firstFrame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                var data = GifHelpers.ReadDataBlocks(fileStream, false);
+                var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
                 using (var ms = new MemoryStream(data))
                 using (var lzwStream = new LzwDecompressStream(ms, firstFrame.ImageData.LzwMinimumCodeSize))
                 using (var indexStream = new MemoryStream())
                 {
-                    lzwStream.CopyTo(indexStream);
+                    await lzwStream.CopyToAsync(indexStream);
 
                     var pixelData = indexStream.ToArray();
                     image.Lock();
@@ -80,11 +109,11 @@ namespace TestDecode
             }
         }
 
-        static void DumpFrames(string path)
+        static async Task DumpFramesAsync(string path)
         {
             using (var fileStream = File.OpenRead(path))
             {
-                var gif = GifDataStream.ReadGifDataStream(fileStream);
+                var gif = await GifDataStream.ReadAsync(fileStream);
                 var desc = gif.Header.LogicalScreenDescriptor;
                 var colors = gif.GlobalColorTable.Select(gc => Color.FromRgb(gc.R, gc.G, gc.B)).ToArray();
                 //colors[0] = Colors.Transparent;
@@ -105,12 +134,12 @@ namespace TestDecode
                 {
                     var frame = gif.Frames[i];
                     fileStream.Seek(frame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                    var data = GifHelpers.ReadDataBlocks(fileStream, false);
+                    var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
                     using (var ms = new MemoryStream(data))
                     using (var lzwStream = new LzwDecompressStream(ms, frame.ImageData.LzwMinimumCodeSize))
                     using (var indexStream = new MemoryStream())
                     {
-                        lzwStream.CopyTo(indexStream);
+                        await lzwStream.CopyToAsync(indexStream);
 
                         var pixelData = indexStream.ToArray();
                         image.Lock();
