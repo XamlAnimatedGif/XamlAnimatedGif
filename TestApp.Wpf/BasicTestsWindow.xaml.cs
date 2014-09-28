@@ -68,15 +68,10 @@ namespace TestApp.Wpf
                 var gif = await GifDataStream.ReadAsync(fileStream);
                 var firstFrame = gif.Frames[0];
                 fileStream.Seek(firstFrame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                //var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
-                //File.WriteAllBytes(path + ".lzw", data);
-                //using (var ms = new MemoryStream(data))
                 using (var dataBlockStream = new GifDataBlockStream(fileStream))
-                //using (var lzwOutStream = File.OpenWrite(path + ".lzw"))
                 using (var lzwStream = new LzwDecompressStream(dataBlockStream, firstFrame.ImageData.LzwMinimumCodeSize))
                 using (var indOutStream = File.OpenWrite(path + ".ind"))
                 {
-                    //await dataBlockStream.CopyToAsync(lzwOutStream);
                     await lzwStream.CopyToAsync(indOutStream);
                 }
             }
@@ -150,9 +145,10 @@ namespace TestApp.Wpf
                 {
                     var frame = gif.Frames[i];
                     fileStream.Seek(frame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                    var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
-                    using (var ms = new MemoryStream(data))
-                    using (var lzwStream = new LzwDecompressStream(ms, frame.ImageData.LzwMinimumCodeSize))
+                    //var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
+                    //using (var ms = new MemoryStream(data))
+                    using (var dataBlockStream = new GifDataBlockStream(fileStream, true))
+                    using (var lzwStream = new LzwDecompressStream(dataBlockStream, frame.ImageData.LzwMinimumCodeSize))
                     using (var indexStream = new MemoryStream())
                     {
                         await lzwStream.CopyToAsync(indexStream);

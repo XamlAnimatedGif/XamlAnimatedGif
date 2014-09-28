@@ -113,16 +113,13 @@
     <Resource Include="Images\bomb.gif" />
     <Resource Include="Images\earth.gif" />
     <Resource Include="Images\monster.gif" />
-    <Resource Include="Images\new.gif" />
     <Resource Include="Images\partialfirstframe.gif" />
     <Resource Include="Images\radar.gif" />
-    <Resource Include="Images\sample_1.gif" />
     <Resource Include="Images\pause.png" />
     <Resource Include="Images\play.png" />
     <Content Include="Images\siteoforigin.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Images\test.gif" />
     <Resource Include="Images\working.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

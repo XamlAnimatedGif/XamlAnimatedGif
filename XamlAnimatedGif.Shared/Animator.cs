@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
@@ -70,18 +71,10 @@ namespace XamlAnimatedGif
             get { return _metadata.Frames.Count; }
         }
 
-        public async void Play()
+        public void Play()
         {
-            try
-            {
-                await RenderFrameCoreAsync(0);
-                _storyboard.Begin();
-                _storyboard.Pause();
-            }
-            catch
-            {
-                // TODO: call error handler?
-            }
+            _storyboard.Begin();
+            //_storyboard.Pause();
         }
 
         public void Stop()
@@ -127,7 +120,7 @@ namespace XamlAnimatedGif
         }
 
         private static readonly DependencyProperty CurrentFrameIndexProperty =
-            DependencyProperty.Register("CurrentFrameIndex", typeof(int), typeof(Animator), new PropertyMetadata(0, CurrentFrameIndexChanged));
+            DependencyProperty.Register("CurrentFrameIndex", typeof(int), typeof(Animator), new PropertyMetadata(-1, CurrentFrameIndexChanged));
 
         private static void CurrentFrameIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -201,43 +194,34 @@ namespace XamlAnimatedGif
             }
         }
 
-        private bool _isRendering;
         private async Task RenderFrameCoreAsync(int frameIndex)
         {
-            if (_isRendering)
-                return;
-
-            try
+            Debug.WriteLine("Entering RenderFrameCoreAsync({0})", frameIndex);
+            var frame = _metadata.Frames[frameIndex];
+            var desc = frame.Descriptor;
+            using (var indexStream = GetIndexStream(frame))
             {
-                var frame = _metadata.Frames[frameIndex];
-                var desc = frame.Descriptor;
-                using (var indexStream = GetIndexStream(frame))
+                _bitmap.Lock();
+                try
                 {
-                    _bitmap.Lock();
-                    try
+                    int stride = desc.Width;
+                    byte[] lineBuffer = new byte[stride];
+                    for (int y = 0; y < desc.Height; y++)
                     {
-                        int stride = desc.Width;
-                        byte[] lineBuffer = new byte[stride];
-                        for (int y = 0; y < desc.Height; y++)
-                        {
-                            int read = await indexStream.ReadAsync(lineBuffer, 0, stride);
-                            if (read != stride)
-                                throw new EndOfStreamException();
-                            int offset = (desc.Top + y) * stride + desc.Left;
-                            Marshal.Copy(lineBuffer, 0, _bitmap.BackBuffer + offset, stride);
-                        }
-                        var rect = new Int32Rect(desc.Left, desc.Top, desc.Width, desc.Height);
-                        _bitmap.AddDirtyRect(rect);
+                        int read = await indexStream.ReadAsync(lineBuffer, 0, stride);
+                        if (read != stride)
+                            throw new EndOfStreamException();
+                        int offset = (desc.Top + y) * _bitmap.BackBufferStride + desc.Left;
+                        Marshal.Copy(lineBuffer, 0, _bitmap.BackBuffer + offset, stride);
                     }
-                    finally
-                    {
-                        _bitmap.Unlock();
-                    }
+                    var rect = new Int32Rect(desc.Left, desc.Top, desc.Width, desc.Height);
+                    _bitmap.AddDirtyRect(rect);
                 }
-            }
-            finally
-            {
-                _isRendering = false;
+                finally
+                {
+                    _bitmap.Unlock();
+                }
+                Debug.WriteLine("Leaving RenderFrameCoreAsync({0})", frameIndex);
             }
         }
 
@@ -246,7 +230,7 @@ namespace XamlAnimatedGif
             var data = frame.ImageData;
             _sourceStream.Seek(data.CompressedDataStartOffset, SeekOrigin.Begin);
             var dataBlockStream = new GifDataBlockStream(_sourceStream, true);
-            var lzwStream = new LzwDecompressStream(dataBlockStream, data.LzwMinimumCodeSize, true);
+            var lzwStream = new LzwDecompressStream(dataBlockStream, data.LzwMinimumCodeSize);
             return lzwStream;
         }
 

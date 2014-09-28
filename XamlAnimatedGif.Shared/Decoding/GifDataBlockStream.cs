@@ -65,7 +65,7 @@ namespace XamlAnimatedGif.Decoding
                     _currentPositionInBlock = 0;
                 }
 
-                ReadBytesFromCurrentBlock(buffer, offset, count, ref read);
+                ReadBytesFromCurrentBlock(buffer, offset + read, count, ref read);
             }
             return read;
         }
@@ -94,7 +94,7 @@ namespace XamlAnimatedGif.Decoding
                     _currentPositionInBlock = 0;
                 }
 
-                ReadBytesFromCurrentBlock(buffer, offset, count, ref read);
+                ReadBytesFromCurrentBlock(buffer, offset + read, count, ref read);
             }
             return read;
         }

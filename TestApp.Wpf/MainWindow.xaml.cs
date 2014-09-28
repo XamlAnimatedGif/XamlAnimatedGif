@@ -79,25 +79,25 @@ namespace TestApp.Wpf
         private void ImageChanged()
         {
             if (_animator != null)
-                _animator.CurrentFrameChanged -= ControllerCurrentFrameChanged;
+                _animator.CurrentFrameChanged -= CurrentFrameChanged;
 
             _animator = AnimationBehavior.GetAnimator(img);
 
             if (_animator != null)
             {
-                _animator.CurrentFrameChanged += ControllerCurrentFrameChanged;
+                _animator.CurrentFrameChanged += CurrentFrameChanged;
                 sldPosition.Value = 0;
                 sldPosition.Maximum = _animator.FrameCount - 1;
                 SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
             }
         }
 
-        private void ControllerCurrentFrameChanged(object sender, EventArgs e)
+        private void CurrentFrameChanged(object sender, EventArgs e)
         {
             if (_animator != null)
             {
                 sldPosition.Value = _animator.CurrentFrameIndex;
-                Debug.WriteLine("ControllerCurrentFrameChanged: {0}", sldPosition.Value);
+                //Debug.WriteLine("CurrentFrameChanged: {0}", sldPosition.Value);
             }
         }
 
