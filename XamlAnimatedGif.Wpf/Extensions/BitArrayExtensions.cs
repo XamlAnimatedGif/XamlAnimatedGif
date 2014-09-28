@@ -7,9 +7,12 @@ namespace XamlAnimatedGif.Extensions
     {
         public static short ToInt16(this BitArray bitArray)
         {
-            var bytes = bitArray.ReadBytes(16);
-            Array.Reverse(bytes); // We want big-endian, so reverse the bytes
-            return BitConverter.ToInt16(bytes, 0);
+            short n = 0;
+            for (int i = bitArray.Length - 1; i >= 0; i--)
+            {
+                n = (short) ((n << 1) + (bitArray[i] ? 1 : 0));
+            }
+            return n;
         }
 
         private static byte[] ReadBytes(this BitArray bitArray, int bitLength)

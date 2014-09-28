@@ -13,15 +13,16 @@ namespace XamlAnimatedGif.Decompression
         private readonly BitReader _reader;
         private readonly int _minimumCodeLength;
         private int _codeLength;
-        private Sequence? _previousSequence;
+        private short _prevCode;
+        private List<Sequence> _codeTable;
         private byte[] _remainingBytes;
-        private List<Sequence> _dictionary;
+        private bool _endOfStream;
 
         public LzwDecompressStream(Stream compressedStream, int minimumCodeLength)
         {
             _reader = new BitReader(compressedStream);
             _minimumCodeLength = minimumCodeLength;
-            CreateDictionary();
+            InitCodeTable();
         }
 
         public override void Flush()
@@ -47,6 +48,9 @@ namespace XamlAnimatedGif.Decompression
         {
             ValidateReadArgs(buffer, offset, count);
 
+            if (_endOfStream)
+                return 0;
+
             int read = 0;
 
             FlushRemainingBytes(buffer, offset, count, ref read);
@@ -56,7 +60,10 @@ namespace XamlAnimatedGif.Decompression
                 var bits = _reader.ReadBits(_codeLength);
                 short code = bits.ToInt16();
                 if (!ProcessCode(code, buffer, offset, count, ref read))
+                {
+                    _endOfStream = true;
                     break;
+                }
             }
             return read;
         }
@@ -64,6 +71,9 @@ namespace XamlAnimatedGif.Decompression
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             ValidateReadArgs(buffer, offset, count);
+
+            if (_endOfStream)
+                return 0;
 
             int read = 0;
 
@@ -74,7 +84,10 @@ namespace XamlAnimatedGif.Decompression
                 var bits = await _reader.ReadBitsAsync(_codeLength, cancellationToken);
                 short code = bits.ToInt16();
                 if (!ProcessCode(code, buffer, offset, count, ref read))
+                {
+                    _endOfStream = true;
                     break;
+                }
             }
             return read;
         }
@@ -172,16 +185,16 @@ namespace XamlAnimatedGif.Decompression
             }
         }
 
-        private void CreateDictionary()
+        private void InitCodeTable()
         {
             int initialEntries = 1 << _minimumCodeLength;
-            _dictionary = Enumerable.Range(0, initialEntries)
+            _codeTable = Enumerable.Range(0, initialEntries)
                 .Select(i => new Sequence(new[] { (byte)i }))
                 .ToList();
-            _dictionary.Add(Sequence.ClearCode);
-            _dictionary.Add(Sequence.StopCode);
-            _codeLength = _minimumCodeLength;
-            _previousSequence = null;
+            _codeTable.Add(Sequence.ClearCode);
+            _codeTable.Add(Sequence.StopCode);
+            _codeLength = _minimumCodeLength + 1;
+            _prevCode = -1;
         }
 
         static int GetMinBitLength(int value)
@@ -210,15 +223,11 @@ namespace XamlAnimatedGif.Decompression
             return remainingBytes;
         }
 
-        private void AppendToDictionary(Sequence sequence)
+        private void AppendToCodeTable(Sequence sequence)
         {
-            if (_previousSequence != null)
-            {
-                var newSequence = _previousSequence.Value.Append(sequence.Bytes[0]);
-                _dictionary.Add(newSequence);
-                if (_codeLength < GetMinBitLength(_dictionary.Count))
-                    _codeLength++;
-            }
+            _codeTable.Add(sequence);
+            if (_codeLength < GetMinBitLength(_codeTable.Count))
+                _codeLength++;
         }
 
         private void FlushRemainingBytes(byte[] buffer, int offset, int count, ref int read)
@@ -241,19 +250,34 @@ namespace XamlAnimatedGif.Decompression
 
         private bool ProcessCode(short code, byte[] buffer, int offset, int count, ref int read)
         {
-            var sequence = _dictionary[code];
-            if (sequence.IsStopCode)
+            if (code < _codeTable.Count)
             {
-                return false;
+                var sequence = _codeTable[code];
+                if (sequence.IsStopCode)
+                {
+                    return false;
+                }
+                if (sequence.IsClearCode)
+                {
+                    InitCodeTable();
+                    return true;
+                }
+                _remainingBytes = CopySequenceToBuffer(sequence.Bytes, buffer, offset, count, ref read);
+                if (_prevCode >= 0)
+                {
+                    var prev = _codeTable[_prevCode];
+                    var newSequence = prev.Append(sequence.Bytes[0]);
+                    AppendToCodeTable(newSequence);
+                }
             }
-            if (sequence.IsClearCode)
+            else
             {
-                CreateDictionary();
-                return true;
+                var prev = _codeTable[_prevCode];
+                var newSequence = prev.Append(prev.Bytes[0]);
+                AppendToCodeTable(newSequence);
+                _remainingBytes = CopySequenceToBuffer(newSequence.Bytes, buffer, offset, count, ref read);
             }
-            _remainingBytes = CopySequenceToBuffer(sequence.Bytes, buffer, offset, count, ref read);
-            AppendToDictionary(sequence);
-            _previousSequence = sequence;
+            _prevCode = code;
             return true;
         }
     }

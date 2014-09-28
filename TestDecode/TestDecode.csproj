@@ -4,15 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{3D29A20B-A556-448F-B58A-EF26D8170E9E}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>XamlAnimatedGif</RootNamespace>
-    <AssemblyName>XamlAnimatedGif.Wpf</AssemblyName>
+    <RootNamespace>TestDecode</RootNamespace>
+    <AssemblyName>TestDecode</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,6 +23,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -39,28 +41,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Decoding\GifApplicationExtension.cs" />
-    <Compile Include="Decoding\GifBlock.cs" />
-    <Compile Include="Decoding\GifBlockKind.cs" />
-    <Compile Include="Decoding\GifColor.cs" />
-    <Compile Include="Decoding\GifCommentExtension.cs" />
-    <Compile Include="Decoding\GifDataBlocksStream.cs" />
-    <Compile Include="Decoding\GifDecoderException.cs" />
-    <Compile Include="Decoding\GifExtension.cs" />
-    <Compile Include="Decoding\GifDataStream.cs" />
-    <Compile Include="Decoding\GifFrame.cs" />
-    <Compile Include="Decoding\GifGraphicControlExtension.cs" />
-    <Compile Include="Decoding\GifHeader.cs" />
-    <Compile Include="Decoding\GifHelpers.cs" />
-    <Compile Include="Decoding\GifImageData.cs" />
-    <Compile Include="Decoding\GifImageDescriptor.cs" />
-    <Compile Include="Decoding\GifLogicalScreenDescriptor.cs" />
-    <Compile Include="Decoding\GifPlainTextExtension.cs" />
-    <Compile Include="Decoding\GifTrailer.cs" />
-    <Compile Include="Decompression\BitReader.cs" />
-    <Compile Include="Decompression\LzwDecompressStream.cs" />
-    <Compile Include="Extensions\BitArrayExtensions.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\XamlAnimatedGif.Wpf\XamlAnimatedGif.Wpf.csproj">
+      <Project>{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}</Project>
+      <Name>XamlAnimatedGif.Wpf</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

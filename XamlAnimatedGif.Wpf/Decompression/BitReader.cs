@@ -78,7 +78,7 @@ namespace XamlAnimatedGif.Decompression
         private bool ReadBitFromBuffer(int bitPositionInBuffer)
         {
             int bytePosition = bitPositionInBuffer / 8;
-            int bitIndex = bitPositionInBuffer % 8;
+            int bitIndex = 7 - bitPositionInBuffer % 8;
             byte b = _buffer[bytePosition];
             return ((b << bitIndex) & 0x80) != 0;
         }
