@@ -10,6 +10,7 @@ namespace XamlAnimatedGif.Decompression
 {
     class LzwDecompressStream : Stream
     {
+        private const int MaxCodeLength = 12;
         private readonly BitReader _reader;
         private readonly int _minimumCodeLength;
         private int _codeLength;
@@ -170,7 +171,7 @@ namespace XamlAnimatedGif.Decompression
         private void AppendToCodeTable(Sequence sequence)
         {
             _codeTable.Add(sequence);
-            if (_codeLength < GetMinBitLength(_codeTable.Count))
+            if (_codeLength < GetMinBitLength(_codeTable.Count) && _codeLength < MaxCodeLength)
                 _codeLength++;
         }
 
