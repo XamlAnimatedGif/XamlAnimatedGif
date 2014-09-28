@@ -40,6 +40,7 @@ namespace XamlAnimatedGif.Decompression
                     if (len == 0)
                         throw new EndOfStreamException();
                     _bufferLengthInBits = len * 8;
+                    _bitPositionInBuffer = 0;
                 }
 
                 // As long as there are bits in the buffer, take them

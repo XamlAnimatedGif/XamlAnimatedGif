@@ -12,12 +12,14 @@ namespace TestDecode
     {
         static void Main()
         {
-            DumpFrames();
+            const string path = @"D:\tmp\gif\monster.gif";
+            DumpFrames(path);
+            //MakeImage(path);
+            //TestLzwDecompression(path);
         }
 
-        private static void TestLzwDecompression()
+        private static void TestLzwDecompression(string path)
         {
-            const string path = @"D:\tmp\gif\new.gif";
             using (var fileStream = File.OpenRead(path))
             {
                 var gif = GifDataStream.ReadGifDataStream(fileStream);
@@ -35,9 +37,8 @@ namespace TestDecode
             }
         }
 
-        static void MakeImage()
+        static void MakeImage(string path)
         {
-            const string path = @"D:\tmp\gif\sample_1.gif";
             using (var fileStream = File.OpenRead(path))
             {
                 var gif = GifDataStream.ReadGifDataStream(fileStream);
@@ -62,6 +63,7 @@ namespace TestDecode
 
                     var pixelData = indexStream.ToArray();
                     image.Lock();
+
                     var fd = firstFrame.Descriptor;
                     var rect = new Int32Rect(fd.Left, fd.Top, fd.Width, fd.Height);
                     image.WritePixels(rect, pixelData, fd.Width, 0);
@@ -78,9 +80,8 @@ namespace TestDecode
             }
         }
 
-        static void DumpFrames()
+        static void DumpFrames(string path)
         {
-            const string path = @"D:\tmp\gif\bomb.gif";
             using (var fileStream = File.OpenRead(path))
             {
                 var gif = GifDataStream.ReadGifDataStream(fileStream);
