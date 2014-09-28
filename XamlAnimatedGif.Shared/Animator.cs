@@ -197,6 +197,10 @@ namespace XamlAnimatedGif
         private async Task RenderFrameCoreAsync(int frameIndex)
         {
             Debug.WriteLine("Entering RenderFrameCoreAsync({0})", frameIndex);
+
+            if (frameIndex < 0)
+                return;
+
             var frame = _metadata.Frames[frameIndex];
             var desc = frame.Descriptor;
             using (var indexStream = GetIndexStream(frame))
@@ -307,6 +311,8 @@ namespace XamlAnimatedGif
             {
                 if (disposing)
                 {
+                    _storyboard.Stop();
+                    _storyboard.Children.Clear();
                     _sourceStream.Dispose();
                 }
                 _disposed = true;

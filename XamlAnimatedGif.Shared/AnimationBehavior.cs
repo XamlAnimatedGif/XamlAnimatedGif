@@ -60,7 +60,9 @@ namespace XamlAnimatedGif
 
             if (oldValue != null)
             {
-                
+                var animator = GetAnimator(image);
+                if (animator != null)
+                    animator.Dispose();
             }
             if (newValue != null)
             {
