@@ -117,6 +117,7 @@
     <Resource Include="Images\radar.gif" />
     <Resource Include="Images\pause.png" />
     <Resource Include="Images\play.png" />
+    <Resource Include="Images\nonanimated.gif" />
     <Content Include="Images\siteoforigin.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

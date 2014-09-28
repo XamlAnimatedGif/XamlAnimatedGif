@@ -26,7 +26,7 @@ namespace TestApp.Wpf
                           "pack://application:,,,/images/radar.gif",
                           "pack://application:,,,/images/bomb.gif",
                           "pack://application:,,,/images/bomb-once.gif",
-                          "pack://application:,,,/images/nonanimated.png",
+                          "pack://application:,,,/images/nonanimated.gif",
                           "pack://application:,,,/images/monster.gif",
                           "pack://siteoforigin:,,,/images/siteoforigin.gif",
                           "pack://application:,,,/images/partialfirstframe.gif",
