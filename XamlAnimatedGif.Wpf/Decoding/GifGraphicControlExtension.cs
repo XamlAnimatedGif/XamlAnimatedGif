@@ -9,7 +9,7 @@ namespace XamlAnimatedGif.Decoding
         internal const int ExtensionLabel = 0xF9;
 
         public int BlockSize { get; private set; }
-        public int DisposalMethod { get; private set; }
+        public GifFrameDisposalMethod DisposalMethod { get; private set; }
         public bool UserInput { get; private set; }
         public bool HasTransparency { get; private set; }
         public int Delay { get; private set; }
@@ -42,7 +42,7 @@ namespace XamlAnimatedGif.Decoding
             if (BlockSize != 4)
                 throw GifHelpers.InvalidBlockSizeException("Graphic Control Extension", 4, BlockSize);
             byte packedFields = bytes[1];
-            DisposalMethod = (packedFields & 0x1C) >> 2;
+            DisposalMethod = (GifFrameDisposalMethod) ((packedFields & 0x1C) >> 2);
             UserInput = (packedFields & 0x02) != 0;
             HasTransparency = (packedFields & 0x01) != 0;
             Delay = BitConverter.ToUInt16(bytes, 2) * 10; // milliseconds

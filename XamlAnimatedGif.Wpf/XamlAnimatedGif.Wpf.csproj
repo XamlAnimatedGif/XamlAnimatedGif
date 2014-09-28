@@ -49,6 +49,7 @@
     <Compile Include="Decoding\GifExtension.cs" />
     <Compile Include="Decoding\GifDataStream.cs" />
     <Compile Include="Decoding\GifFrame.cs" />
+    <Compile Include="Decoding\GifFrameDisposalMethod.cs" />
     <Compile Include="Decoding\GifGraphicControlExtension.cs" />
     <Compile Include="Decoding\GifHeader.cs" />
     <Compile Include="Decoding\GifHelpers.cs" />
