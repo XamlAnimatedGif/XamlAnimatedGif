@@ -37,5 +37,13 @@ namespace XamlAnimatedGif.Extensions
                 return -1;
             return buffer[0];
         }
+
+        public static BufferedStream AsBuffered(this Stream stream)
+        {
+            var bs = stream as BufferedStream;
+            if (bs != null)
+                return bs;
+            return new BufferedStream(stream);
+        }
     }
 }

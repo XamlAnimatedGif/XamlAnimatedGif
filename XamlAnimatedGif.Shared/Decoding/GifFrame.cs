@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace XamlAnimatedGif.Decoding
         public GifColor[] LocalColorTable { get; private set; }
         public IList<GifExtension> Extensions { get; private set; }
         public GifImageData ImageData { get; private set; }
+        public GifGraphicControlExtension GraphicControl { get; set; }
 
         private GifFrame()
         {
@@ -43,6 +45,7 @@ namespace XamlAnimatedGif.Decoding
             }
             ImageData = await GifImageData.ReadAsync(stream);
             Extensions = controlExtensions.ToList().AsReadOnly();
+            GraphicControl = Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
         }
     }
 }

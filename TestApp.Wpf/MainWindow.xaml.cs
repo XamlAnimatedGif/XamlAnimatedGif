@@ -1,164 +1,252 @@
-﻿using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
+using Microsoft.VisualBasic;
 using Microsoft.Win32;
-using XamlAnimatedGif.Decoding;
-using XamlAnimatedGif.Decompression;
+using XamlAnimatedGif;
 
 namespace TestApp.Wpf
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow
+    public partial class MainWindow : INotifyPropertyChanged
     {
         public MainWindow()
         {
             InitializeComponent();
+            _images = new ObservableCollection<string>
+                      {
+                          "pack://application:,,,/images/working.gif",
+                          "pack://application:,,,/images/earth.gif",
+                          "pack://application:,,,/images/radar.gif",
+                          "pack://application:,,,/images/bomb.gif",
+                          "pack://application:,,,/images/bomb-once.gif",
+                          "pack://application:,,,/images/nonanimated.png",
+                          "pack://application:,,,/images/monster.gif",
+                          "pack://siteoforigin:,,,/images/siteoforigin.gif",
+                          "pack://application:,,,/images/partialfirstframe.gif",
+                          //"http://i.imgur.com/rCK6xzh.gif"
+                      };
+            DataContext = this;
         }
 
-        private void BtnBrowse_OnClick(object sender, RoutedEventArgs e)
+        private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog {Filter = "GIF files|*.gif"};
+            var dlg = new OpenFileDialog {Filter = "GIF images|*.gif"};
             if (dlg.ShowDialog() == true)
             {
-                txtFileName.Text = dlg.FileName;
+                Images.Add(dlg.FileName);
+                SelectedImage = dlg.FileName;
             }
         }
 
-        private async void BtnDumpFrames_OnClick(object sender, RoutedEventArgs e)
+        private void AnimationCompleted(object sender, RoutedEventArgs e)
         {
-            string fileName = txtFileName.Text;
-            if (string.IsNullOrEmpty(fileName))
-                return;
-
-            btnDumpFrames.IsEnabled = false;
-            try
-            {
-                await DumpFramesAsync(fileName);
-            }
-            finally
-            {
-                btnDumpFrames.IsEnabled = true;
-            }
-
+            Completed = true;
+            if (_animator != null)
+                SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
         }
 
-        private static async Task TestLzwDecompressionAsync(string path)
+        private ObservableCollection<string> _images;
+        public ObservableCollection<string> Images
         {
-            using (var fileStream = File.OpenRead(path))
+            get { return _images; }
+            set
             {
-                var gif = await GifDataStream.ReadAsync(fileStream);
-                var firstFrame = gif.Frames[0];
-                fileStream.Seek(firstFrame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
-                File.WriteAllBytes(path + ".lzw", data);
-                using (var ms = new MemoryStream(data))
-                using (var lzwStream = new LzwDecompressStream(ms, firstFrame.ImageData.LzwMinimumCodeSize))
-                using (var ms2 = new MemoryStream())
-                {
-                    await lzwStream.CopyToAsync(ms2);
-                    File.WriteAllBytes(path + ".ind", ms2.ToArray());
-                }
+                _images = value;
+                OnPropertyChanged("Images");
             }
         }
 
-        static async Task MakeImageAsync(string path)
+        private string _selectedImage;
+        public string SelectedImage
         {
-            using (var fileStream = File.OpenRead(path))
+            get { return _selectedImage; }
+            set
             {
-                var gif = await GifDataStream.ReadAsync(fileStream);
-                var firstFrame = gif.Frames[0];
-                var colorTable = firstFrame.LocalColorTable ?? gif.GlobalColorTable;
-                var colors = colorTable.Select(gc => Color.FromRgb(gc.R, gc.G, gc.B)).ToArray();
-                var palette = new BitmapPalette(colors);
-                var desc = gif.Header.LogicalScreenDescriptor;
-                var image = new WriteableBitmap(
-                    desc.Width, desc.Height,
-                    96, 96,
-                    PixelFormats.Indexed8,
-                    palette);
-
-                fileStream.Seek(firstFrame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
-                using (var ms = new MemoryStream(data))
-                using (var lzwStream = new LzwDecompressStream(ms, firstFrame.ImageData.LzwMinimumCodeSize))
-                using (var indexStream = new MemoryStream())
-                {
-                    await lzwStream.CopyToAsync(indexStream);
-
-                    var pixelData = indexStream.ToArray();
-                    image.Lock();
-
-                    var fd = firstFrame.Descriptor;
-                    var rect = new Int32Rect(fd.Left, fd.Top, fd.Width, fd.Height);
-                    image.WritePixels(rect, pixelData, fd.Width, 0);
-                    image.AddDirtyRect(rect);
-                    image.Unlock();
-
-                    var encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create(image));
-                    using (var fs = File.OpenWrite(path + ".png"))
-                    {
-                        encoder.Save(fs);
-                    }
-                }
+                _selectedImage = value;
+                OnPropertyChanged("SelectedImage");
+                Completed = false;
+                Dispatcher.BeginInvoke(ImageChanged, DispatcherPriority.Background);
             }
         }
 
-        static async Task DumpFramesAsync(string path)
+        private void ImageChanged()
         {
-            using (var fileStream = File.OpenRead(path))
+            if (_animator != null)
+                _animator.CurrentFrameChanged -= ControllerCurrentFrameChanged;
+
+            _animator = AnimationBehavior.GetAnimator(img);
+
+            if (_animator != null)
             {
-                var gif = await GifDataStream.ReadAsync(fileStream);
-                var desc = gif.Header.LogicalScreenDescriptor;
-                var colors = gif.GlobalColorTable.Select(gc => Color.FromRgb(gc.R, gc.G, gc.B)).ToArray();
-                //colors[0] = Colors.Transparent;
-                //colors[desc.BackgroundColorIndex] = Colors.Transparent;
-                var gce = gif.Frames[0].Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
-                if (gce != null && gce.HasTransparency)
-                {
-                    colors[gce.TransparencyIndex] = Colors.Transparent;
-                }
-                var palette = new BitmapPalette(colors);
-                var image = new WriteableBitmap(
-                    desc.Width, desc.Height,
-                    96, 96,
-                    PixelFormats.Indexed8,
-                    palette);
-
-                for (int i = 0; i < gif.Frames.Count; i++)
-                {
-                    var frame = gif.Frames[i];
-                    fileStream.Seek(frame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                    var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
-                    using (var ms = new MemoryStream(data))
-                    using (var lzwStream = new LzwDecompressStream(ms, frame.ImageData.LzwMinimumCodeSize))
-                    using (var indexStream = new MemoryStream())
-                    {
-                        await lzwStream.CopyToAsync(indexStream);
-
-                        var pixelData = indexStream.ToArray();
-                        image.Lock();
-                        var fd = frame.Descriptor;
-                        var rect = new Int32Rect(fd.Left, fd.Top, fd.Width, fd.Height);
-                        image.WritePixels(rect, pixelData, fd.Width, 0);
-                        image.AddDirtyRect(rect);
-                        image.Unlock();
-
-                        var encoder = new PngBitmapEncoder();
-                        encoder.Frames.Add(BitmapFrame.Create(image));
-                        string outPath = string.Format("{0}.{1}.png", path, i);
-                        using (var outStream = File.OpenWrite(outPath))
-                        {
-                            encoder.Save(outStream);
-                        }
-                    }
-                }
+                _animator.CurrentFrameChanged += ControllerCurrentFrameChanged;
+                sldPosition.Value = 0;
+                sldPosition.Maximum = _animator.FrameCount - 1;
+                SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
             }
+        }
+
+        private void ControllerCurrentFrameChanged(object sender, EventArgs e)
+        {
+            if (_animator != null)
+            {
+                sldPosition.Value = _animator.CurrentFrameIndex;
+                Debug.WriteLine("ControllerCurrentFrameChanged: {0}", sldPosition.Value);
+            }
+        }
+
+        private bool _useDefaultRepeatBehavior = true;
+        public bool UseDefaultRepeatBehavior
+        {
+            get { return _useDefaultRepeatBehavior; }
+            set
+            {
+                _useDefaultRepeatBehavior = value;
+                OnPropertyChanged("UseDefaultRepeatBehavior");
+                if (value)
+                    RepeatBehavior = default(RepeatBehavior);
+            }
+        }
+
+
+        private bool _repeatForever;
+        public bool RepeatForever
+        {
+            get { return _repeatForever; }
+            set
+            {
+                _repeatForever = value;
+                OnPropertyChanged("RepeatForever");
+                if (value)
+                    RepeatBehavior = RepeatBehavior.Forever;
+            }
+        }
+
+
+        private bool _useSpecificRepeatCount;
+        public bool UseSpecificRepeatCount
+        {
+            get { return _useSpecificRepeatCount; }
+            set
+            {
+                _useSpecificRepeatCount = value;
+                OnPropertyChanged("UseSpecificRepeatCount");
+                if (value)
+                    RepeatBehavior = new RepeatBehavior(RepeatCount);
+            }
+        }
+
+        private int _repeatCount = 3;
+        public int RepeatCount
+        {
+            get { return _repeatCount; }
+            set
+            {
+                _repeatCount = value;
+                OnPropertyChanged("RepeatCount");
+                if (UseSpecificRepeatCount)
+                    RepeatBehavior = new RepeatBehavior(value);
+            }
+        }
+
+        private bool _completed;
+        public bool Completed
+        {
+            get { return _completed; }
+            set
+            {
+                _completed = value;
+                OnPropertyChanged("Completed");
+            }
+        }
+
+        private RepeatBehavior _repeatBehavior;
+        public RepeatBehavior RepeatBehavior
+        {
+            get { return _repeatBehavior; }
+            set
+            {
+                _repeatBehavior = value;
+                OnPropertyChanged("RepeatBehavior");
+                Completed = false;
+                Dispatcher.BeginInvoke(ImageChanged, DispatcherPriority.Background);
+            }
+        }
+
+        private bool _autoStart = true;
+        public bool AutoStart
+        {
+            get { return _autoStart; }
+            set
+            {
+                _autoStart = value;
+                OnPropertyChanged("AutoStart");
+            }
+        }
+        
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private Animator _animator;
+
+        private void btnPause_Click(object sender, RoutedEventArgs e)
+        {
+            if (_animator != null)
+                _animator.Pause();
+            SetPlayPauseEnabled(true);
+        }
+
+        private void btnPlay_Click(object sender, RoutedEventArgs e)
+        {
+            if (_animator != null)
+                _animator.Play();
+            Completed = false;
+            SetPlayPauseEnabled(false);
+        }
+
+        private void sldPosition_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            // Not supported (yet?)
+
+            //if (_animator != null)
+            //{
+            //    var currentFrame = _animator.CurrentFrameIndex;
+            //    if (currentFrame >= 0 && currentFrame != (int)sldPosition.Value)
+            //        _animator.GotoFrame((int)sldPosition.Value);
+            //}
+        }
+
+        private void SetPlayPauseEnabled(bool isPaused)
+        {
+            btnPause.IsEnabled = !isPaused;
+            btnPlay.IsEnabled = isPaused;
+        }
+
+        private void btnOpenUrl_Click(object sender, RoutedEventArgs e)
+        {
+            string url = Interaction.InputBox("Enter the URL of the image to load", "Enter URL");
+            if (!string.IsNullOrEmpty(url))
+            {
+                Images.Add(url);
+                SelectedImage = url;
+            }
+        }
+
+        private void btnGC_Click(object sender, RoutedEventArgs e)
+        {
+            GC.Collect();
         }
     }
 }

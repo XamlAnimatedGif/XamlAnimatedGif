@@ -10,12 +10,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AnimationBehavior.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Animator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifApplicationExtension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifBlockKind.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifColor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifCommentExtension.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDataBlocksStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDataBlockStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDataStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDecoderException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifExtension.cs" />

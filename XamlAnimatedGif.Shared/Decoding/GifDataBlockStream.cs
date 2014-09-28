@@ -6,16 +6,19 @@ using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif.Decoding
 {
-    class GifDataBlocksStream : Stream
+    class GifDataBlockStream : Stream
     {
         private readonly Stream _baseStream;
+        private readonly bool _leaveOpen;
         private readonly byte[] _currentBlock;
         private int _currentBlockLength;
         private int _currentPositionInBlock;
+        private bool _endOfStream;
 
-        public GifDataBlocksStream(Stream baseStream)
+        public GifDataBlockStream(Stream baseStream, bool leaveOpen = false)
         {
             _baseStream = baseStream;
+            _leaveOpen = leaveOpen;
             _currentBlock = new byte[256];
         }
 
@@ -42,6 +45,9 @@ namespace XamlAnimatedGif.Decoding
         {
             ValidateReadArgs(buffer, offset, count);
 
+            if (_endOfStream)
+                return 0;
+
             int read = 0;
             while (read < count)
             {
@@ -49,7 +55,10 @@ namespace XamlAnimatedGif.Decoding
                 {
                     int blockLength = _baseStream.ReadByte();
                     if (blockLength <= 0)
+                    {
+                        _endOfStream = true;
                         return read;
+                    }
 
                     _baseStream.ReadAll(_currentBlock, 0, blockLength);
                     _currentBlockLength = blockLength;
@@ -65,6 +74,9 @@ namespace XamlAnimatedGif.Decoding
         {
             ValidateReadArgs(buffer, offset, count);
 
+            if (_endOfStream)
+                return 0;
+
             int read = 0;
             while (read < count)
             {
@@ -72,7 +84,10 @@ namespace XamlAnimatedGif.Decoding
                 {
                     int blockLength = await _baseStream.ReadByteAsync();
                     if (blockLength <= 0)
+                    {
+                        _endOfStream = true;
                         return read;
+                    }
 
                     await _baseStream.ReadAllAsync(_currentBlock, 0, blockLength);
                     _currentBlockLength = blockLength;
@@ -113,6 +128,13 @@ namespace XamlAnimatedGif.Decoding
         {
             get { throw new NotSupportedException(); }
             set { throw new NotSupportedException(); }
+        }
+
+        public override void Close()
+        {
+            base.Close();
+            if (!_leaveOpen)
+                _baseStream.Dispose();
         }
 
         private void ReadBytesFromCurrentBlock(byte[] buffer, int offset, int count, ref int read)

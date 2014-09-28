@@ -19,9 +19,9 @@ namespace XamlAnimatedGif.Decompression
         private byte[] _remainingBytes;
         private bool _endOfStream;
 
-        public LzwDecompressStream(Stream compressedStream, int minimumCodeLength)
+        public LzwDecompressStream(Stream compressedStream, int minimumCodeLength, bool leaveOpen = false)
         {
-            _reader = new BitReader(compressedStream);
+            _reader = new BitReader(compressedStream, leaveOpen);
             _minimumCodeLength = minimumCodeLength;
             InitCodeTable();
         }
