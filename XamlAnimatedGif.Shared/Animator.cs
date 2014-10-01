@@ -171,11 +171,18 @@ namespace XamlAnimatedGif
             var desc = metadata.Header.LogicalScreenDescriptor;
             if (desc.HasGlobalColorTable)
             {
-                var colors = metadata.GlobalColorTable.Select(gc => Color.FromRgb(gc.R, gc.G, gc.B));
+                var colors = metadata.GlobalColorTable.Select(gc => Color.FromRgb(gc.R, gc.G, gc.B)).ToList();
 
-                // TODO: implement the case where frames have a local color table
+                // TODO: handle the case where not all frames have the same transparency index
+                var gce = metadata.Frames.First().GraphicControl;
+                if (gce != null && gce.HasTransparency)
+                {
+                    colors[gce.TransparencyIndex] = Colors.Transparent;
+                }
 
-                var palette = new BitmapPalette(colors.ToList());
+                // TODO: handle the case where frames have a local color table
+
+                var palette = new BitmapPalette(colors);
                 return palette;
             }
             // TODO: implement the case where there are only local color tables
