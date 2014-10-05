@@ -1,9 +1,11 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 
 namespace XamlAnimatedGif
 {
@@ -104,6 +106,30 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region AnimateInDesignMode
+
+
+        public static bool GetAnimateInDesignMode(DependencyObject obj)
+        {
+            return (bool)obj.GetValue(AnimateInDesignModeProperty);
+        }
+
+        public static void SetAnimateInDesignMode(DependencyObject obj, bool value)
+        {
+            obj.SetValue(AnimateInDesignModeProperty, value);
+        }
+
+        public static readonly DependencyProperty AnimateInDesignModeProperty =
+            DependencyProperty.RegisterAttached(
+                "AnimateInDesignMode",
+                typeof(bool),
+                typeof(AnimationBehavior),
+                new PropertyMetadata(
+                    false,
+                    AnimateInDesignModeChanged));
+
+        #endregion
+
         #region Animator
 
         public static Animator GetAnimator(DependencyObject obj)
@@ -162,8 +188,48 @@ namespace XamlAnimatedGif
             }
         }
 
+        private static void AnimateInDesignModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var image = d as Image;
+            if (image == null)
+                return;
+
+            if (DesignerProperties.GetIsInDesignMode(image))
+            {
+                bool animateInDesignMode = (bool) e.NewValue;
+                if (animateInDesignMode)
+                {
+                    SourceChanged(image, new DependencyPropertyChangedEventArgs());
+                }
+                else
+                {
+                    ClearAnimatorCore(image);
+                }
+            }
+        }
+
+        private static bool CheckDesignMode(Image image, Uri sourceUri, Stream sourceStream)
+        {
+            if (DesignerProperties.GetIsInDesignMode(image) && !GetAnimateInDesignMode(image))
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                if (sourceStream != null)
+                    bmp.StreamSource = sourceStream;
+                if (sourceUri != null)
+                    bmp.UriSource = sourceUri;
+                bmp.EndInit();
+                image.Source = bmp;
+                return false;
+            }
+            return true;
+        }
+
         private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior)
         {
+            if (!CheckDesignMode(image, sourceUri, null))
+                return;
+
             try
             {
                 var animator = await Animator.CreateAsync(sourceUri, repeatBehavior);
@@ -177,6 +243,9 @@ namespace XamlAnimatedGif
 
         private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior)
         {
+            if (!CheckDesignMode(image, null, stream))
+                return;
+
             try
             {
                 var animator = await Animator.CreateAsync(stream, repeatBehavior);
