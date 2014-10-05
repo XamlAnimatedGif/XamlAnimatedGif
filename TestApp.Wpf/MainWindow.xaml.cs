@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -45,13 +44,6 @@ namespace TestApp.Wpf
             }
         }
 
-        private void AnimationCompleted(object sender, RoutedEventArgs e)
-        {
-            Completed = true;
-            if (_animator != null)
-                SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
-        }
-
         private ObservableCollection<string> _images;
         public ObservableCollection<string> Images
         {
@@ -79,13 +71,17 @@ namespace TestApp.Wpf
         private void ImageChanged()
         {
             if (_animator != null)
+            {
                 _animator.CurrentFrameChanged -= CurrentFrameChanged;
+                _animator.AnimationCompleted -= AnimationCompleted;
+            }
 
             _animator = AnimationBehavior.GetAnimator(img);
 
             if (_animator != null)
             {
                 _animator.CurrentFrameChanged += CurrentFrameChanged;
+                _animator.AnimationCompleted += AnimationCompleted;
                 sldPosition.Value = 0;
                 sldPosition.Maximum = _animator.FrameCount - 1;
                 SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
@@ -99,6 +95,13 @@ namespace TestApp.Wpf
                 sldPosition.Value = _animator.CurrentFrameIndex;
                 //Debug.WriteLine("CurrentFrameChanged: {0}", sldPosition.Value);
             }
+        }
+
+        private void AnimationCompleted(object sender, EventArgs e)
+        {
+            Completed = true;
+            if (_animator != null)
+                SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
         }
 
         private bool _useDefaultRepeatBehavior = true;

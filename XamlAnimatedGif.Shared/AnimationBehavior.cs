@@ -2,12 +2,15 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 
 namespace XamlAnimatedGif
 {
     public static class AnimationBehavior
     {
-        #region Public attached properties
+        #region Public attached properties and events
+
+        #region SourceUri
 
         [AttachedPropertyBrowsableForType(typeof(Image))]
         public static Uri GetSourceUri(Image image)
@@ -27,11 +30,84 @@ namespace XamlAnimatedGif
               typeof(AnimationBehavior),
               new PropertyMetadata(
                 null,
-                SourceUriChanged));
+                SourceChanged));
+
+        #endregion
+
+        #region SourceStream
+
+
+        public static Stream GetSourceStream(DependencyObject obj)
+        {
+            return (Stream)obj.GetValue(SourceStreamProperty);
+        }
+
+        public static void SetSourceStream(DependencyObject obj, Stream value)
+        {
+            obj.SetValue(SourceStreamProperty, value);
+        }
+
+        public static readonly DependencyProperty SourceStreamProperty =
+            DependencyProperty.RegisterAttached(
+                "SourceStream",
+                typeof(Stream),
+                typeof(AnimationBehavior),
+                new PropertyMetadata(
+                    null,
+                    SourceChanged));
+
+        #endregion
+
+        #region RepeatBehavior
+
+        [AttachedPropertyBrowsableForType(typeof(Image))]
+        public static RepeatBehavior GetRepeatBehavior(DependencyObject obj)
+        {
+            return (RepeatBehavior)obj.GetValue(RepeatBehaviorProperty);
+        }
+
+        public static void SetRepeatBehavior(DependencyObject obj, RepeatBehavior value)
+        {
+            obj.SetValue(RepeatBehaviorProperty, value);
+        }
+
+        public static readonly DependencyProperty RepeatBehaviorProperty =
+            DependencyProperty.RegisterAttached(
+              "RepeatBehavior",
+              typeof(RepeatBehavior),
+              typeof(AnimationBehavior),
+              new UIPropertyMetadata(
+                default(RepeatBehavior),
+                SourceChanged));
+
+        #endregion
+
+        #region AutoStart
+
+        public static bool GetAutoStart(DependencyObject obj)
+        {
+            return (bool)obj.GetValue(AutoStartProperty);
+        }
+
+        public static void SetAutoStart(DependencyObject obj, bool value)
+        {
+            obj.SetValue(AutoStartProperty, value);
+        }
+
+        public static readonly DependencyProperty AutoStartProperty =
+            DependencyProperty.RegisterAttached(
+                "AutoStart",
+                typeof(bool),
+                typeof(AnimationBehavior),
+                new PropertyMetadata(true));
+
+        #endregion
+
+        #region Animator
 
         public static Animator GetAnimator(DependencyObject obj)
         {
-            return (Animator)obj.GetValue(AnimatorProperty);
+            return (Animator) obj.GetValue(AnimatorProperty);
         }
 
         private static void SetAnimator(DependencyObject obj, Animator value)
@@ -41,42 +117,44 @@ namespace XamlAnimatedGif
 
         public static readonly DependencyProperty AnimatorProperty =
             DependencyProperty.RegisterAttached(
-              "Animator",
-              typeof(Animator),
-              typeof(AnimationBehavior),
-              new PropertyMetadata(null));
-
+                "Animator",
+                typeof (Animator),
+                typeof (AnimationBehavior),
+                new PropertyMetadata(null));
 
         #endregion
 
-        private static void SourceUriChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        #endregion
+
+        private static void SourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
             var image = o as Image;
             if (image == null)
                 return;
 
-            var oldValue = (Uri)e.OldValue;
-            var newValue = (Uri)e.NewValue;
+            ClearAnimatorCore(image);
 
-            if (oldValue != null)
+            var stream = GetSourceStream(image);
+            if (stream != null)
             {
-                var animator = GetAnimator(image);
-                if (animator != null)
-                    animator.Dispose();
+                InitAnimationAsync(image, stream, GetRepeatBehavior(image));
             }
-            if (newValue != null)
+            else
             {
-                // Init new animation
-                InitAnimationAsync(image, newValue);
+                var uri = GetSourceUri(image);
+                if (uri != null)
+                {
+                    InitAnimationAsync(image, uri, GetRepeatBehavior(image));
+                }
             }
         }
 
-        private static async void InitAnimationAsync(Image image, Uri sourceUri)
+        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior)
         {
             try
             {
-                var animator = await Animator.CreateAsync(sourceUri);
-                SetAnimatorAndStart(image, animator);
+                var animator = await Animator.CreateAsync(sourceUri, repeatBehavior);
+                SetAnimatorCore(image, animator);
             }
             catch
             {
@@ -84,12 +162,12 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static async void InitAnimationAsync(Image image, Stream stream)
+        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior)
         {
             try
             {
-                var animator = await Animator.CreateAsync(stream);
-                SetAnimatorAndStart(image, animator);
+                var animator = await Animator.CreateAsync(stream, repeatBehavior);
+                SetAnimatorCore(image, animator);
             }
             catch
             {
@@ -97,12 +175,26 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static void SetAnimatorAndStart(Image image, Animator animator)
+        private static void SetAnimatorCore(Image image, Animator animator)
         {
             SetAnimator(image, animator);
             image.Source = animator.Bitmap;
-            animator.Play();
+            if (GetAutoStart(image))
+                animator.Play();
+            else
+                animator.CurrentFrameIndex = 0;
         }
+
+        private static void ClearAnimatorCore(Image image)
+        {
+            var animator = GetAnimator(image);
+            if (animator == null)
+                return;
+
+            animator.Dispose();
+            SetAnimator(image, null);
+        }
+
 
     }
 }

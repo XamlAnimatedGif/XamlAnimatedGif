@@ -24,12 +24,12 @@ namespace XamlAnimatedGif
         private readonly GifDataStream _metadata;
         private readonly Dictionary<int, GifPalette> _palettes;
         private readonly WriteableBitmap _bitmap;
-        private byte[] _previousBackBuffer;
+        private readonly byte[] _previousBackBuffer;
         private readonly Storyboard _storyboard;
 
         #region Constructor and factory methods
 
-        private Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata)
+        private Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior)
         {
             _sourceStream = sourceStream;
             _sourceUri = sourceUri;
@@ -37,15 +37,15 @@ namespace XamlAnimatedGif
             _palettes = CreatePalettes(metadata);
             _bitmap = CreateBitmap(metadata);
             _previousBackBuffer = new byte[metadata.Header.LogicalScreenDescriptor.Height * _bitmap.BackBufferStride];
-            _storyboard = CreateStoryboard(metadata);
+            _storyboard = CreateStoryboard(metadata, repeatBehavior);
         }
 
-        internal static async Task<Animator> CreateAsync(Uri sourceUri)
+        internal static async Task<Animator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior)
         {
             var stream = GetStreamFromUri(sourceUri);
             try
             {
-                return await CreateAsync(stream, sourceUri);
+                return await CreateAsync(stream, sourceUri, repeatBehavior);
             }
             catch
             {
@@ -55,16 +55,16 @@ namespace XamlAnimatedGif
             }
         }
 
-        internal static Task<Animator> CreateAsync(Stream sourceStream)
+        internal static Task<Animator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior)
         {
-            return CreateAsync(sourceStream, null);
+            return CreateAsync(sourceStream, null, repeatBehavior);
         }
 
-        internal static async Task<Animator> CreateAsync(Stream sourceStream, Uri sourceUri)
+        internal static async Task<Animator> CreateAsync(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior)
         {
             var stream = sourceStream.AsBuffered();
             var metadata = await GifDataStream.ReadAsync(stream);
-            return new Animator(stream, sourceUri, metadata);
+            return new Animator(stream, sourceUri, metadata, repeatBehavior);
         }
 
         #endregion
@@ -76,38 +76,41 @@ namespace XamlAnimatedGif
             get { return _metadata.Frames.Count; }
         }
 
+        private bool _isStarted;
+
         public void Play()
         {
-            _storyboard.Begin();
-            //_storyboard.Pause();
-        }
-
-        public void Stop()
-        {
-            _storyboard.Stop();
+            if (_isStarted)
+                _storyboard.Resume();
+            else
+                _storyboard.Begin();
+            _isStarted = true;
         }
 
         public void Pause()
         {
-            _storyboard.Pause();
-        }
-
-        public void Resume()
-        {
-            _storyboard.Resume();
+            if (_isStarted)
+                _storyboard.Pause();
         }
 
         public bool IsPaused
         {
             get
             {
-                return _storyboard.GetIsPaused();
+                if (_isStarted)
+                    return _storyboard.GetIsPaused();
+                return true;
             }
         }
 
         public bool IsComplete
         {
-            get { return _storyboard.GetCurrentState() == ClockState.Filling; }
+            get
+            {
+                if (_isStarted)
+                    return _storyboard.GetCurrentState() == ClockState.Filling;
+                return false;
+            }
         }
 
         public event EventHandler CurrentFrameChanged;
@@ -119,9 +122,19 @@ namespace XamlAnimatedGif
                 handler(this, EventArgs.Empty);
         }
 
+        public event EventHandler AnimationCompleted;
+
+        protected virtual void OnAnimationCompleted()
+        {
+            EventHandler handler = AnimationCompleted;
+            if (handler != null)
+                handler(this, EventArgs.Empty);
+        }
+
         public int CurrentFrameIndex
         {
             get { return (int)GetValue(CurrentFrameIndexProperty); }
+            internal set { SetValue(CurrentFrameIndexProperty, value); }
         }
 
         private static readonly DependencyProperty CurrentFrameIndexProperty =
@@ -136,7 +149,7 @@ namespace XamlAnimatedGif
             animator.RenderFrameAsync((int) e.NewValue);
         }
 
-        private Storyboard CreateStoryboard(GifDataStream metadata)
+        private Storyboard CreateStoryboard(GifDataStream metadata, RepeatBehavior repeatBehavior)
         {
             var animation = new Int32AnimationUsingKeyFrames();
             var totalDuration = TimeSpan.Zero;
@@ -148,15 +161,23 @@ namespace XamlAnimatedGif
                 totalDuration += GetFrameDelay(frame);
             }
 
-            animation.RepeatBehavior = GetRepeatBehavior(metadata);
+            animation.RepeatBehavior =
+                repeatBehavior == default(RepeatBehavior)
+                    ? GetRepeatBehavior(metadata)
+                    : repeatBehavior;
 
             Storyboard.SetTarget(animation, this);
             Storyboard.SetTargetProperty(animation, new PropertyPath(CurrentFrameIndexProperty));
 
-            return new Storyboard
+
+            var sb = new Storyboard
             {
                 Children = {animation}
             };
+
+            sb.Completed += (sender, e) => OnAnimationCompleted();
+
+            return sb;
         }
 
         #endregion
@@ -285,14 +306,6 @@ namespace XamlAnimatedGif
             lineBuffer[startIndex + 1] = color.G;
             lineBuffer[startIndex + 2] = color.R;
             lineBuffer[startIndex + 3] = color.A;
-        }
-
-        private static void CopyPixel(byte[] source, byte[] destination, int startIndex)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                destination[startIndex + i] = source[startIndex + i];
-            }
         }
 
         private void DisposePreviousFrame(GifFrame currentFrame)

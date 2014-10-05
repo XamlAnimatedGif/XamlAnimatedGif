@@ -90,7 +90,9 @@
             <Grid>
                 <Image Name="img" Margin="5"
                        Stretch="None"
-                       gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" />
+                       gif:AnimationBehavior.SourceUri="{Binding SelectedImage}"
+                       gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}"
+                       gif:AnimationBehavior.AutoStart="{Binding AutoStart}" />
 
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top"
                         Visibility="{Binding Completed, Converter={StaticResource boolToVis}}">
