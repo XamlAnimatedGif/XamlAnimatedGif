@@ -248,5 +248,10 @@ namespace TestApp.Wpf
         {
             GC.Collect();
         }
+
+        private void btnBasicTests_Click(object sender, RoutedEventArgs e)
+        {
+            new BasicTestsWindow().ShowDialog();
+        }
     }
 }

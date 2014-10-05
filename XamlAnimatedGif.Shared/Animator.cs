@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Packaging;
@@ -21,7 +22,9 @@ namespace XamlAnimatedGif
         private readonly Stream _sourceStream;
         private readonly Uri _sourceUri;
         private readonly GifDataStream _metadata;
+        private readonly Dictionary<int, GifPalette> _palettes;
         private readonly WriteableBitmap _bitmap;
+        private byte[] _previousBackBuffer;
         private readonly Storyboard _storyboard;
 
         #region Constructor and factory methods
@@ -31,7 +34,9 @@ namespace XamlAnimatedGif
             _sourceStream = sourceStream;
             _sourceUri = sourceUri;
             _metadata = metadata;
+            _palettes = CreatePalettes(metadata);
             _bitmap = CreateBitmap(metadata);
+            _previousBackBuffer = new byte[metadata.Header.LogicalScreenDescriptor.Height * _bitmap.BackBufferStride];
             _storyboard = CreateStoryboard(metadata);
         }
 
@@ -158,35 +163,48 @@ namespace XamlAnimatedGif
 
         #region Rendering
 
-        private static WriteableBitmap CreateBitmap(GifDataStream metadata)
+        private WriteableBitmap CreateBitmap(GifDataStream metadata)
         {
-            var palette = CreatePalette(metadata);
             var desc = metadata.Header.LogicalScreenDescriptor;
-            var bitmap = new WriteableBitmap(desc.Width, desc.Height, 96, 96, PixelFormats.Indexed8, palette);
+            var bitmap = new WriteableBitmap(desc.Width, desc.Height, 96, 96, PixelFormats.Bgra32, null);
             return bitmap;
         }
 
-        private static BitmapPalette CreatePalette(GifDataStream metadata)
+        private Dictionary<int, GifPalette> CreatePalettes(GifDataStream metadata)
         {
-            var desc = metadata.Header.LogicalScreenDescriptor;
-            if (desc.HasGlobalColorTable)
+            var palettes = new Dictionary<int, GifPalette>();
+            Color[] globalColorTable = null;
+            if (metadata.Header.LogicalScreenDescriptor.HasGlobalColorTable)
             {
-                var colors = metadata.GlobalColorTable.Select(gc => Color.FromRgb(gc.R, gc.G, gc.B)).ToList();
+                globalColorTable =
+                    metadata.GlobalColorTable
+                        .Select(gc => Color.FromRgb(gc.R, gc.G, gc.B))
+                        .ToArray();
+            }
 
-                // TODO: handle the case where not all frames have the same transparency index
-                var gce = metadata.Frames.First().GraphicControl;
-                if (gce != null && gce.HasTransparency)
+            for (int i = 0; i < metadata.Frames.Count; i++)
+            {
+                var frame = metadata.Frames[i];
+                var colorTable = globalColorTable;
+                if (frame.Descriptor.HasLocalColorTable)
                 {
-                    colors[gce.TransparencyIndex] = Colors.Transparent;
+                    colorTable =
+                        frame.LocalColorTable
+                            .Select(gc => Color.FromRgb(gc.R, gc.G, gc.B))
+                            .ToArray();
                 }
 
-                // TODO: handle the case where frames have a local color table
+                int? transparencyIndex = null;
+                var gce = frame.GraphicControl;
+                if (gce != null && gce.HasTransparency)
+                {
+                    transparencyIndex = gce.TransparencyIndex;
+                }
 
-                var palette = new BitmapPalette(colors);
-                return palette;
+                palettes[i] = new GifPalette(transparencyIndex, colorTable);
             }
-            // TODO: implement the case where there are only local color tables
-            throw new NotSupportedException("Images without a global color table are not supported");
+
+            return palettes;
         }
 
         private async void RenderFrameAsync(int frameIndex)
@@ -201,6 +219,7 @@ namespace XamlAnimatedGif
             }
         }
 
+        private GifFrame _previousFrame;
         private async Task RenderFrameCoreAsync(int frameIndex)
         {
             Debug.WriteLine("Entering RenderFrameCoreAsync({0})", frameIndex);
@@ -215,24 +234,116 @@ namespace XamlAnimatedGif
                 _bitmap.Lock();
                 try
                 {
-                    int stride = desc.Width;
-                    byte[] lineBuffer = new byte[stride];
+                    DisposePreviousFrame(frame);
+
+                    int stride = _bitmap.BackBufferStride;
+                    int bufferLength = 4 * desc.Width;
+                    byte[] indexBuffer = new byte[desc.Width];
+                    byte[] lineBuffer = new byte[bufferLength];
+
+                    var palette = _palettes[frameIndex];
+                    int transparencyIndex = palette.TransparencyIndex ?? -1;
                     for (int y = 0; y < desc.Height; y++)
                     {
-                        int read = await indexStream.ReadAsync(lineBuffer, 0, stride);
-                        if (read != stride)
+                        int read = await indexStream.ReadAsync(indexBuffer, 0, desc.Width);
+                        if (read != desc.Width)
                             throw new EndOfStreamException();
-                        int offset = (desc.Top + y) * _bitmap.BackBufferStride + desc.Left;
-                        Marshal.Copy(lineBuffer, 0, _bitmap.BackBuffer + offset, stride);
+
+                        int offset = (desc.Top + y) * stride + desc.Left * 4;
+
+                        if (transparencyIndex > 0)
+                        {
+                            Marshal.Copy(_bitmap.BackBuffer + offset, lineBuffer, 0, bufferLength);
+                        }
+
+                        for (int x = 0; x < desc.Width; x++)
+                        {
+                            byte index = indexBuffer[x];
+                            int i = 4 * x;
+                            if (index != transparencyIndex)
+                            {
+                                WriteColor(lineBuffer, palette[index], i);
+                            }
+                        }
+                        Marshal.Copy(lineBuffer, 0, _bitmap.BackBuffer + offset, bufferLength);
                     }
                     var rect = new Int32Rect(desc.Left, desc.Top, desc.Width, desc.Height);
                     _bitmap.AddDirtyRect(rect);
+                    _previousFrame = frame;
                 }
                 finally
                 {
                     _bitmap.Unlock();
                 }
                 Debug.WriteLine("Leaving RenderFrameCoreAsync({0})", frameIndex);
+            }
+        }
+
+        private void WriteColor(byte[] lineBuffer, Color color, int startIndex)
+        {
+            lineBuffer[startIndex] = color.B;
+            lineBuffer[startIndex + 1] = color.G;
+            lineBuffer[startIndex + 2] = color.R;
+            lineBuffer[startIndex + 3] = color.A;
+        }
+
+        private static void CopyPixel(byte[] source, byte[] destination, int startIndex)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                destination[startIndex + i] = source[startIndex + i];
+            }
+        }
+
+        private void DisposePreviousFrame(GifFrame currentFrame)
+        {
+            if (_previousFrame != null)
+            {
+                var pgce = _previousFrame.GraphicControl;
+                if (pgce != null)
+                {
+                    switch (pgce.DisposalMethod)
+                    {
+                        case GifFrameDisposalMethod.None:
+                        case GifFrameDisposalMethod.DoNotDispose:
+                            {
+                                // Leave previous frame in place
+                                break;
+                            }
+                        case GifFrameDisposalMethod.RestoreBackground:
+                            {
+                                ClearArea(_bitmap, _previousFrame.Descriptor);
+                                break;
+                            }
+                        case GifFrameDisposalMethod.RestorePrevious:
+                            {
+                                Marshal.Copy(_previousBackBuffer, 0, _bitmap.BackBuffer, _previousBackBuffer.Length);
+                                break;
+                            }
+                        default:
+                            {
+                                throw new ArgumentOutOfRangeException();
+                            }
+                    }
+                }
+
+                var gce = currentFrame.GraphicControl;
+                if (gce != null && gce.DisposalMethod == GifFrameDisposalMethod.RestorePrevious)
+                {
+                    Marshal.Copy(_bitmap.BackBuffer, _previousBackBuffer, 0, _previousBackBuffer.Length);
+                }
+            }
+        }
+
+        private static void ClearArea(WriteableBitmap bitmap, IGifRect rect)
+        {
+            int stride = bitmap.BackBufferStride;
+            int bufferLength = 4 * rect.Width;
+            byte[] lineBuffer = new byte[bufferLength];
+            for (int y = 0; y < rect.Height; y++)
+            {
+                int offset = (rect.Top + y) * stride + 4 * rect.Left;
+                Marshal.Copy(lineBuffer, 0, bitmap.BackBuffer + offset, bufferLength);
             }
         }
 
@@ -327,5 +438,33 @@ namespace XamlAnimatedGif
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            string s = _sourceUri != null ? _sourceUri.ToString() : _sourceStream.ToString();
+            return "GIF: " + s;
+        }
+
+        class GifPalette
+        {
+            private readonly int? _transparencyIndex;
+            private readonly Color[] _colors;
+
+            public GifPalette(int? transparencyIndex, Color[] colors)
+            {
+                _transparencyIndex = transparencyIndex;
+                _colors = colors;
+            }
+
+            public int? TransparencyIndex
+            {
+                get { return _transparencyIndex; }
+            }
+
+            public Color this[int i]
+            {
+                get { return _colors[i]; }
+            }
+        }
     }
 }

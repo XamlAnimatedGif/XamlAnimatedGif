@@ -5,7 +5,7 @@ using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif.Decoding
 {
-    internal class GifLogicalScreenDescriptor
+    internal class GifLogicalScreenDescriptor : IGifRect
     {
         public int Width { get; private set; }
         public int Height { get; private set; }
@@ -40,6 +40,16 @@ namespace XamlAnimatedGif.Decoding
                 bytes[5] == 0
                     ? 0.0
                     : (15 + bytes[5]) / 64.0;
+        }
+
+        int IGifRect.Left
+        {
+            get { return 0; }
+        }
+
+        int IGifRect.Top
+        {
+            get { return 0; }
         }
     }
 }

@@ -5,7 +5,7 @@ using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif.Decoding
 {
-    internal class GifImageDescriptor
+    internal class GifImageDescriptor : IGifRect
     {
         public int Left { get; private set; }
         public int Top { get; private set; }
