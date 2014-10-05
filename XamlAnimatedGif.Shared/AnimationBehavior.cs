@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using System.Windows.Media.Animation;
 
 namespace XamlAnimatedGif
@@ -144,6 +145,18 @@ namespace XamlAnimatedGif
                 var uri = GetSourceUri(image);
                 if (uri != null)
                 {
+                    if (!uri.IsAbsoluteUri)
+                    {
+                        var baseUri = ((IUriContext) image).BaseUri;
+                        if (baseUri != null)
+                        {
+                            uri = new Uri(baseUri, uri);
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
                     InitAnimationAsync(image, uri, GetRepeatBehavior(image));
                 }
             }
@@ -194,7 +207,5 @@ namespace XamlAnimatedGif
             animator.Dispose();
             SetAnimator(image, null);
         }
-
-
     }
 }

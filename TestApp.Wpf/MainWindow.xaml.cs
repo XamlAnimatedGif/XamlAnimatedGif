@@ -20,15 +20,15 @@ namespace TestApp.Wpf
             InitializeComponent();
             _images = new ObservableCollection<string>
                       {
-                          "pack://application:,,,/images/working.gif",
-                          "pack://application:,,,/images/earth.gif",
-                          "pack://application:,,,/images/radar.gif",
-                          "pack://application:,,,/images/bomb.gif",
-                          "pack://application:,,,/images/bomb-once.gif",
-                          "pack://application:,,,/images/nonanimated.gif",
-                          "pack://application:,,,/images/monster.gif",
+                          "images/working.gif",
+                          "images/earth.gif",
+                          "images/radar.gif",
+                          "images/bomb.gif",
+                          "images/bomb-once.gif",
+                          "images/nonanimated.gif",
+                          "images/monster.gif",
                           "pack://siteoforigin:,,,/images/siteoforigin.gif",
-                          "pack://application:,,,/images/partialfirstframe.gif",
+                          "images/partialfirstframe.gif",
                           //"http://i.imgur.com/rCK6xzh.gif"
                       };
             DataContext = this;
