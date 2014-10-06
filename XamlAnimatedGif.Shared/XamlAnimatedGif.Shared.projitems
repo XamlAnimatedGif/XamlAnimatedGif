@@ -37,5 +37,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\BitArrayExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\CollectionExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\StreamExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Properties\VersionInfo.cs" />
   </ItemGroup>
 </Project>

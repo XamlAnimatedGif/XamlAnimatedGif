@@ -193,7 +193,7 @@ namespace XamlAnimatedGif
 #if WPF
             var animation = new Int32AnimationUsingKeyFrames();
 #elif WINRT
-            var animation = new ObjectAnimationUsingKeyFrames();
+            var animation = new ObjectAnimationUsingKeyFrames {EnableDependentAnimation = true};
 #endif
             var totalDuration = TimeSpan.Zero;
             for (int i = 0; i < metadata.Frames.Count; i++)
@@ -501,7 +501,7 @@ namespace XamlAnimatedGif
                 return Task.FromResult<Stream>(File.OpenRead(uri.LocalPath));
             }
 
-            throw new NotSupportedException("Only pack:// and file:// URIs are supported");
+            throw new NotSupportedException("Only pack: and file: URIs are supported");
         }
 #elif WINRT
         private static async Task<Stream> GetStreamFromUriAsync(Uri uri)
@@ -516,7 +516,7 @@ namespace XamlAnimatedGif
                 var file = await StorageFile.GetFileFromPathAsync(uri.LocalPath);
                 return await file.OpenStreamForReadAsync();
             }
-            throw new NotSupportedException("Only ms-appx://, ms-appdata://, ms-resource:// and file:// URIs are supported");
+            throw new NotSupportedException("Only ms-appx:, ms-appdata:, ms-resource: and file: URIs are supported");
         }
 #endif
 

@@ -2,10 +2,10 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("XamlAnimatedGif.Wpf")]
+[assembly: AssemblyTitle("XamlAnimatedGif")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Thomas Levesque")]
 [assembly: AssemblyProduct("XamlAnimatedGif.Wpf")]
 [assembly: AssemblyCopyright("Copyright © Thomas Levesque 2014")]
 [assembly: AssemblyTrademark("")]
@@ -14,8 +14,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 [assembly: Guid("485f2b6e-aa2e-450a-af9e-d556499a858a")]
-
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
-
 [assembly: InternalsVisibleTo("TestApp.Wpf")]

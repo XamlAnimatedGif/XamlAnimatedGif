@@ -1,0 +1,30 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>XamlAnimatedGif</id>
+    <title>XAML Animated GIF</title>
+    <version>1.0.0-alpha</version>
+    <summary>A simple library to display animated GIF images in XAML applications</summary>
+    <description>A simple library to display animated GIF images in XAML applications. Currently supported platforms include WPF (.NET 4.5), Windows 8.1 and Windows Phone 8.1.</description>
+    <authors>Thomas Levesque</authors>
+    <owners>Thomas Levesque</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
+    <projectUrl>https://github.com/thomaslevesque/XamlAnimatedGif</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <releaseNotes>
+      Initial release (alpha)
+    </releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>xaml animated gif winrt wpf windows-phone</tags>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="WindowsBase" targetFramework="net45" />
+      <frameworkAssembly assemblyName="PresentationCore" targetFramework="net45" />
+      <frameworkAssembly assemblyName="PresentationFramework" targetFramework="net45" />
+      <frameworkAssembly assemblyName="System.Xaml" targetFramework="net45"/>
+    </frameworkAssemblies>
+  </metadata>
+  <files>
+    <file src="XamlAnimatedGif.Wpf\bin\Release\XamlAnimatedGif.dll" target="lib\net45" />
+    <file src="XamlAnimatedGif.WinRT\bin\Release\XamlAnimatedGif.dll" target="lib\portable-win81+wpa81" />
+  </files>
+</package>
