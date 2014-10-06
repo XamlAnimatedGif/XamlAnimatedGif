@@ -1,15 +1,13 @@
 XamlAnimatedGif
 ===============
 
-A library to display animated GIF images in XAML apps (WPF, WinRT, Windows Phone). **(Work in progress)**
+A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows Phone 8.1).
 
 This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAnimatedGif) project. I rewrote everything from scratch with a completely different approach, with the following goals in mind:
 
-- Support for all XAML platforms not just WPF
+- Support for all recent XAML platforms, not just WPF
 
-  The WpfAnimatedGif library relied heavily on WPF-specific imaging features, which made it pretty much impossible to adapt to other platforms. XamlAnimatedGif, on the other hand, implements its own GIF decoding (metadata parsing and LZW decompression), which works on any XAML platform, and has as little dependency as possible on platform-specific types.
-
-  *(the current implementation works only for WPF, but support for WinRT and Windows Phone is on the way)*
+  The WpfAnimatedGif library relied heavily on WPF-specific imaging features, which made it pretty much impossible to adapt to other platforms. XamlAnimatedGif, on the other hand, implements its own GIF decoding (metadata parsing and LZW decompression), which works on any XAML platform, and has as little dependency as possible on platform-specific types. The library currently works on WPF (.NET 4.5), Windows 8.1 and Windows Phone 8.1.
 
 - Resource efficiency
 
@@ -20,11 +18,13 @@ This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAni
   One major issue of WpfAnimatedGif was that it accepted an `ImageSource` as its input. The idea was to make it more natural to use, but it also made the code much more complex. To access the frames, it had to obtain a `BitmapDecoder` from the source; depending on the type of the source, this means it had to reload the image from a URL or stream, or use the `Decoder` property directly if the source was a `BitmapFrame`; if the image was from a remote URI and wasn't completely downloaded yet, this case had to be handled as well. It had to handle many different scenarios, which made for very complex and inefficient code, and it still didn't work in all cases... XamlAnimatedGif is much more conservative in what it accepts (either a URL to a local file or app resource, or a stream), which makes it simpler, more maintainable, and more reliable.
 
 **This is still a work in progress and isn't usable in real apps yet**. At this point, it has the following limitations:
-- support for non-WPF XAML platform isn't implemented yet
-- transparency isn't handled
-- images where each frame has its own color table aren't supported
-- frame disposal methods other than the default aren't supported
+- ~~transparency isn't handled~~ *(done)*
+- ~~images where each frame has its own color table aren't supported~~ *(done)*
+- ~~frame disposal methods other than the default aren't supported~~ *(done)*
 - manual control of the animation is limited to play/stop/pause/resume (no previous/next/seek)
+- ~~support for non-WPF XAML platform isn't implemented yet~~ *(added support for Win 8.1 and WP 8.1)*
+- no support for Windows 8.0, Windows Phone 8.0 and Windows Phone Silverlight 8.1 *(might be easy to support)*
+- no support for WPF 4.0 and earlier, because a large part of the code is asynchronous *(might be possible to support 4.0 using Microsoft.Bcl.Async, but 3.5 is definitely not going to be supported)*
 
 Why didn't I just make a new version of WpfAnimatedGif?
 -------------------------------------------------------
