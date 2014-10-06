@@ -1,0 +1,26 @@
+﻿<Page
+    x:Class="TestApp.WinRT.GifTestPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TestApp.WinRT"
+    xmlns:gif="using:XamlAnimatedGif"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Page.Resources>
+        <local:StringToUriConverter x:Key="uriConverter" />
+    </Page.Resources>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+        <Image Name="imgAnim" Grid.Row="0" Stretch="None"
+               gif:AnimationBehavior.SourceUri="{Binding SelectedImage, Converter={StaticResource uriConverter}}"/>
+
+        <ComboBox Grid.Row="1" ItemsSource="{Binding Images}" SelectedItem="{Binding SelectedImage, Mode=TwoWay}"/>
+        
+    </Grid>
+</Page>

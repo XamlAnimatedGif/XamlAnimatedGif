@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>609621a0-e20d-40c9-826a-665e3006b6be</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>TestApp.WinRT</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="$(MSBuildThisFileDirectory)App.xaml">
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)GifTestPage.xaml.cs">
+      <DependentUpon>GifTestPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)StringToUriConverter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)GifTestPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Images\bomb-once.gif" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\bomb.gif" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\earth.gif" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\monster.gif" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\nonanimated.gif" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\partialfirstframe.gif" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\pause.png" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\play.png" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\radar.gif" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\working.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Images\siteoforigin.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>
