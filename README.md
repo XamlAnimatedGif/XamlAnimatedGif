@@ -17,7 +17,7 @@ This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAni
 
   One major issue of WpfAnimatedGif was that it accepted an `ImageSource` as its input. The idea was to make it more natural to use, but it also made the code much more complex. To access the frames, it had to obtain a `BitmapDecoder` from the source; depending on the type of the source, this means it had to reload the image from a URL or stream, or use the `Decoder` property directly if the source was a `BitmapFrame`; if the image was from a remote URI and wasn't completely downloaded yet, this case had to be handled as well. It had to handle many different scenarios, which made for very complex and inefficient code, and it still didn't work in all cases... XamlAnimatedGif is much more conservative in what it accepts (either a URL to a local file or app resource, or a stream), which makes it simpler, more maintainable, and more reliable.
 
-**This is still a work in progress and isn't usable in real apps yet**. At this point, it has the following limitations:
+**This library is still a work in progress**. At this point, it has the following limitations:
 - ~~transparency isn't handled~~ *(done)*
 - ~~images where each frame has its own color table aren't supported~~ *(done)*
 - ~~frame disposal methods other than the default aren't supported~~ *(done)*
