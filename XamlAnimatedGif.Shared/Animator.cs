@@ -228,15 +228,23 @@ namespace XamlAnimatedGif
             return palettes;
         }
 
+        internal Task RenderingTask { get; private set; }
+
+        private static readonly Task _completedTask = Task.FromResult(0);
         private async void RenderFrameAsync(int frameIndex)
         {
             try
             {
-                await RenderFrameCoreAsync(frameIndex);
+                var task = RenderingTask = RenderFrameCoreAsync(frameIndex);
+                await task;
             }
             catch
             {
                 // TODO: call error handler?
+            }
+            finally
+            {
+                RenderingTask = _completedTask;
             }
         }
 
@@ -331,6 +339,9 @@ namespace XamlAnimatedGif
                         case GifFrameDisposalMethod.RestorePrevious:
                             {
                                 Marshal.Copy(_previousBackBuffer, 0, _bitmap.BackBuffer, _previousBackBuffer.Length);
+                                var desc = _metadata.Header.LogicalScreenDescriptor;
+                                var rect = new Int32Rect(0, 0, desc.Width, desc.Height);
+                                _bitmap.AddDirtyRect(rect);
                                 break;
                             }
                         default:
@@ -358,6 +369,7 @@ namespace XamlAnimatedGif
                 int offset = (rect.Top + y) * stride + 4 * rect.Left;
                 Marshal.Copy(lineBuffer, 0, bitmap.BackBuffer + offset, bufferLength);
             }
+            bitmap.AddDirtyRect(new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
         }
 
         private Stream GetIndexStream(GifFrame frame)

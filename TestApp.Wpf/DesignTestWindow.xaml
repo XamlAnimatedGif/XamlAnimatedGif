@@ -1,0 +1,10 @@
+﻿<Window x:Class="TestApp.Wpf.DesignTestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:gif="clr-namespace:XamlAnimatedGif;assembly=XamlAnimatedGif.Wpf"
+        Title="DesignTestWindow" Height="480" Width="680">
+    <Grid>
+        <Image gif:AnimationBehavior.SourceUri="Images/bomb.gif">
+        </Image>
+    </Grid>
+</Window>
