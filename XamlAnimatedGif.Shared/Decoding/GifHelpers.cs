@@ -12,7 +12,7 @@ namespace XamlAnimatedGif.Decoding
         {
             byte[] bytes = new byte[length];
             await stream.ReadAllAsync(bytes, 0, length);
-            return Encoding.ASCII.GetString(bytes);
+            return GetString(bytes);
         }
 
         public static async Task<byte[]> ReadDataBlocksAsync(Stream stream, bool discard)
@@ -53,7 +53,7 @@ namespace XamlAnimatedGif.Decoding
         public static bool IsNetscapeExtension(GifApplicationExtension ext)
         {
             return ext.ApplicationIdentifier == "NETSCAPE"
-                && Encoding.ASCII.GetString(ext.AuthenticationCode) == "2.0";
+                && GetString(ext.AuthenticationCode) == "2.0";
         }
 
         public static ushort GetRepeatCount(GifApplicationExtension ext)
@@ -98,6 +98,16 @@ namespace XamlAnimatedGif.Decoding
         public static Exception UnsupportedVersionException(string version)
         {
             return new GifDecoderException("Unsupported version: " + version);
+        }
+
+        public static string GetString(byte[] bytes)
+        {
+            return GetString(bytes, 0, bytes.Length);
+        }
+
+        public static string GetString(byte[] bytes, int index, int count)
+        {
+            return Encoding.UTF8.GetString(bytes, index, count);
         }
     }
 }

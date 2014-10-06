@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using XamlAnimatedGif.Extensions;
 
@@ -42,7 +41,7 @@ namespace XamlAnimatedGif.Decoding
             if (BlockSize != 11)
                 throw GifHelpers.InvalidBlockSizeException("Application Extension", 11, BlockSize);
 
-            ApplicationIdentifier = Encoding.ASCII.GetString(bytes, 1, 8);
+            ApplicationIdentifier = GifHelpers.GetString(bytes, 1, 8);
             byte[] authCode = new byte[3];
             Array.Copy(bytes, 9, authCode, 0, 3);
             AuthenticationCode = authCode;

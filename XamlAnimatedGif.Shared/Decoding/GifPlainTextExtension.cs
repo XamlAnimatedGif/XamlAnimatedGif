@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using XamlAnimatedGif.Extensions;
 
@@ -63,7 +62,7 @@ namespace XamlAnimatedGif.Decoding
             BackgroundColorIndex = bytes[12];
 
             var dataBytes = await GifHelpers.ReadDataBlocksAsync(stream, false);
-            Text = Encoding.ASCII.GetString(dataBytes);
+            Text = GifHelpers.GetString(dataBytes);
             Extensions = controlExtensions.ToList().AsReadOnly();
         }
     }

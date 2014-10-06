@@ -1,5 +1,4 @@
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace XamlAnimatedGif.Decoding
@@ -32,7 +31,7 @@ namespace XamlAnimatedGif.Decoding
 
             var bytes = await GifHelpers.ReadDataBlocksAsync(stream, false);
             if (bytes != null)
-                Text = Encoding.ASCII.GetString(bytes);
+                Text = GifHelpers.GetString(bytes);
         }
     }
 }

@@ -35,6 +35,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Decompression\BitReader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decompression\LzwDecompressStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\BitArrayExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\CollectionExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\StreamExtensions.cs" />
   </ItemGroup>
 </Project>

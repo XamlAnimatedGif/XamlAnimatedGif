@@ -124,10 +124,11 @@ namespace XamlAnimatedGif.Decompression
             set { throw new NotSupportedException(); }
         }
 
-        public override void Close()
+        protected override void Dispose(bool disposing)
         {
-            base.Close();
-            _reader.Dispose();
+            base.Dispose(disposing);
+            if (disposing)
+                _reader.Dispose();
         }
 
         private void InitCodeTable()

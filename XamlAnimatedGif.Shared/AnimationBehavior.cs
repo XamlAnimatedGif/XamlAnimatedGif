@@ -1,11 +1,19 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
+#if WPF
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+#elif WINRT
+using Windows.ApplicationModel;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Imaging;
+#endif
 
 namespace XamlAnimatedGif
 {
@@ -15,7 +23,9 @@ namespace XamlAnimatedGif
 
         #region SourceUri
 
+#if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
+#endif
         public static Uri GetSourceUri(Image image)
         {
             return (Uri)image.GetValue(SourceUriProperty);
@@ -39,7 +49,9 @@ namespace XamlAnimatedGif
 
         #region SourceStream
 
-
+#if WPF
+        [AttachedPropertyBrowsableForType(typeof(Image))]
+#endif
         public static Stream GetSourceStream(DependencyObject obj)
         {
             return (Stream)obj.GetValue(SourceStreamProperty);
@@ -63,7 +75,9 @@ namespace XamlAnimatedGif
 
         #region RepeatBehavior
 
+#if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
+#endif
         public static RepeatBehavior GetRepeatBehavior(DependencyObject obj)
         {
             return (RepeatBehavior)obj.GetValue(RepeatBehaviorProperty);
@@ -79,7 +93,7 @@ namespace XamlAnimatedGif
               "RepeatBehavior",
               typeof(RepeatBehavior),
               typeof(AnimationBehavior),
-              new UIPropertyMetadata(
+              new PropertyMetadata(
                 default(RepeatBehavior),
                 SourceChanged));
 
@@ -87,6 +101,9 @@ namespace XamlAnimatedGif
 
         #region AutoStart
 
+#if WPF
+        [AttachedPropertyBrowsableForType(typeof(Image))]
+#endif
         public static bool GetAutoStart(DependencyObject obj)
         {
             return (bool)obj.GetValue(AutoStartProperty);
@@ -175,6 +192,58 @@ namespace XamlAnimatedGif
             if (image == null)
                 return;
 
+            InitAnimation(image);
+        }
+
+        private static void AnimateInDesignModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var image = d as Image;
+            if (image == null)
+                return;
+
+            if (IsInDesignMode(image))
+            {
+                bool animateInDesignMode = (bool) e.NewValue;
+                if (animateInDesignMode)
+                {
+                    InitAnimation(image);
+                }
+                else
+                {
+                    ClearAnimatorCore(image);
+                }
+            }
+        }
+
+        private static bool CheckDesignMode(Image image, Uri sourceUri, Stream sourceStream)
+        {
+            if (IsInDesignMode(image) && !GetAnimateInDesignMode(image))
+            {
+                var bmp = new BitmapImage();
+#if WPF
+                bmp.BeginInit();
+#endif
+                if (sourceStream != null)
+                {
+#if WPF
+                    bmp.StreamSource = sourceStream;
+#elif WINRT
+                    bmp.SetSource(sourceStream.AsRandomAccessStream());
+#endif
+                }
+                if (sourceUri != null)
+                    bmp.UriSource = sourceUri;
+#if WPF
+                bmp.EndInit();
+#endif
+                image.Source = bmp;
+                return false;
+            }
+            return true;
+        }
+
+        private static void InitAnimation(Image image)
+        {
             ClearAnimatorCore(image);
 
             var stream = GetSourceStream(image);
@@ -189,7 +258,11 @@ namespace XamlAnimatedGif
                 {
                     if (!uri.IsAbsoluteUri)
                     {
+#if WPF
                         var baseUri = ((IUriContext) image).BaseUri;
+#elif WINRT
+                        var baseUri = image.BaseUri;
+#endif
                         if (baseUri != null)
                         {
                             uri = new Uri(baseUri, uri);
@@ -202,43 +275,6 @@ namespace XamlAnimatedGif
                     InitAnimationAsync(image, uri, GetRepeatBehavior(image));
                 }
             }
-        }
-
-        private static void AnimateInDesignModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var image = d as Image;
-            if (image == null)
-                return;
-
-            if (DesignerProperties.GetIsInDesignMode(image))
-            {
-                bool animateInDesignMode = (bool) e.NewValue;
-                if (animateInDesignMode)
-                {
-                    SourceChanged(image, new DependencyPropertyChangedEventArgs());
-                }
-                else
-                {
-                    ClearAnimatorCore(image);
-                }
-            }
-        }
-
-        private static bool CheckDesignMode(Image image, Uri sourceUri, Stream sourceStream)
-        {
-            if (DesignerProperties.GetIsInDesignMode(image) && !GetAnimateInDesignMode(image))
-            {
-                var bmp = new BitmapImage();
-                bmp.BeginInit();
-                if (sourceStream != null)
-                    bmp.StreamSource = sourceStream;
-                if (sourceUri != null)
-                    bmp.UriSource = sourceUri;
-                bmp.EndInit();
-                image.Source = bmp;
-                return false;
-            }
-            return true;
         }
 
         private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior)
@@ -291,6 +327,17 @@ namespace XamlAnimatedGif
 
             animator.Dispose();
             SetAnimator(image, null);
+        }
+
+        // ReSharper disable once UnusedParameter.Local (used in WPF)
+        private static bool IsInDesignMode(DependencyObject obj)
+        {
+#if WPF
+            return DesignerProperties.GetIsInDesignMode(obj);
+#elif WINRT
+            return DesignMode.DesignModeEnabled;
+#endif
+
         }
     }
 }

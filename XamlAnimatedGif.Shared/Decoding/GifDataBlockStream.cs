@@ -130,10 +130,10 @@ namespace XamlAnimatedGif.Decoding
             set { throw new NotSupportedException(); }
         }
 
-        public override void Close()
+        protected override void Dispose(bool disposing)
         {
-            base.Close();
-            if (!_leaveOpen)
+            base.Dispose(disposing);
+            if (disposing && !_leaveOpen)
                 _baseStream.Dispose();
         }
 

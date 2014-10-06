@@ -38,6 +38,7 @@ namespace XamlAnimatedGif.Extensions
             return buffer[0];
         }
 
+#if WPF
         public static BufferedStream AsBuffered(this Stream stream)
         {
             var bs = stream as BufferedStream;
@@ -45,5 +46,6 @@ namespace XamlAnimatedGif.Extensions
                 return bs;
             return new BufferedStream(stream);
         }
+#endif
     }
 }

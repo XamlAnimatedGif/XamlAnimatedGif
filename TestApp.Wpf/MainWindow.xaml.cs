@@ -93,7 +93,6 @@ namespace TestApp.Wpf
             if (_animator != null)
             {
                 sldPosition.Value = _animator.CurrentFrameIndex;
-                //Debug.WriteLine("CurrentFrameChanged: {0}", sldPosition.Value);
             }
         }
 

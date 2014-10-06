@@ -1,9 +1,6 @@
 ﻿using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using XamlAnimatedGif;
@@ -62,7 +59,6 @@ namespace TestApp.Wpf
             }
         }
 
-
         private static async Task TestLzwDecompressionAsync(string path)
         {
             using (var fileStream = File.OpenRead(path))
@@ -79,54 +75,11 @@ namespace TestApp.Wpf
             }
         }
 
-        static async Task MakeImageAsync(string path)
-        {
-            using (var fileStream = File.OpenRead(path))
-            {
-                var gif = await GifDataStream.ReadAsync(fileStream);
-                var firstFrame = gif.Frames[0];
-                var colorTable = firstFrame.LocalColorTable ?? gif.GlobalColorTable;
-                var colors = colorTable.Select(gc => Color.FromRgb(gc.R, gc.G, gc.B)).ToArray();
-                var palette = new BitmapPalette(colors);
-                var desc = gif.Header.LogicalScreenDescriptor;
-                var image = new WriteableBitmap(
-                    desc.Width, desc.Height,
-                    96, 96,
-                    PixelFormats.Indexed8,
-                    palette);
-
-                fileStream.Seek(firstFrame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                var data = await GifHelpers.ReadDataBlocksAsync(fileStream, false);
-                using (var ms = new MemoryStream(data))
-                using (var lzwStream = new LzwDecompressStream(ms, firstFrame.ImageData.LzwMinimumCodeSize))
-                using (var indexStream = new MemoryStream())
-                {
-                    await lzwStream.CopyToAsync(indexStream);
-
-                    var pixelData = indexStream.ToArray();
-                    image.Lock();
-
-                    var fd = firstFrame.Descriptor;
-                    var rect = new Int32Rect(fd.Left, fd.Top, fd.Width, fd.Height);
-                    image.WritePixels(rect, pixelData, fd.Width, 0);
-                    image.AddDirtyRect(rect);
-                    image.Unlock();
-
-                    var encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create(image));
-                    using (var fs = File.OpenWrite(path + ".png"))
-                    {
-                        encoder.Save(fs);
-                    }
-                }
-            }
-        }
-
         static async Task DumpFramesAsync(string path)
         {
             using (var fileStream = File.OpenRead(path))
             {
-                using (var animator = await Animator.CreateAsync(fileStream, default(RepeatBehavior)))
+                using (var animator = await Animator.CreateAsync(fileStream))
                 {
                     for (int i = 0; i < animator.FrameCount; i++)
                     {
