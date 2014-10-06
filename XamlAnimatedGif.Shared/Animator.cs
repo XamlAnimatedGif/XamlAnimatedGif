@@ -21,6 +21,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media.Animation;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Resources.Core;
 #endif
 
 using XamlAnimatedGif.Decoding;
@@ -506,10 +507,20 @@ namespace XamlAnimatedGif
 #elif WINRT
         private static async Task<Stream> GetStreamFromUriAsync(Uri uri)
         {
-            if (uri.Scheme == "ms-appx" || uri.Scheme == "ms-appdata" || uri.Scheme == "ms-resource")
+            if (uri.Scheme == "ms-appx" || uri.Scheme == "ms-appdata")
             {
                 var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
                 return await file.OpenStreamForReadAsync();
+            }
+            if (uri.Scheme == "ms-resource")
+            {
+                var candidate = ResourceManager.Current.MainResourceMap.GetValue(uri.LocalPath);
+                if (candidate != null && candidate.IsMatch)
+                {
+                    var file = await candidate.GetValueAsFileAsync();
+                    return await file.OpenStreamForReadAsync();
+                }
+                throw new Exception("Resource not found");
             }
             if (uri.Scheme == "file")
             {
