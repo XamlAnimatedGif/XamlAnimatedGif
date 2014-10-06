@@ -3,6 +3,15 @@ XamlAnimatedGif
 
 A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows Phone 8.1).
 
+Basic usage:
+
+```xml
+<Image gif:AnimationBehavior.SourceUri="/Images/animated.gif" />
+```
+
+About this project
+==================
+
 This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAnimatedGif) project. I rewrote everything from scratch with a completely different approach, with the following goals in mind:
 
 - Support for all recent XAML platforms, not just WPF
