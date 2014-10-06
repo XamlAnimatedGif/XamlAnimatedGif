@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -22,6 +23,7 @@ namespace XamlAnimatedGif
         private readonly Stream _sourceStream;
         private readonly Uri _sourceUri;
         private readonly GifDataStream _metadata;
+        private readonly Image _image;
         private readonly Dictionary<int, GifPalette> _palettes;
         private readonly WriteableBitmap _bitmap;
         private readonly byte[] _previousBackBuffer;
@@ -29,23 +31,24 @@ namespace XamlAnimatedGif
 
         #region Constructor and factory methods
 
-        private Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior)
+        private Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior, Image image)
         {
             _sourceStream = sourceStream;
             _sourceUri = sourceUri;
             _metadata = metadata;
+            _image = image;
             _palettes = CreatePalettes(metadata);
             _bitmap = CreateBitmap(metadata);
             _previousBackBuffer = new byte[metadata.Header.LogicalScreenDescriptor.Height * _bitmap.BackBufferStride];
             _storyboard = CreateStoryboard(metadata, repeatBehavior);
         }
 
-        internal static async Task<Animator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior)
+        internal static async Task<Animator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior), Image image = null)
         {
             var stream = GetStreamFromUri(sourceUri);
             try
             {
-                return await CreateAsync(stream, sourceUri, repeatBehavior);
+                return await CreateAsync(stream, sourceUri, repeatBehavior, image);
             }
             catch
             {
@@ -55,16 +58,16 @@ namespace XamlAnimatedGif
             }
         }
 
-        internal static Task<Animator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior)
+        internal static Task<Animator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior = default(RepeatBehavior), Image image = null)
         {
-            return CreateAsync(sourceStream, null, repeatBehavior);
+            return CreateAsync(sourceStream, null, repeatBehavior, image);
         }
 
-        internal static async Task<Animator> CreateAsync(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior)
+        private static async Task<Animator> CreateAsync(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior, Image image)
         {
             var stream = sourceStream.AsBuffered();
             var metadata = await GifDataStream.ReadAsync(stream);
-            return new Animator(stream, sourceUri, metadata, repeatBehavior);
+            return new Animator(stream, sourceUri, metadata, repeatBehavior, image);
         }
 
         #endregion
@@ -238,9 +241,10 @@ namespace XamlAnimatedGif
                 var task = RenderingTask = RenderFrameCoreAsync(frameIndex);
                 await task;
             }
-            catch
+            catch(Exception ex)
             {
-                // TODO: call error handler?
+                object sender = (object) _image ?? this;
+                AnimationBehavior.OnError(sender, ex, AnimationErrorKind.Rendering);
             }
             finally
             {

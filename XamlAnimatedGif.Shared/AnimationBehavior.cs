@@ -151,6 +151,22 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region Error
+
+        public static event EventHandler<AnimationErrorEventArgs> Error;
+
+        internal static void OnError(object sender, Exception exception, AnimationErrorKind kind)
+        {
+            EventHandler<AnimationErrorEventArgs> handler = Error;
+            if (handler != null)
+            {
+                var e = new AnimationErrorEventArgs(exception, kind);
+                handler(sender, e);
+            }
+        }
+
+        #endregion
+
         #endregion
 
         private static void SourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
@@ -235,9 +251,9 @@ namespace XamlAnimatedGif
                 var animator = await Animator.CreateAsync(sourceUri, repeatBehavior);
                 SetAnimatorCore(image, animator);
             }
-            catch
+            catch(Exception ex)
             {
-                // TODO: call an error handler?
+                OnError(image, ex, AnimationErrorKind.Loading);
             }
         }
 
@@ -251,9 +267,9 @@ namespace XamlAnimatedGif
                 var animator = await Animator.CreateAsync(stream, repeatBehavior);
                 SetAnimatorCore(image, animator);
             }
-            catch
+            catch(Exception ex)
             {
-                // TODO: call an error handler?
+                OnError(image, ex, AnimationErrorKind.Loading);
             }
         }
 

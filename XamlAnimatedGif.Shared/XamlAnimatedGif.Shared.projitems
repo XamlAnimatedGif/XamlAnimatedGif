@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AnimationBehavior.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AnimationErrorEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Animator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifApplicationExtension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifBlock.cs" />
