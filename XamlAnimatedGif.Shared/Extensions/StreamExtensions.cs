@@ -38,14 +38,17 @@ namespace XamlAnimatedGif.Extensions
             return buffer[0];
         }
 
-#if WPF
-        public static BufferedStream AsBuffered(this Stream stream)
+        public static Stream AsBuffered(this Stream stream)
         {
+#if WPF
             var bs = stream as BufferedStream;
             if (bs != null)
                 return bs;
             return new BufferedStream(stream);
-        }
+#elif WINRT
+            // WinRT stream wrapper is already buffered
+            return stream;
 #endif
+        }
     }
 }

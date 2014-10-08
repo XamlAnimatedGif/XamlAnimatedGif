@@ -12,7 +12,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Resources;
 using System.IO.Packaging;
 using System.Runtime.InteropServices;
-using XamlAnimatedGif.Extensions;
 #elif WINRT
 using Windows.Storage;
 using Windows.UI;
@@ -24,6 +23,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel.Resources.Core;
 #endif
 
+using XamlAnimatedGif.Extensions;
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
 
@@ -80,8 +80,9 @@ namespace XamlAnimatedGif
 
         private static async Task<Animator> CreateAsync(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior, Image image)
         {
-            var metadata = await GifDataStream.ReadAsync(sourceStream);
-            return new Animator(sourceStream, sourceUri, metadata, repeatBehavior, image);
+            var stream = sourceStream.AsBuffered();
+            var metadata = await GifDataStream.ReadAsync(stream);
+            return new Animator(stream, sourceUri, metadata, repeatBehavior, image);
         }
 
         #endregion
