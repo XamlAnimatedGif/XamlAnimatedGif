@@ -80,14 +80,8 @@ namespace XamlAnimatedGif
 
         private static async Task<Animator> CreateAsync(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior, Image image)
         {
-#if WPF
-            var stream = sourceStream.AsBuffered();
-#else
-            #warning TODO: buffer the stream
-            var stream = sourceStream;
-#endif
-            var metadata = await GifDataStream.ReadAsync(stream);
-            return new Animator(stream, sourceUri, metadata, repeatBehavior, image);
+            var metadata = await GifDataStream.ReadAsync(sourceStream);
+            return new Animator(sourceStream, sourceUri, metadata, repeatBehavior, image);
         }
 
         #endregion
@@ -514,7 +508,9 @@ namespace XamlAnimatedGif
             }
             if (uri.Scheme == "ms-resource")
             {
-                var candidate = ResourceManager.Current.MainResourceMap.GetValue(uri.LocalPath);
+                var rm = ResourceManager.Current;
+                var context = ResourceContext.GetForCurrentView();
+                var candidate = rm.MainResourceMap.GetValue(uri.LocalPath, context);
                 if (candidate != null && candidate.IsMatch)
                 {
                     var file = await candidate.GetValueAsFileAsync();
