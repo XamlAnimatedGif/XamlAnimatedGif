@@ -20,7 +20,16 @@
         <Image Name="imgAnim" Grid.Row="0" Stretch="None"
                gif:AnimationBehavior.SourceUri="{Binding SelectedImage, Converter={StaticResource uriConverter}}"/>
 
-        <ComboBox Grid.Row="1" ItemsSource="{Binding Images}" SelectedItem="{Binding SelectedImage, Mode=TwoWay}"/>
-        
+        <Border Grid.Row="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ComboBox ItemsSource="{Binding Images}" SelectedItem="{Binding SelectedImage, Mode=TwoWay}"/>
+                <Button Name="btnBrowse" Content="..." Grid.Column="1" Click="BtnBrowse_OnClick" />
+            </Grid>
+            
+        </Border>
     </Grid>
 </Page>

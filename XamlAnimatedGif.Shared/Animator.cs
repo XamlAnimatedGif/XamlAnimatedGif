@@ -305,64 +305,77 @@ namespace XamlAnimatedGif
         }
 
         private GifFrame _previousFrame;
+        private bool _isRendering;
         private async Task RenderFrameCoreAsync(int frameIndex)
         {
             if (frameIndex < 0)
                 return;
 
-            var frame = _metadata.Frames[frameIndex];
-            var desc = frame.Descriptor;
-            using (var indexStream = GetIndexStream(frame))
+            if (_isRendering)
+                return;
+
+            _isRendering = true;
+
+            try
             {
-#if WPF
-                _bitmap.Lock();
-                try
+                var frame = _metadata.Frames[frameIndex];
+                var desc = frame.Descriptor;
+                using (var indexStream = GetIndexStream(frame))
                 {
-#endif
-                    DisposePreviousFrame(frame);
-
-                    int bufferLength = 4 * desc.Width;
-                    byte[] indexBuffer = new byte[desc.Width];
-                    byte[] lineBuffer = new byte[bufferLength];
-
-                    var palette = _palettes[frameIndex];
-                    int transparencyIndex = palette.TransparencyIndex ?? -1;
-                    for (int y = 0; y < desc.Height; y++)
+#if WPF
+                    _bitmap.Lock();
+                    try
                     {
-                        int read = await indexStream.ReadAsync(indexBuffer, 0, desc.Width);
-                        if (read != desc.Width)
-                            throw new EndOfStreamException();
+#endif
+                        DisposePreviousFrame(frame);
 
-                        int offset = (desc.Top + y) * _stride + desc.Left * 4;
+                        int bufferLength = 4 * desc.Width;
+                        byte[] indexBuffer = new byte[desc.Width];
+                        byte[] lineBuffer = new byte[bufferLength];
 
-                        if (transparencyIndex > 0)
+                        var palette = _palettes[frameIndex];
+                        int transparencyIndex = palette.TransparencyIndex ?? -1;
+                        for (int y = 0; y < desc.Height; y++)
                         {
-                            CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
-                        }
+                            int read = await indexStream.ReadAsync(indexBuffer, 0, desc.Width);
+                            if (read != desc.Width)
+                                throw new EndOfStreamException();
 
-                        for (int x = 0; x < desc.Width; x++)
-                        {
-                            byte index = indexBuffer[x];
-                            int i = 4 * x;
-                            if (index != transparencyIndex)
+                            int offset = (desc.Top + y) * _stride + desc.Left * 4;
+
+                            if (transparencyIndex > 0)
                             {
-                                WriteColor(lineBuffer, palette[index], i);
+                                CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
                             }
+
+                            for (int x = 0; x < desc.Width; x++)
+                            {
+                                byte index = indexBuffer[x];
+                                int i = 4 * x;
+                                if (index != transparencyIndex)
+                                {
+                                    WriteColor(lineBuffer, palette[index], i);
+                                }
+                            }
+                            CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
                         }
-                        CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
-                    }
 #if WPF
-                    var rect = new Int32Rect(desc.Left, desc.Top, desc.Width, desc.Height);
-                    _bitmap.AddDirtyRect(rect);
-                }
-                finally
-                {
-                    _bitmap.Unlock();
-                }
+                        var rect = new Int32Rect(desc.Left, desc.Top, desc.Width, desc.Height);
+                        _bitmap.AddDirtyRect(rect);
+                    }
+                    finally
+                    {
+                        _bitmap.Unlock();
+                    }
 #elif WINRT
                 _bitmap.Invalidate();
 #endif
-                _previousFrame = frame;
+                    _previousFrame = frame;
+                }
+            }
+            finally
+            {
+                _isRendering = false;
             }
         }
 
