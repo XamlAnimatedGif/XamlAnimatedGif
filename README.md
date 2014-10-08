@@ -10,7 +10,7 @@ Basic usage:
 ```
 
 About this project
-==================
+------------------
 
 This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAnimatedGif) project. I rewrote everything from scratch with a completely different approach, with the following goals in mind:
 
