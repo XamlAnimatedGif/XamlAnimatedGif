@@ -335,7 +335,12 @@ namespace XamlAnimatedGif
 
                         var palette = _palettes[frameIndex];
                         int transparencyIndex = palette.TransparencyIndex ?? -1;
-                        for (int y = 0; y < desc.Height; y++)
+
+                        var rows = frame.Descriptor.Interlace
+                            ? InterlacedRows(frame.Descriptor.Height)
+                            : NormalRows(frame.Descriptor.Height);
+
+                        foreach (int y in rows)
                         {
                             int read = await indexStream.ReadAsync(indexBuffer, 0, desc.Width);
                             if (read != desc.Width)
@@ -376,6 +381,38 @@ namespace XamlAnimatedGif
             finally
             {
                 _isRendering = false;
+            }
+        }
+
+        private static IEnumerable<int> NormalRows(int height)
+        {
+            return Enumerable.Range(0, height);
+        }
+
+        private static IEnumerable<int> InterlacedRows(int height)
+        {
+            /*
+             * 4 passes:
+             * Pass 1: rows 0, 8, 16, 24...
+             * Pass 2: rows 4, 12, 20, 28...
+             * Pass 3: rows 2, 6, 10, 14...
+             * Pass 4: rows 1, 3, 5, 7...
+             * */
+            var passes = new[]
+            {
+                new { Start = 0, Step = 8 },
+                new { Start = 4, Step = 8 },
+                new { Start = 2, Step = 4 },
+                new { Start = 1, Step = 2 }
+            };
+            foreach (var pass in passes)
+            {
+                int y = pass.Start;
+                while (y < height)
+                {
+                    yield return y;
+                    y += pass.Step;
+                }
             }
         }
 
