@@ -17,6 +17,7 @@ using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media.Animation;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -29,6 +30,9 @@ using XamlAnimatedGif.Decompression;
 
 namespace XamlAnimatedGif
 {
+#if WINRT
+    [Bindable]
+#endif
     public class Animator : DependencyObject, IDisposable
     {
         private readonly Stream _sourceStream;
