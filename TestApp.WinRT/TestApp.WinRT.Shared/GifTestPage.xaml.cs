@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using Windows.ApplicationModel.Activation;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
@@ -59,6 +61,27 @@ namespace TestApp.WinRT
             }
         }
 
+#if WINDOWS_PHONE_APP
+        private void BtnBrowse_OnClick(object sender, RoutedEventArgs e)
+        {
+            var picker = new FileOpenPicker();
+            picker.FileTypeFilter.Add(".gif");
+            picker.ContinuationData["context"] = "addGifImage";
+            picker.PickSingleFileAndContinue();
+        }
+
+        public void PickFileContinuation(FileOpenPickerContinuationEventArgs args)
+        {
+            var file = args.Files.FirstOrDefault();
+            if (file == null)
+                return;
+
+            StorageApplicationPermissions.FutureAccessList.Add(file);
+            string uriString = new Uri(file.Path).AbsoluteUri;
+            Images.Add(uriString);
+            SelectedImage = uriString;
+        }
+#else
         private async void BtnBrowse_OnClick(object sender, RoutedEventArgs e)
         {
             var picker = new FileOpenPicker();
@@ -68,7 +91,7 @@ namespace TestApp.WinRT
             string uriString = new Uri(file.Path).AbsoluteUri;
             Images.Add(uriString);
             SelectedImage = uriString;
-            
         }
+#endif
     }
 }

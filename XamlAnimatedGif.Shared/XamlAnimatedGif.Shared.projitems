@@ -17,7 +17,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifBlockKind.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifColor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifCommentExtension.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDataBlockStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDataStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDecoderException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifExtension.cs" />
@@ -38,5 +37,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\CollectionExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\StreamExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\VersionInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TimingManager.cs" />
   </ItemGroup>
 </Project>

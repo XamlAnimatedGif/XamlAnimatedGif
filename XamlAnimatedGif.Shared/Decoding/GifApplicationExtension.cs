@@ -27,7 +27,7 @@ namespace XamlAnimatedGif.Decoding
         internal static async Task<GifApplicationExtension> ReadAsync(Stream stream)
         {
             var ext = new GifApplicationExtension();
-            await ext.ReadInternalAsync(stream);
+            await ext.ReadInternalAsync(stream).ConfigureAwait(false);
             return ext;
         }
 
@@ -36,7 +36,7 @@ namespace XamlAnimatedGif.Decoding
             // Note: at this point, the label (0xFF) has already been read
 
             byte[] bytes = new byte[12];
-            await stream.ReadAllAsync(bytes, 0, bytes.Length);
+            await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
             BlockSize = bytes[0]; // should always be 11
             if (BlockSize != 11)
                 throw GifHelpers.InvalidBlockSizeException("Application Extension", 11, BlockSize);
@@ -45,7 +45,7 @@ namespace XamlAnimatedGif.Decoding
             byte[] authCode = new byte[3];
             Array.Copy(bytes, 9, authCode, 0, 3);
             AuthenticationCode = authCode;
-            Data = await GifHelpers.ReadDataBlocksAsync(stream, false);
+            Data = await GifHelpers.ReadDataBlocksAsync(stream, false).ConfigureAwait(false);
         }
     }
 }

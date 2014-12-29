@@ -23,19 +23,19 @@ namespace XamlAnimatedGif.Decoding
         internal static async Task<GifDataStream> ReadAsync(Stream stream)
         {
             var file = new GifDataStream();
-            await file.ReadInternalAsync(stream);
+            await file.ReadInternalAsync(stream).ConfigureAwait(false);
             return file;
         }
 
         private async Task ReadInternalAsync(Stream stream)
         {
-            Header = await GifHeader.ReadAsync(stream);
+            Header = await GifHeader.ReadAsync(stream).ConfigureAwait(false);
 
             if (Header.LogicalScreenDescriptor.HasGlobalColorTable)
             {
-                GlobalColorTable = await GifHelpers.ReadColorTableAsync(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize);
+                GlobalColorTable = await GifHelpers.ReadColorTableAsync(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize).ConfigureAwait(false);
             }
-            await ReadFramesAsync(stream);
+            await ReadFramesAsync(stream).ConfigureAwait(false);
 
             var netscapeExtension =
                             Extensions
@@ -54,7 +54,7 @@ namespace XamlAnimatedGif.Decoding
             List<GifExtension> specialExtensions = new List<GifExtension>();
             while (true)
             {
-                var block = await GifBlock.ReadAsync(stream, controlExtensions);
+                var block = await GifBlock.ReadAsync(stream, controlExtensions).ConfigureAwait(false);
 
                 if (block.Kind == GifBlockKind.GraphicRendering)
                     controlExtensions = new List<GifExtension>();

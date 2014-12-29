@@ -21,7 +21,7 @@ namespace XamlAnimatedGif.Decoding
         internal static async Task<GifCommentExtension> ReadAsync(Stream stream)
         {
             var comment = new GifCommentExtension();
-            await comment.ReadInternalAsync(stream);
+            await comment.ReadInternalAsync(stream).ConfigureAwait(false);
             return comment;
         }
 
@@ -29,7 +29,7 @@ namespace XamlAnimatedGif.Decoding
         {
             // Note: at this point, the label (0xFE) has already been read
 
-            var bytes = await GifHelpers.ReadDataBlocksAsync(stream, false);
+            var bytes = await GifHelpers.ReadDataBlocksAsync(stream, false).ConfigureAwait(false);
             if (bytes != null)
                 Text = GifHelpers.GetString(bytes);
         }

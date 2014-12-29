@@ -15,7 +15,7 @@ namespace XamlAnimatedGif.Decoding
         internal static async Task<GifImageData> ReadAsync(Stream stream)
         {
             var imgData = new GifImageData();
-            await imgData.ReadInternalAsync(stream);
+            await imgData.ReadInternalAsync(stream).ConfigureAwait(false);
             return imgData;
         }
 
@@ -23,7 +23,7 @@ namespace XamlAnimatedGif.Decoding
         {
             LzwMinimumCodeSize = (byte)stream.ReadByte();
             CompressedDataStartOffset = stream.Position;
-            await GifHelpers.ReadDataBlocksAsync(stream, true);
+            await GifHelpers.ReadDataBlocksAsync(stream, true).ConfigureAwait(false);
         }
     }
 }

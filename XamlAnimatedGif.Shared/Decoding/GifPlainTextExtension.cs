@@ -37,7 +37,7 @@ namespace XamlAnimatedGif.Decoding
         internal new static async Task<GifPlainTextExtension> ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             var plainText = new GifPlainTextExtension();
-            await plainText.ReadInternalAsync(stream, controlExtensions);
+            await plainText.ReadInternalAsync(stream, controlExtensions).ConfigureAwait(false);
             return plainText;
         }
 
@@ -46,7 +46,7 @@ namespace XamlAnimatedGif.Decoding
             // Note: at this point, the label (0x01) has already been read
 
             byte[] bytes = new byte[13];
-            await stream.ReadAllAsync(bytes,0, bytes.Length);
+            await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
 
             BlockSize = bytes[0];
             if (BlockSize != 12)
@@ -61,7 +61,7 @@ namespace XamlAnimatedGif.Decoding
             ForegroundColorIndex = bytes[11];
             BackgroundColorIndex = bytes[12];
 
-            var dataBytes = await GifHelpers.ReadDataBlocksAsync(stream, false);
+            var dataBytes = await GifHelpers.ReadDataBlocksAsync(stream, false).ConfigureAwait(false);
             Text = GifHelpers.GetString(dataBytes);
             Extensions = controlExtensions.ToList().AsReadOnly();
         }

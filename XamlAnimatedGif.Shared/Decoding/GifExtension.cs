@@ -18,13 +18,13 @@ namespace XamlAnimatedGif.Decoding
             switch (label)
             {
                 case GifGraphicControlExtension.ExtensionLabel:
-                    return await GifGraphicControlExtension.ReadAsync(stream);
+                    return await GifGraphicControlExtension.ReadAsync(stream).ConfigureAwait(false);
                 case GifCommentExtension.ExtensionLabel:
-                    return await GifCommentExtension.ReadAsync(stream);
+                    return await GifCommentExtension.ReadAsync(stream).ConfigureAwait(false);
                 case GifPlainTextExtension.ExtensionLabel:
-                    return await GifPlainTextExtension.ReadAsync(stream, controlExtensions);
+                    return await GifPlainTextExtension.ReadAsync(stream, controlExtensions).ConfigureAwait(false);
                 case GifApplicationExtension.ExtensionLabel:
-                    return await GifApplicationExtension.ReadAsync(stream);
+                    return await GifApplicationExtension.ReadAsync(stream).ConfigureAwait(false);
                 default:
                     throw GifHelpers.UnknownExtensionTypeException(label);
             }

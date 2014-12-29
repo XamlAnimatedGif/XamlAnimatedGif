@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using Buffer = System.Buffer;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using XamlAnimatedGif.Extensions;
+using System.Diagnostics;
 
 namespace XamlAnimatedGif.Decompression
 {
@@ -12,20 +12,16 @@ namespace XamlAnimatedGif.Decompression
     {
         private const int MaxCodeLength = 12;
         private readonly BitReader _reader;
-        private readonly int _minimumCodeLength;
-        private int _codeLength;
-        private short _prevCode;
-        private List<Sequence> _codeTable;
+        private readonly CodeTable _codeTable;
+        private int _prevCode;
         private byte[] _remainingBytes;
         private bool _endOfStream;
 
-        public LzwDecompressStream(Stream compressedStream, int minimumCodeLength, bool leaveOpen = false)
+        public LzwDecompressStream(byte[] compressedBuffer, int minimumCodeLength)
         {
-            _reader = new BitReader(compressedStream, leaveOpen);
-            _minimumCodeLength = minimumCodeLength;
-            InitCodeTable();
+            _reader = new BitReader(compressedBuffer);
+            _codeTable = new CodeTable(minimumCodeLength);
         }
-
         public override void Flush()
         {
         }
@@ -58,32 +54,8 @@ namespace XamlAnimatedGif.Decompression
 
             while (read < count)
             {
-                var bits = _reader.ReadBits(_codeLength);
-                short code = bits.ToInt16();
-                if (!ProcessCode(code, buffer, offset, count, ref read))
-                {
-                    _endOfStream = true;
-                    break;
-                }
-            }
-            return read;
-        }
-
-        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            ValidateReadArgs(buffer, offset, count);
-
-            if (_endOfStream)
-                return 0;
-
-            int read = 0;
-
-            FlushRemainingBytes(buffer, offset, count, ref read);
-
-            while (read < count)
-            {
-                var bits = await _reader.ReadBitsAsync(_codeLength, cancellationToken);
-                short code = bits.ToInt16();
+                int code = _reader.ReadBits(_codeTable.CodeLength);
+                
                 if (!ProcessCode(code, buffer, offset, count, ref read))
                 {
                     _endOfStream = true;
@@ -124,37 +96,13 @@ namespace XamlAnimatedGif.Decompression
             set { throw new NotSupportedException(); }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            if (disposing)
-                _reader.Dispose();
-        }
-
         private void InitCodeTable()
         {
-            int initialEntries = 1 << _minimumCodeLength;
-            _codeTable = Enumerable.Range(0, initialEntries)
-                .Select(i => new Sequence(new[] { (byte)i }))
-                .ToList();
-            _codeTable.Add(Sequence.ClearCode);
-            _codeTable.Add(Sequence.StopCode);
-            _codeLength = _minimumCodeLength + 1;
+            _codeTable.Reset();
             _prevCode = -1;
         }
 
-        static int GetMinBitLength(int value)
-        {
-            int length = 0;
-            do
-            {
-                length++;
-                value = value >> 1;
-            } while (value != 0);
-            return length;
-        }
-
-        private byte[] CopySequenceToBuffer(byte[] sequence, byte[] buffer, int offset, int count, ref int read)
+        private static byte[] CopySequenceToBuffer(byte[] sequence, byte[] buffer, int offset, int count, ref int read)
         {
             int bytesToRead = Math.Min(sequence.Length, count - read);
             Buffer.BlockCopy(sequence, 0, buffer, offset + read, bytesToRead);
@@ -169,13 +117,6 @@ namespace XamlAnimatedGif.Decompression
             return remainingBytes;
         }
 
-        private void AppendToCodeTable(Sequence sequence)
-        {
-            _codeTable.Add(sequence);
-            if (_codeLength < GetMinBitLength(_codeTable.Count) && _codeLength < MaxCodeLength)
-                _codeLength++;
-        }
-
         private void FlushRemainingBytes(byte[] buffer, int offset, int count, ref int read)
         {
             // If we read too many bytes last time, copy them first;
@@ -183,7 +124,8 @@ namespace XamlAnimatedGif.Decompression
                 _remainingBytes = CopySequenceToBuffer(_remainingBytes, buffer, offset, count, ref read);
         }
 
-        private void ValidateReadArgs(byte[] buffer, int offset, int count)
+        [Conditional("DISABLED")]
+        private static void ValidateReadArgs(byte[] buffer, int offset, int count)
         {
             if (buffer == null) throw new ArgumentNullException("buffer");
             if (offset < 0)
@@ -194,7 +136,7 @@ namespace XamlAnimatedGif.Decompression
                 throw new ArgumentException("Buffer is to small to receive the requested data");
         }
 
-        private bool ProcessCode(short code, byte[] buffer, int offset, int count, ref int read)
+        private bool ProcessCode(int code, byte[] buffer, int offset, int count, ref int read)
         {
             if (code < _codeTable.Count)
             {
@@ -213,14 +155,14 @@ namespace XamlAnimatedGif.Decompression
                 {
                     var prev = _codeTable[_prevCode];
                     var newSequence = prev.Append(sequence.Bytes[0]);
-                    AppendToCodeTable(newSequence);
+                    _codeTable.Add(newSequence);
                 }
             }
             else
             {
                 var prev = _codeTable[_prevCode];
                 var newSequence = prev.Append(prev.Bytes[0]);
-                AppendToCodeTable(newSequence);
+                _codeTable.Add(newSequence);
                 _remainingBytes = CopySequenceToBuffer(newSequence.Bytes, buffer, offset, count, ref read);
             }
             _prevCode = code;
@@ -236,7 +178,6 @@ namespace XamlAnimatedGif.Decompression
             public Sequence(byte[] bytes)
                 : this()
             {
-                if (bytes == null) throw new ArgumentNullException("bytes");
                 _bytes = bytes;
             }
 
@@ -276,12 +217,68 @@ namespace XamlAnimatedGif.Decompression
 
             public Sequence Append(byte b)
             {
-                if (_bytes == null)
-                    throw new InvalidOperationException("Can't append to clear code or stop code");
                 var bytes = new byte[_bytes.Length + 1];
                 _bytes.CopyTo(bytes, 0);
                 bytes[_bytes.Length] = b;
                 return new Sequence(bytes);
+            }
+        }
+
+        class CodeTable
+        {
+            private readonly int _minimumCodeLength;
+            private readonly Sequence[] _table;
+            private int _count;
+            private int _codeLength;
+
+            public CodeTable(int minimumCodeLength)
+            {
+                _minimumCodeLength = minimumCodeLength;
+                _codeLength = _minimumCodeLength + 1;
+                int initialEntries = 1 << minimumCodeLength;
+                _table = new Sequence[1 << MaxCodeLength];
+                for (int i = 0; i < initialEntries; i++)
+                {
+                    _table[_count++] = new Sequence(new[] {(byte) i});
+                }
+                Add(Sequence.ClearCode);
+                Add(Sequence.StopCode);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset()
+            {
+                _count = (1 << _minimumCodeLength) + 2;
+                _codeLength = _minimumCodeLength + 1;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Add(Sequence sequence)
+            {
+                _table[_count++] = sequence;
+                if ((_count & (_count - 1)) == 0 && _codeLength < MaxCodeLength)
+                    _codeLength++;
+            }
+
+            public Sequence this[int index]
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get
+                {
+                    return _table[index];
+                }
+            }
+
+            public int Count
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get { return _count; }
+            }
+
+            public int CodeLength
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get { return _codeLength; }
             }
         }
     }

@@ -1,107 +1,56 @@
-﻿using System;
-using System.Collections;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace XamlAnimatedGif.Decompression
+﻿namespace XamlAnimatedGif.Decompression
 {
-    class BitReader : IDisposable
+    class BitReader
     {
-        private readonly Stream _stream;
-        private readonly bool _leaveOpen;
-
         private readonly byte[] _buffer;
-        private int _bitPositionInBuffer;
-        private int _bufferLengthInBits;
 
-        public BitReader(byte[] bytes)
-            : this(new MemoryStream(bytes))
+        public BitReader(byte[] buffer)
         {
+            _buffer = buffer;
         }
 
-        public BitReader(Stream stream, bool leaveOpen = false)
+        private int _bytePosition = -1;
+        private int _bitPosition;
+        private int _currentValue = -1;
+        public int ReadBits(int bitCount)
         {
-            _stream = stream;
-            _leaveOpen = leaveOpen;
-            _buffer = new byte[4096];
-        }
+            // The following code assumes it's running on a little-endian architecture.
+            // It's probably safe to assume it will always be the case, because:
+            // - Windows only supports little-endian architectures: x86/x64 and ARM (which supports
+            //   both endiannesses, but Windows on ARM is always in little-endian mode)
+            // - No platforms other than Windows support XAML applications
+            // If the situation changes, this code will have to be updated.
 
-        public BitArray ReadBits(int count)
-        {
-            var result = new BitArray(count);
-            int n = 0;
-            while (n < count)
+            if (_bytePosition == -1)
             {
-                // If the buffer is empty, fill it
-                if (_bitPositionInBuffer >= _bufferLengthInBits)
-                {
-                    int len = _stream.Read(_buffer, 0, _buffer.Length);
-                    if (len == 0)
-                        throw new EndOfStreamException();
-                    _bufferLengthInBits = len * 8;
-                    _bitPositionInBuffer = 0;
-                }
-
-                ReadBitsFromBuffer(result, count, ref n);
+                _bytePosition = 0;
+                _bitPosition = 0;
+                _currentValue = ReadInt32(); //BitConverter.ToInt32(_buffer, _bytePosition);
             }
-            return result;
-        }
-
-        public async Task<BitArray> ReadBitsAsync(int count, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var result = new BitArray(count);
-            int n = 0;
-            while (n < count)
+            else if (bitCount > 32 - _bitPosition)
             {
-                // If the buffer is empty, fill it
-                if (_bitPositionInBuffer >= _bufferLengthInBits)
-                {
-                    int len = await _stream.ReadAsync(_buffer, 0, _buffer.Length, cancellationToken);
-                    if (len == 0)
-                        throw new EndOfStreamException();
-                    _bufferLengthInBits = len * 8;
-                    _bitPositionInBuffer = 0;
-                }
-
-                ReadBitsFromBuffer(result, count, ref n);
+                int n = _bitPosition >> 3;
+                _bytePosition += n;
+                _bitPosition &= 0x07;
+                _currentValue = ReadInt32() >> _bitPosition;
             }
-            return result;
+            int mask = (1 << bitCount) - 1;
+            int value = _currentValue & mask;
+            _currentValue >>= bitCount;
+            _bitPosition += bitCount;
+            return value;
         }
 
-        private void ReadBitsFromBuffer(BitArray result, int count, ref int n)
+        private int ReadInt32()
         {
-            // As long as there are bits in the buffer, take them
-            while (n < count && _bitPositionInBuffer < _bufferLengthInBits)
+            int value = 0;
+            for (int i = 0; i < 4; i++)
             {
-                result[n++] = ReadBitFromBuffer(_bitPositionInBuffer++);
+                if (_bytePosition + i >= _buffer.Length)
+                    break;
+                value |= _buffer[_bytePosition + i] << (i << 3);
             }
-        }
-
-        private bool ReadBitFromBuffer(int bitPositionInBuffer)
-        {
-            int bytePosition = bitPositionInBuffer / 8;
-            int bitIndex = 7 - bitPositionInBuffer % 8;
-            byte b = _buffer[bytePosition];
-            return ((b << bitIndex) & 0x80) != 0;
-        }
-
-        private bool _disposed;
-        public void Dispose()
-        {
-            if (_leaveOpen || _disposed)
-                return;
-
-            lock (_stream)
-            {
-                // The stream might have been disposed while we were
-                // waiting for the lock, so check again
-                if (_disposed)
-                    return;
-
-                _stream.Dispose();
-                _disposed = true;
-            }
+            return value;
         }
     }
 }

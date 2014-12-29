@@ -1,18 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
@@ -23,10 +13,10 @@ namespace TestApp.WinRT
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
     /// </summary>
-    public sealed partial class App : Application
+    public sealed partial class App
     {
 #if WINDOWS_PHONE_APP
-        private TransitionCollection transitions;
+        private TransitionCollection _transitions;
 #endif
 
         /// <summary>
@@ -36,7 +26,7 @@ namespace TestApp.WinRT
         public App()
         {
             this.InitializeComponent();
-            this.Suspending += this.OnSuspending;
+            this.Suspending += OnSuspending;
         }
 
         /// <summary>
@@ -81,10 +71,10 @@ namespace TestApp.WinRT
                 // Removes the turnstile navigation for startup.
                 if (rootFrame.ContentTransitions != null)
                 {
-                    this.transitions = new TransitionCollection();
+                    this._transitions = new TransitionCollection();
                     foreach (var c in rootFrame.ContentTransitions)
                     {
-                        this.transitions.Add(c);
+                        this._transitions.Add(c);
                     }
                 }
 
@@ -113,8 +103,8 @@ namespace TestApp.WinRT
         /// <param name="e">Details about the navigation event.</param>
         private void RootFrame_FirstNavigated(object sender, NavigationEventArgs e)
         {
-            var rootFrame = sender as Frame;
-            rootFrame.ContentTransitions = this.transitions ?? new TransitionCollection() { new NavigationThemeTransition() };
+            var rootFrame = (Frame) sender;
+            rootFrame.ContentTransitions = this._transitions ?? new TransitionCollection() { new NavigationThemeTransition() };
             rootFrame.Navigated -= this.RootFrame_FirstNavigated;
         }
 #endif
@@ -126,12 +116,45 @@ namespace TestApp.WinRT
         /// </summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
-        private void OnSuspending(object sender, SuspendingEventArgs e)
+        private static void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
-
-            // TODO: Save application state and stop any background activity
-            deferral.Complete();
+            try
+            {
+                // TODO: Save application state and stop any background activity
+            }
+            finally
+            {
+                deferral.Complete();
+            }
         }
+
+#if WINDOWS_PHONE_APP
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            base.OnActivated(args);
+            switch (args.Kind)
+            {
+                case ActivationKind.PickFileContinuation:
+                    HandlePickFileContinuation((FileOpenPickerContinuationEventArgs) args);
+                    break;
+            }
+        }
+
+        private static void HandlePickFileContinuation(FileOpenPickerContinuationEventArgs args)
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+            if (rootFrame == null)
+                return;
+            
+            string context = (string) args.ContinuationData["context"];
+            if (context == "addGifImage")
+            {
+                var page = rootFrame.Content as GifTestPage;
+                if (page != null)
+                    page.PickFileContinuation(args);
+            }
+        }
+#endif
     }
 }

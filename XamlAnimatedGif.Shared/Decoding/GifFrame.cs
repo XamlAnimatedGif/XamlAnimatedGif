@@ -31,7 +31,7 @@ namespace XamlAnimatedGif.Decoding
         {
             var frame = new GifFrame();
 
-            await frame.ReadInternalAsync(stream, controlExtensions);
+            await frame.ReadInternalAsync(stream, controlExtensions).ConfigureAwait(false);
 
             return frame;
         }
@@ -40,12 +40,12 @@ namespace XamlAnimatedGif.Decoding
         {
             // Note: at this point, the Image Separator (0x2C) has already been read
 
-            Descriptor = await GifImageDescriptor.ReadAsync(stream);
+            Descriptor = await GifImageDescriptor.ReadAsync(stream).ConfigureAwait(false);
             if (Descriptor.HasLocalColorTable)
             {
-                LocalColorTable = await GifHelpers.ReadColorTableAsync(stream, Descriptor.LocalColorTableSize);
+                LocalColorTable = await GifHelpers.ReadColorTableAsync(stream, Descriptor.LocalColorTableSize).ConfigureAwait(false);
             }
-            ImageData = await GifImageData.ReadAsync(stream);
+            ImageData = await GifImageData.ReadAsync(stream).ConfigureAwait(false);
             Extensions = controlExtensions.ToList().AsReadOnly();
             GraphicControl = Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
         }

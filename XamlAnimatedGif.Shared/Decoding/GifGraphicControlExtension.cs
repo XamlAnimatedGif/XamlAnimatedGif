@@ -30,7 +30,7 @@ namespace XamlAnimatedGif.Decoding
         internal static async Task<GifGraphicControlExtension> ReadAsync(Stream stream)
         {
             var ext = new GifGraphicControlExtension();
-            await ext.ReadInternalAsync(stream);
+            await ext.ReadInternalAsync(stream).ConfigureAwait(false);
             return ext;
         }
 
@@ -39,7 +39,7 @@ namespace XamlAnimatedGif.Decoding
             // Note: at this point, the label (0xF9) has already been read
 
             byte[] bytes = new byte[6];
-            await stream.ReadAllAsync(bytes, 0, bytes.Length);
+            await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
             BlockSize = bytes[0]; // should always be 4
             if (BlockSize != 4)
                 throw GifHelpers.InvalidBlockSizeException("Graphic Control Extension", 4, BlockSize);
