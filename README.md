@@ -3,7 +3,7 @@ XamlAnimatedGif
 
 A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows Phone 8.1).
 
-A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha)
+A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha2)
 
 Basic usage:
 
@@ -38,7 +38,7 @@ This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAni
 - ~~support for non-WPF XAML platform isn't implemented yet~~ *(added support for Win 8.1 and WP 8.1)*
 - no support for Windows 8.0, Windows Phone 8.0 and Windows Phone Silverlight 8.1 *(might be easy to support)*
 - no support for WPF 4.0 and earlier, because a large part of the code is asynchronous *(might be possible to support 4.0 using Microsoft.Bcl.Async, but 3.5 is definitely not going to be supported)*
-- interlaced images are not rendered properly yet
+- ~~interlaced images are not rendered properly yet~~ *(done)*
  
 **Known issues:**
 - for large images, sometimes a frame doesn't have time to finish rendering before the next frame must be rendered; in this case the next frame is skipped in order to keep the timing, which can cause rendering issues for partial frames. I have a few ideas to solve this and hope to fix it for the final release.
