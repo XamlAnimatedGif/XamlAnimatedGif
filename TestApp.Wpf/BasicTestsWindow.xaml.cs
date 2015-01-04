@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using XamlAnimatedGif;
@@ -56,6 +58,24 @@ namespace TestApp.Wpf
             finally
             {
                 btnDumpFrames.IsEnabled = true;
+            }
+        }
+
+        private void BtnTestStream_OnClick(object sender, RoutedEventArgs e)
+        {
+            string fileName = txtFileName.Text;
+            if (string.IsNullOrEmpty(fileName))
+                return;
+
+            var img = new Image { Stretch = Stretch.None };
+            var wnd = new Window { Content = img };
+
+            using (var fileStream = File.OpenRead(fileName))
+            {
+                AnimationBehavior.SetSourceStream(img, fileStream);
+                wnd.ShowDialog();
+                wnd.Close();
+                AnimationBehavior.SetSourceStream(img, null);
             }
         }
 
