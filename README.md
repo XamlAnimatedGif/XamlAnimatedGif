@@ -3,7 +3,7 @@ XamlAnimatedGif
 
 A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows Phone 8.1).
 
-A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha2)
+A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha2](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha2)
 
 Basic usage:
 
