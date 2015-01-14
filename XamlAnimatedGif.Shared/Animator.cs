@@ -208,6 +208,8 @@ namespace XamlAnimatedGif
                 totalDuration += GetFrameDelay(frame);
             }
 
+            animation.Duration = totalDuration;
+
             animation.RepeatBehavior =
                 repeatBehavior == default(RepeatBehavior)
                     ? GetRepeatBehavior(metadata)
@@ -308,6 +310,7 @@ namespace XamlAnimatedGif
             }
         }
 
+        private int _previousFrameIndex;
         private GifFrame _previousFrame;
         private bool _isRendering;
         private async Task RenderFrameCoreAsync(int frameIndex)
@@ -331,6 +334,9 @@ namespace XamlAnimatedGif
                     try
                     {
 #endif
+                        if (frameIndex < _previousFrameIndex)
+                            ClearArea(_metadata.Header.LogicalScreenDescriptor);
+
                         DisposePreviousFrame(frame);
 
                         int bufferLength = 4 * desc.Width;
@@ -380,6 +386,7 @@ namespace XamlAnimatedGif
                 _bitmap.Invalidate();
 #endif
                     _previousFrame = frame;
+                    _previousFrameIndex = frameIndex;
                 }
             }
             finally
