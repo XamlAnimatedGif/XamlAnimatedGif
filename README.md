@@ -3,7 +3,7 @@ XamlAnimatedGif
 
 A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows Phone 8.1).
 
-A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha2](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha2)
+A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha5](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha5)
 
 Basic usage:
 
@@ -34,19 +34,15 @@ This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAni
 - ~~transparency isn't handled~~ *(done)*
 - ~~images where each frame has its own color table aren't supported~~ *(done)*
 - ~~frame disposal methods other than the default aren't supported~~ *(done)*
-- manual control of the animation is limited to play/stop/pause/resume (no previous/next/seek)
+- manual control of the animation is limited to play/pause/resume (no previous/next/seek)
 - ~~support for non-WPF XAML platform isn't implemented yet~~ *(added support for Win 8.1 and WP 8.1)*
 - no support for Windows 8.0, Windows Phone 8.0 and Windows Phone Silverlight 8.1 *(might be easy to support)*
 - no support for WPF 4.0 and earlier, because a large part of the code is asynchronous *(might be possible to support 4.0 using Microsoft.Bcl.Async, but 3.5 is definitely not going to be supported)*
 - ~~interlaced images are not rendered properly yet~~ *(done)*
- 
-**Known issues:**
-- for large images, sometimes a frame doesn't have time to finish rendering before the next frame must be rendered; in this case the next frame is skipped in order to keep the timing, which can cause rendering issues for partial frames. I have a few ideas to solve this and hope to fix it for the final release.
-
 
 Why didn't I just make a new version of WpfAnimatedGif?
 -------------------------------------------------------
 
-One reason is that th name obviously implied that it was for WPF; it would be weird to use a library named WpfAnimatedGif in a WinRT app.
+One reason is that the name obviously implied that it was for WPF; it would be weird to use a library named WpfAnimatedGif in a WinRT app.
 
 The other, and more important reason, is that I couldn't make the old library evolve in the direction I wanted without breaking compatibility. XamlAnimatedGif is **not** compatible with WpfAnimatedGif, you can't just replace the library and recompile your app. Also, there might be some features of WpfAnimatedGif that won't be available in XamlAnimatedGif (at least, not immediately; for instance, jumping to a specific frame is going to be much harder to implement).
