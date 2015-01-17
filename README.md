@@ -5,7 +5,7 @@ A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows
 
 A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha5](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha5)
 
-Basic usage:
+**Basic usage:**
 
 ```xml
 <Image gif:AnimationBehavior.SourceUri="/Images/animated.gif" />
@@ -46,3 +46,20 @@ Why didn't I just make a new version of WpfAnimatedGif?
 One reason is that the name obviously implied that it was for WPF; it would be weird to use a library named WpfAnimatedGif in a WinRT app.
 
 The other, and more important reason, is that I couldn't make the old library evolve in the direction I wanted without breaking compatibility. XamlAnimatedGif is **not** compatible with WpfAnimatedGif, you can't just replace the library and recompile your app. Also, there might be some features of WpfAnimatedGif that won't be available in XamlAnimatedGif (at least, not immediately; for instance, jumping to a specific frame is going to be much harder to implement).
+
+
+How to build
+------------
+
+You will need VS2015 Preview, because the code uses a few features from C# 6. You will also need a Windows Store developer license to be able to compile the WinRT targets.
+
+
+How to contribute
+-----------------
+
+There are a few things that I would like to include in the library, but I don't have the time or will to do it myself, so I'd be glad to accept contributions:
+- support for Windows 8.0 and Windows Phone 8.0
+- support for Silverlight (is anyone still using Silverlight out there?)
+- support for iOS and Android via Xamarin (is it even possible? I haven't played with Xamarin yet, so I'm not sure). The implementation would probably be quite different, although the basic blocks (GiF decoding and decompression) could probably be reused.
+
+Before you start working on something, please create an issue to discuss it and make sure we're on the same page regarding how it should be done.
