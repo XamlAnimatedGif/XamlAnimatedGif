@@ -84,3 +84,9 @@ There are a few things that I would like to include in the library, but I don't 
 - support for iOS and Android via Xamarin (is it even possible? I haven't played with Xamarin yet, so I'm not sure). I don't even know if it would be useful; perhaps these platforms already have some support for animated GIFs. If not the implementation would probably be quite different, but the basic blocks (GiF decoding and decompression) could probably be reused.
 
 Before you start working on something, please create an issue to discuss it and make sure we're on the same page regarding how it should be done.
+
+
+Special thanks
+--------------
+
+I want to say a big "thank you" to Matthew Flickinger for his article [What's in a GIF](http://www.matthewflickinger.com/lab/whatsinagif/index.html). This article has been incredingly helpful to help me understand the structure of a GIF file, and more specifically the LZW decompression process.
