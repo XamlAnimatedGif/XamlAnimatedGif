@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Core;
+using Windows.Storage.Streams;
 #if WPF
 using System.Windows;
 using System.Windows.Controls;
@@ -549,8 +552,8 @@ namespace XamlAnimatedGif
                 throw new Exception("Resource not found");
             }
 
-            if (uri.Scheme.StartsWith("http://") 
-                || uri.Scheme.StartsWith("https://"))
+            if (uri.Scheme == "http" 
+                || uri.Scheme == "https")
             {
                 return await GetNetworkStreamAsync(uri);
             }
@@ -565,8 +568,8 @@ namespace XamlAnimatedGif
 
         private static async Task<Stream> GetNetworkStreamAsync(Uri uri)
         {
-            //generating temp file name by converting the uri to base64
-            var tempId = Convert.ToBase64String(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
+            //generating temp file name by hashing the url
+            var tempId = GetHash(HashAlgorithmNames.Sha1, uri.AbsoluteUri);
 
             var folder = ApplicationData.Current.TemporaryFolder;
 
@@ -596,6 +599,15 @@ namespace XamlAnimatedGif
                 stream.Position = 0;
                 return stream;
             }
+        }
+
+        public static string GetHash(string algoritm, string s)
+        {
+            var alg = HashAlgorithmProvider.OpenAlgorithm(algoritm);
+            var buff = CryptographicBuffer.ConvertStringToBinary(s, BinaryStringEncoding.Utf8);
+            var hashed = alg.HashData(buff);
+            var res = CryptographicBuffer.EncodeToHexString(hashed);
+            return res;
         }
 #endif
 
