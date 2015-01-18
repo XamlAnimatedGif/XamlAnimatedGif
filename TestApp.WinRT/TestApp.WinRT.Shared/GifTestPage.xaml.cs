@@ -18,6 +18,7 @@ namespace TestApp.WinRT
             this.InitializeComponent();
             _images = new ObservableCollection<string>
                       {
+                          "http://media.giphy.com/media/nWn6ko2ygIeEU/giphy.gif",
                           "ms-appx:///images/working.gif",
                           "ms-appx:///images/earth.gif",
                           "ms-appx:///images/radar.gif",

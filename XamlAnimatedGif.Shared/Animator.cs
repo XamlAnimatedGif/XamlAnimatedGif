@@ -565,7 +565,7 @@ namespace XamlAnimatedGif
         private static async Task<Stream> GetNetworkStreamAsync(Uri uri)
         {
             //generating temp file name by converting the uri to base64
-            var tempId = Convert.ToBase64String(Encoding.UTF8.GetBytes(uri.AbsolutePath));
+            var tempId = Convert.ToBase64String(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
 
             var folder = ApplicationData.Current.TemporaryFolder;
 
