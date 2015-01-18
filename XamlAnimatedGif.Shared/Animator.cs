@@ -549,7 +549,8 @@ namespace XamlAnimatedGif
                 throw new Exception("Resource not found");
             }
 
-            if (uri.Scheme.StartsWith("http"))
+            if (uri.Scheme.StartsWith("http://") 
+                || uri.Scheme.StartsWith("https://"))
             {
                 return await GetNetworkStreamAsync(uri);
             }
@@ -559,7 +560,7 @@ namespace XamlAnimatedGif
                 var file = await StorageFile.GetFileFromPathAsync(uri.LocalPath);
                 return await file.OpenStreamForReadAsync();
             }
-            throw new NotSupportedException("Only ms-appx:, ms-appdata:, ms-resource: and file: URIs are supported");
+            throw new NotSupportedException("Only ms-appx:, ms-appdata:, ms-resource:, http:, https: and file: URIs are supported");
         }
 
         private static async Task<Stream> GetNetworkStreamAsync(Uri uri)
