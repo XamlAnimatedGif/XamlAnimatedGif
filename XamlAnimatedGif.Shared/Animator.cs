@@ -593,6 +593,7 @@ namespace XamlAnimatedGif
                 //using a memory stream, need a seekable one
                 var mem = new MemoryStream();
                 await stream.CopyToAsync(mem);
+                stream.Dispose();
                 mem.Position = 0;
 
                 //cache the gif
