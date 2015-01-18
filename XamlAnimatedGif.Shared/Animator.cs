@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 #if WPF
@@ -14,6 +15,7 @@ using System.Windows.Resources;
 using System.IO.Packaging;
 using System.Runtime.InteropServices;
 #elif WINRT
+using System.Net.Http;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -546,12 +548,58 @@ namespace XamlAnimatedGif
                 }
                 throw new Exception("Resource not found");
             }
+
+            if (uri.Scheme.StartsWith("http"))
+            {
+                return await GetNetworkStreamAsync(uri);
+            }
+
             if (uri.Scheme == "file")
             {
                 var file = await StorageFile.GetFileFromPathAsync(uri.LocalPath);
                 return await file.OpenStreamForReadAsync();
             }
             throw new NotSupportedException("Only ms-appx:, ms-appdata:, ms-resource: and file: URIs are supported");
+        }
+
+        private static async Task<Stream> GetNetworkStreamAsync(Uri uri)
+        {
+            //generating temp file name by converting the uri to base64
+            var tempId = Convert.ToBase64String(Encoding.UTF8.GetBytes(uri.AbsolutePath));
+
+            var folder = ApplicationData.Current.TemporaryFolder;
+
+            try
+            {
+                var tempFile = await folder.GetFileAsync(tempId);
+
+                //return the cache image
+                return await tempFile.OpenStreamForReadAsync();
+            }
+            catch{}
+
+            //no cache, continue with download
+            using (var client = new HttpClient())
+            {
+                var resp = await client.GetAsync(uri);
+
+                if (resp.IsSuccessStatusCode)
+                {
+                    var stream = await resp.Content.ReadAsStreamAsync();
+                    var tempFile = await folder.CreateFileAsync(tempId);
+
+                    //cache the gif
+                    using (var tempStream = await tempFile.OpenStreamForWriteAsync())
+                    {
+                        await stream.CopyToAsync(tempStream);
+                    }
+
+                    //reset stream position
+                    stream.Position = 0;
+                    return stream;
+                }
+                throw new Exception("Failed to download gif");
+            }
         }
 #endif
 
