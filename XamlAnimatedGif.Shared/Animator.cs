@@ -590,6 +590,10 @@ namespace XamlAnimatedGif
             {
                 //fails if the status is not a success one
                 var stream = await client.GetStreamAsync(uri);
+                //using a memory stream, need a seekable one
+                var mem = new MemoryStream();
+                await stream.CopyToAsync(mem);
+                mem.Position = 0;
 
                 //cache the gif
                 try
@@ -597,14 +601,22 @@ namespace XamlAnimatedGif
                     var tempFile = await folder.CreateFileAsync(tempId, CreationCollisionOption.ReplaceExisting);
                     using (var tempStream = await tempFile.OpenStreamForWriteAsync())
                     {
-                        await stream.CopyToAsync(tempStream);
+                        await mem.CopyToAsync(tempStream);
                     }
                 }
-                catch {}
+                catch
+                {
+                    try
+                    {
+                        await (await folder.GetFileAsync(tempId)).DeleteAsync();
+                    }
+                    catch { }
+                }
 
                 //reset stream position
-                stream.Position = 0;
-                return stream;
+                mem.Position = 0;
+
+                return mem;
             }
         }
 
