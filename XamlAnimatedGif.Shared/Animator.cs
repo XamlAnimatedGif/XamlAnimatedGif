@@ -577,7 +577,7 @@ namespace XamlAnimatedGif
                 //return the cache image
                 return await tempFile.OpenStreamForReadAsync();
             }
-            catch{}
+            catch (FileNotFoundException) {}
 
             //no cache, continue with download
             using (var client = new HttpClient())
