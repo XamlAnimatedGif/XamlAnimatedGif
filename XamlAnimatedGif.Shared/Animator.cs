@@ -581,24 +581,19 @@ namespace XamlAnimatedGif
             //no cache, continue with download
             using (var client = new HttpClient())
             {
-                var resp = await client.GetAsync(uri);
+                //fails if the status is not a success one
+                var stream = await client.GetStreamAsync(uri);
+                var tempFile = await folder.CreateFileAsync(tempId);
 
-                if (resp.IsSuccessStatusCode)
+                //cache the gif
+                using (var tempStream = await tempFile.OpenStreamForWriteAsync())
                 {
-                    var stream = await resp.Content.ReadAsStreamAsync();
-                    var tempFile = await folder.CreateFileAsync(tempId);
-
-                    //cache the gif
-                    using (var tempStream = await tempFile.OpenStreamForWriteAsync())
-                    {
-                        await stream.CopyToAsync(tempStream);
-                    }
-
-                    //reset stream position
-                    stream.Position = 0;
-                    return stream;
+                    await stream.CopyToAsync(tempStream);
                 }
-                throw new Exception("Failed to download gif");
+
+                //reset stream position
+                stream.Position = 0;
+                return stream;
             }
         }
 #endif
