@@ -507,35 +507,6 @@ namespace XamlAnimatedGif
 
         #region Helper methods
 
-#if WPF
-
-        private static Task<Stream> GetStreamFromUriAsync(Uri uri)
-        {
-            if (uri.Scheme == PackUriHelper.UriSchemePack)
-            {
-                StreamResourceInfo sri;
-                if (uri.Authority == "siteoforigin:,,,")
-                    sri = Application.GetRemoteStream(uri);
-                else
-                    sri = Application.GetResourceStream(uri);
-
-                if (sri != null)
-                    return Task.FromResult(sri.Stream);
-
-                throw new FileNotFoundException("Cannot find file with the specified URI");
-            }
-            
-            if (uri.Scheme == Uri.UriSchemeFile)
-            {
-                return Task.FromResult<Stream>(File.OpenRead(uri.LocalPath));
-            }
-
-            throw new NotSupportedException("Only pack: and file: URIs are supported");
-        }
-#elif WINRT
-        
-#endif
-
         private static TimeSpan GetFrameDelay(GifFrame frame)
         {
             var gce = frame.GraphicControl;

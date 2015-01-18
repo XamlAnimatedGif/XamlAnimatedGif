@@ -2,10 +2,10 @@
 
 using System;
 using System.IO;
-using System.Net.Http;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
-using Windows.Security.Cryptography;
-using Windows.Security.Cryptography.Core;
 using XamlAnimatedGif.Interfaces;
 
 #endregion
@@ -24,17 +24,17 @@ namespace XamlAnimatedGif
         public async Task<Stream> GetNetworkStreamAsync(Uri uri)
         {
             //generating temp file name by hashing the url
-            var tempId = GetHash(HashAlgorithmNames.Sha1, uri.AbsoluteUri);
+            var tempId = GetHash(uri.AbsoluteUri);
             var cacheStream = await _cacheHelper.GetAsync(tempId);
 
             if (cacheStream != null)
                 return cacheStream;
 
             //no cache, continue with download
-            using (var client = new HttpClient())
+            using (var client = new WebClient())
             {
                 //fails if the status is not a success one
-                var bytes = await client.GetByteArrayAsync(uri);
+                var bytes = await client.DownloadDataTaskAsync(uri);
                 //using a memory stream, need a seekable one
                 var mem = new MemoryStream(bytes);
 
@@ -45,13 +45,25 @@ namespace XamlAnimatedGif
             }
         }
 
-        private string GetHash(string algoritm, string s)
+        private string GetHash(string s)
         {
-            var alg = HashAlgorithmProvider.OpenAlgorithm(algoritm);
-            var buff = CryptographicBuffer.ConvertStringToBinary(s, BinaryStringEncoding.Utf8);
-            var hashed = alg.HashData(buff);
-            var res = CryptographicBuffer.EncodeToHexString(hashed);
-            return res;
+            //create new instance of md5
+            var sha1 = SHA1.Create();
+
+            //convert the input text to array of bytes
+            var hashData = sha1.ComputeHash(Encoding.Default.GetBytes(s));
+
+            //create new instance of StringBuilder to save hashed data
+            var returnValue = new StringBuilder();
+
+            //loop for each byte and add it to StringBuilder
+            foreach (var t in hashData)
+            {
+                returnValue.Append(t.ToString());
+            }
+
+            // return hexadecimal string
+            return returnValue.ToString();
         }
     }
 }

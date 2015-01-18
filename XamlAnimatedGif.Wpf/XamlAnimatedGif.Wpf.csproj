@@ -40,6 +40,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CacheHelper.cs" />
+    <Compile Include="NetworkHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="..\XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems" Label="Shared" Condition="Exists('..\XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems')" />
