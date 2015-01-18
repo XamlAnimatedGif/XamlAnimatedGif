@@ -72,7 +72,8 @@ namespace XamlAnimatedGif
 
         internal static async Task<Animator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior), Image image = null)
         {
-            var stream = await GetStreamFromUriAsync(sourceUri);
+            var loader = new UriLoader();
+            var stream = await loader.GetStreamFromUriAsync(sourceUri);
             try
             {
                 return await CreateAsync(stream, sourceUri, repeatBehavior, image);
@@ -532,103 +533,7 @@ namespace XamlAnimatedGif
             throw new NotSupportedException("Only pack: and file: URIs are supported");
         }
 #elif WINRT
-        private static async Task<Stream> GetStreamFromUriAsync(Uri uri)
-        {
-            if (uri.Scheme == "ms-appx" || uri.Scheme == "ms-appdata")
-            {
-                var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
-                return await file.OpenStreamForReadAsync();
-            }
-            if (uri.Scheme == "ms-resource")
-            {
-                var rm = ResourceManager.Current;
-                var context = ResourceContext.GetForCurrentView();
-                var candidate = rm.MainResourceMap.GetValue(uri.LocalPath, context);
-                if (candidate != null && candidate.IsMatch)
-                {
-                    var file = await candidate.GetValueAsFileAsync();
-                    return await file.OpenStreamForReadAsync();
-                }
-                throw new Exception("Resource not found");
-            }
-
-            if (uri.Scheme == "http" 
-                || uri.Scheme == "https")
-            {
-                return await GetNetworkStreamAsync(uri);
-            }
-
-            if (uri.Scheme == "file")
-            {
-                var file = await StorageFile.GetFileFromPathAsync(uri.LocalPath);
-                return await file.OpenStreamForReadAsync();
-            }
-            throw new NotSupportedException("Only ms-appx:, ms-appdata:, ms-resource:, http:, https: and file: URIs are supported");
-        }
-
-        private static async Task<Stream> GetNetworkStreamAsync(Uri uri)
-        {
-            //generating temp file name by hashing the url
-            var tempId = GetHash(HashAlgorithmNames.Sha1, uri.AbsoluteUri);
-
-            var folder = ApplicationData.Current.TemporaryFolder;
-
-            try
-            {
-                var tempFile = await folder.GetFileAsync(tempId);
-
-                //return the cache image
-                var stream = await tempFile.OpenStreamForReadAsync();
-
-                if (stream.Length > 0)
-                    return stream;
-            }
-            catch (FileNotFoundException) {}
-
-            //no cache, continue with download
-            using (var client = new HttpClient())
-            {
-                //fails if the status is not a success one
-                var stream = await client.GetStreamAsync(uri);
-                //using a memory stream, need a seekable one
-                var mem = new MemoryStream();
-                await stream.CopyToAsync(mem);
-                stream.Dispose();
-                mem.Position = 0;
-
-                //cache the gif
-                try
-                {
-                    var tempFile = await folder.CreateFileAsync(tempId, CreationCollisionOption.ReplaceExisting);
-                    using (var tempStream = await tempFile.OpenStreamForWriteAsync())
-                    {
-                        await mem.CopyToAsync(tempStream);
-                    }
-                }
-                catch
-                {
-                    try
-                    {
-                        await (await folder.GetFileAsync(tempId)).DeleteAsync();
-                    }
-                    catch { }
-                }
-
-                //reset stream position
-                mem.Position = 0;
-
-                return mem;
-            }
-        }
-
-        private static string GetHash(string algoritm, string s)
-        {
-            var alg = HashAlgorithmProvider.OpenAlgorithm(algoritm);
-            var buff = CryptographicBuffer.ConvertStringToBinary(s, BinaryStringEncoding.Utf8);
-            var hashed = alg.HashData(buff);
-            var res = CryptographicBuffer.EncodeToHexString(hashed);
-            return res;
-        }
+        
 #endif
 
         private static TimeSpan GetFrameDelay(GifFrame frame)

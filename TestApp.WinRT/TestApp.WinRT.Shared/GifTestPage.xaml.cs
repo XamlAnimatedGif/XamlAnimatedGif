@@ -19,6 +19,7 @@ namespace TestApp.WinRT
             _images = new ObservableCollection<string>
                       {
                           "http://media.giphy.com/media/nWn6ko2ygIeEU/giphy.gif",
+                          "http://media.giphy.com/media/zW2pe7UscHiq4/giphy.gif",
                           "ms-appx:///images/working.gif",
                           "ms-appx:///images/earth.gif",
                           "ms-appx:///images/radar.gif",
