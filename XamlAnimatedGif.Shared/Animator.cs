@@ -578,7 +578,10 @@ namespace XamlAnimatedGif
                 var tempFile = await folder.GetFileAsync(tempId);
 
                 //return the cache image
-                return await tempFile.OpenStreamForReadAsync();
+                var stream = await tempFile.OpenStreamForReadAsync();
+
+                if (stream.Length > 0)
+                    return stream;
             }
             catch (FileNotFoundException) {}
 
@@ -587,13 +590,17 @@ namespace XamlAnimatedGif
             {
                 //fails if the status is not a success one
                 var stream = await client.GetStreamAsync(uri);
-                var tempFile = await folder.CreateFileAsync(tempId);
 
                 //cache the gif
-                using (var tempStream = await tempFile.OpenStreamForWriteAsync())
+                try
                 {
-                    await stream.CopyToAsync(tempStream);
+                    var tempFile = await folder.CreateFileAsync(tempId, CreationCollisionOption.ReplaceExisting);
+                    using (var tempStream = await tempFile.OpenStreamForWriteAsync())
+                    {
+                        await stream.CopyToAsync(tempStream);
+                    }
                 }
+                catch {}
 
                 //reset stream position
                 stream.Position = 0;
@@ -601,7 +608,7 @@ namespace XamlAnimatedGif
             }
         }
 
-        public static string GetHash(string algoritm, string s)
+        private static string GetHash(string algoritm, string s)
         {
             var alg = HashAlgorithmProvider.OpenAlgorithm(algoritm);
             var buff = CryptographicBuffer.ConvertStringToBinary(s, BinaryStringEncoding.Utf8);
