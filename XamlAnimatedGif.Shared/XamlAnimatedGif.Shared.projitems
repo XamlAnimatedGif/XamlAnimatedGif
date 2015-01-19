@@ -36,10 +36,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\BitArrayExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\CollectionExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\StreamExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\ICacheHelper.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\INetworkHelper.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IUriLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\VersionInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TimingManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UriLoader.Common.cs" />
   </ItemGroup>
 </Project>

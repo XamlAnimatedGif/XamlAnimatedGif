@@ -12,8 +12,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Runtime.InteropServices;
 #elif WINRT
-using System.Net.Http;
-using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -21,7 +19,6 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media.Animation;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel.Resources.Core;
 #endif
 
 using XamlAnimatedGif.Extensions;
