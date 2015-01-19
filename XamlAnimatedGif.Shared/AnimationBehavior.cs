@@ -201,18 +201,7 @@ namespace XamlAnimatedGif
             if (image == null)
                 return;
 
-            if (IsInDesignMode(image))
-            {
-                bool animateInDesignMode = (bool) e.NewValue;
-                if (animateInDesignMode)
-                {
-                    InitAnimation(image);
-                }
-                else
-                {
-                    ClearAnimatorCore(image);
-                }
-            }
+            InitAnimation(image);
         }
 
         private static bool CheckDesignMode(Image image, Uri sourceUri, Stream sourceStream)
@@ -244,6 +233,7 @@ namespace XamlAnimatedGif
 
         private static void InitAnimation(Image image)
         {
+            image.Source = null;
             ClearAnimatorCore(image);
 
             var stream = GetSourceStream(image);
@@ -269,6 +259,7 @@ namespace XamlAnimatedGif
                         }
                         else
                         {
+                            OnError(image, new InvalidOperationException("Relative URI can't be resolved"), AnimationErrorKind.Loading);
                             return;
                         }
                     }
