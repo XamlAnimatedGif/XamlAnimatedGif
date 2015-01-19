@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region
+
+using System;
 using System.IO;
 using System.IO.Packaging;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Resources;
+using System.Windows;
 using XamlAnimatedGif.Interfaces;
+
+#endregion
 
 namespace XamlAnimatedGif
 {
@@ -19,7 +20,6 @@ namespace XamlAnimatedGif
             _networkHelper = new NetworkHelper();
         }
 
-
         public async Task<Stream> GetStreamFromUriAsync(Uri uri)
         {
             if (uri.Scheme == "http" || uri.Scheme == "https")
@@ -27,7 +27,9 @@ namespace XamlAnimatedGif
 
             if (uri.Scheme == PackUriHelper.UriSchemePack)
             {
-                var sri = uri.Authority == "siteoforigin:,,," ? Application.GetRemoteStream(uri) : Application.GetResourceStream(uri);
+                var sri = uri.Authority == "siteoforigin:,,,"
+                    ? Application.GetRemoteStream(uri)
+                    : Application.GetResourceStream(uri);
 
                 if (sri != null)
                     return sri.Stream;
