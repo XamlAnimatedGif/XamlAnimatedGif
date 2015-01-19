@@ -10,10 +10,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using System.Windows.Resources;
-using System.IO.Packaging;
 using System.Runtime.InteropServices;
 #elif WINRT
+using System.Net.Http;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -67,7 +66,8 @@ namespace XamlAnimatedGif
 
         internal static async Task<Animator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior), Image image = null)
         {
-            var stream = await GetStreamFromUriAsync(sourceUri);
+            var loader = new UriLoader();
+            var stream = await loader.GetStreamFromUriAsync(sourceUri);
             try
             {
                 return await CreateAsync(stream, sourceUri, repeatBehavior, image);
@@ -500,60 +500,6 @@ namespace XamlAnimatedGif
         #endregion
 
         #region Helper methods
-
-#if WPF
-
-        private static Task<Stream> GetStreamFromUriAsync(Uri uri)
-        {
-            if (uri.Scheme == PackUriHelper.UriSchemePack)
-            {
-                StreamResourceInfo sri;
-                if (uri.Authority == "siteoforigin:,,,")
-                    sri = Application.GetRemoteStream(uri);
-                else
-                    sri = Application.GetResourceStream(uri);
-
-                if (sri != null)
-                    return Task.FromResult(sri.Stream);
-
-                throw new FileNotFoundException("Cannot find file with the specified URI");
-            }
-            
-            if (uri.Scheme == Uri.UriSchemeFile)
-            {
-                return Task.FromResult<Stream>(File.OpenRead(uri.LocalPath));
-            }
-
-            throw new NotSupportedException("Only pack: and file: URIs are supported");
-        }
-#elif WINRT
-        private static async Task<Stream> GetStreamFromUriAsync(Uri uri)
-        {
-            if (uri.Scheme == "ms-appx" || uri.Scheme == "ms-appdata")
-            {
-                var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
-                return await file.OpenStreamForReadAsync();
-            }
-            if (uri.Scheme == "ms-resource")
-            {
-                var rm = ResourceManager.Current;
-                var context = ResourceContext.GetForCurrentView();
-                var candidate = rm.MainResourceMap.GetValue(uri.LocalPath, context);
-                if (candidate != null && candidate.IsMatch)
-                {
-                    var file = await candidate.GetValueAsFileAsync();
-                    return await file.OpenStreamForReadAsync();
-                }
-                throw new Exception("Resource not found");
-            }
-            if (uri.Scheme == "file")
-            {
-                var file = await StorageFile.GetFileFromPathAsync(uri.LocalPath);
-                return await file.OpenStreamForReadAsync();
-            }
-            throw new NotSupportedException("Only ms-appx:, ms-appdata:, ms-resource: and file: URIs are supported");
-        }
-#endif
 
         private static TimeSpan GetFrameDelay(GifFrame frame)
         {
