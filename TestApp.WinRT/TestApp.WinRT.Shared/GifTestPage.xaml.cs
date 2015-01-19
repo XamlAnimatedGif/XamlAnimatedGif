@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using Windows.ApplicationModel.Activation;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
-
+#if WINDOWS_PHONE_APP
+using System.Linq;
+using Windows.ApplicationModel.Activation;
+#endif
 
 namespace TestApp.WinRT
 {

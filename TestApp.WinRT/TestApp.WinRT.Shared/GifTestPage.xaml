@@ -17,7 +17,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         
-        <Image Name="imgAnim" Grid.Row="0" Stretch="None"
+        <Image Grid.Row="0" Stretch="None"
                gif:AnimationBehavior.SourceUri="{Binding SelectedImage, Converter={StaticResource uriConverter}}"/>
 
         <Border Grid.Row="1">
@@ -27,7 +27,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <ComboBox ItemsSource="{Binding Images}" SelectedItem="{Binding SelectedImage, Mode=TwoWay}"/>
-                <Button Name="btnBrowse" Content="..." Grid.Column="1" Click="BtnBrowse_OnClick" />
+                <Button Content="..." Grid.Column="1" Click="BtnBrowse_OnClick" />
             </Grid>
             
         </Border>

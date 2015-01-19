@@ -4,7 +4,9 @@
         xmlns:gif="clr-namespace:XamlAnimatedGif;assembly=XamlAnimatedGif"
         Title="DesignTestWindow" Height="480" Width="680">
     <Grid>
-        <Image gif:AnimationBehavior.SourceUri="Images/bomb.gif" gif:AnimationBehavior.AnimateInDesignMode="False">
+        <Image Stretch="None"
+               gif:AnimationBehavior.SourceUri="Images/bomb.gif"
+               gif:AnimationBehavior.AnimateInDesignMode="False">
         </Image>
     </Grid>
 </Window>
