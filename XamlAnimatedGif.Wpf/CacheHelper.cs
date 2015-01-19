@@ -18,6 +18,7 @@ namespace XamlAnimatedGif
                 using (var tempStream = new FileStream(fileName, FileMode.Create))
                 {
                     await stream.CopyToAsync(tempStream);
+                    stream.Position = 0;
                 }
             }
             catch
