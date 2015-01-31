@@ -20,6 +20,9 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media.Animation;
 using System.Runtime.InteropServices.WindowsRuntime;
 #endif
+#if !NET40
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 using XamlAnimatedGif.Extensions;
 using XamlAnimatedGif.Decoding;
@@ -133,7 +136,7 @@ namespace XamlAnimatedGif
                 cancellationToken.ThrowIfCancellationRequested();
                 var timing = _timingManager.NextAsync(cancellationToken);
                 var rendering = RenderFrameAsync(CurrentFrameIndex, cancellationToken);
-                await Task.WhenAll(timing, rendering);
+                await TaskEx.WhenAll(timing, rendering);
                 if (!timing.Result)
                     break;
                 CurrentFrameIndex = (CurrentFrameIndex + 1) % FrameCount;

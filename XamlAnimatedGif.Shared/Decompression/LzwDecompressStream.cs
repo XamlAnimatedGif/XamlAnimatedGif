@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using Buffer = System.Buffer;
+#if !NET40
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
+#endif
 using System.Diagnostics;
 
 namespace XamlAnimatedGif.Decompression
@@ -24,11 +24,6 @@ namespace XamlAnimatedGif.Decompression
         }
         public override void Flush()
         {
-        }
-
-        public override Task FlushAsync(CancellationToken cancellationToken)
-        {
-            return Task.FromResult(0);
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -244,15 +239,18 @@ namespace XamlAnimatedGif.Decompression
                 Add(Sequence.ClearCode);
                 Add(Sequence.StopCode);
             }
-
+#if !NET40
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
             public void Reset()
             {
                 _count = (1 << _minimumCodeLength) + 2;
                 _codeLength = _minimumCodeLength + 1;
             }
 
+#if !NET40
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
             public void Add(Sequence sequence)
             {
                 _table[_count++] = sequence;
@@ -262,7 +260,9 @@ namespace XamlAnimatedGif.Decompression
 
             public Sequence this[int index]
             {
+#if !NET40
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
                 get
                 {
                     return _table[index];
@@ -271,13 +271,17 @@ namespace XamlAnimatedGif.Decompression
 
             public int Count
             {
+#if !NET40
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
                 get { return _count; }
             }
 
             public int CodeLength
             {
+#if !NET40
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
                 get { return _codeLength; }
             }
         }

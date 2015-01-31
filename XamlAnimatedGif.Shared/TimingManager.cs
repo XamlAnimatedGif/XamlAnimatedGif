@@ -7,6 +7,9 @@ using System.Windows.Media.Animation;
 #elif WINRT
 using Windows.UI.Xaml.Media.Animation;
 #endif
+#if !NET40
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace XamlAnimatedGif
 {
@@ -37,7 +40,7 @@ namespace XamlAnimatedGif
             await IsPausedAsync(cancellationToken);
 
             var ts = _timeSpans[_current];
-            await Task.Delay(ts, cancellationToken);
+            await TaskEx.Delay(ts, cancellationToken);
             _current++;
 
             if (_repeatBehavior.HasDuration)
@@ -97,7 +100,7 @@ namespace XamlAnimatedGif
             }
         }
 
-        private readonly Task _completedTask = Task.FromResult(0);
+        private readonly Task _completedTask = TaskEx.FromResult(0);
         private bool _isPaused;
         private TaskCompletionSource<int> _pauseCompletionSource;
         public void Pause()

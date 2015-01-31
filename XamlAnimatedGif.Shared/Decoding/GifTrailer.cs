@@ -1,4 +1,7 @@
 using System.Threading.Tasks;
+#if !NET40
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace XamlAnimatedGif.Decoding
 {
@@ -17,7 +20,7 @@ namespace XamlAnimatedGif.Decoding
 
         internal static Task<GifTrailer> ReadAsync()
         {
-            return Task.FromResult(new GifTrailer());
+            return TaskEx.FromResult(new GifTrailer());
         }
     }
 }
