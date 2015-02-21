@@ -30,6 +30,7 @@ namespace TestApp.Wpf
                           "pack://siteoforigin:,,,/images/siteoforigin.gif",
                           "images/partialfirstframe.gif",
                           "images/newton-cradle.gif",
+                          "images/not-a-gif.png",
                           "http://i.imgur.com/rCK6xzh.gif",
                           "http://media.giphy.com/media/zW2pe7UscHiq4/giphy.gif",
                           "http://media.giphy.com/media/nWn6ko2ygIeEU/giphy.gif"

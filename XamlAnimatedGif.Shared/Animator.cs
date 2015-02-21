@@ -74,8 +74,7 @@ namespace XamlAnimatedGif
             }
             catch
             {
-                if (stream != null)
-                    stream.Dispose();
+                stream?.Dispose();
                 throw;
             }
         }

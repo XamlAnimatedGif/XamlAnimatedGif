@@ -1,4 +1,5 @@
-﻿using System;
+﻿using XamlAnimatedGif.Decoding;
+using System;
 using System.IO;
 #if WPF
 using System.ComponentModel;
@@ -220,8 +221,10 @@ namespace XamlAnimatedGif
                     bmp.SetSource(sourceStream.AsRandomAccessStream());
 #endif
                 }
-                if (sourceUri != null)
+                else if (sourceUri != null)
+                {
                     bmp.UriSource = sourceUri;
+                }
 #if WPF
                 bmp.EndInit();
 #endif
@@ -278,6 +281,10 @@ namespace XamlAnimatedGif
                 var animator = await Animator.CreateAsync(sourceUri, repeatBehavior);
                 SetAnimatorCore(image, animator);
             }
+            catch (InvalidSignatureException)
+            {
+                image.Source = new BitmapImage(sourceUri);
+            }
             catch(Exception ex)
             {
                 OnError(image, ex, AnimationErrorKind.Loading);
@@ -293,6 +300,18 @@ namespace XamlAnimatedGif
             {
                 var animator = await Animator.CreateAsync(stream, repeatBehavior);
                 SetAnimatorCore(image, animator);
+            }
+            catch (InvalidSignatureException)
+            {
+                var bmp = new BitmapImage();
+#if WPF
+                bmp.BeginInit();
+                bmp.StreamSource = stream;
+                bmp.EndInit();
+#elif WINRT
+                bmp.SetSource(stream.AsRandomAccessStream());
+#endif
+                image.Source = bmp;
             }
             catch(Exception ex)
             {

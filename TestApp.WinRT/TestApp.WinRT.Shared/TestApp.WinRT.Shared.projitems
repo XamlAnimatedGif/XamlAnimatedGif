@@ -39,8 +39,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Images\working.gif" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Images\siteoforigin.gif">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Images\not-a-gif.png" />
   </ItemGroup>
 </Project>

@@ -28,7 +28,8 @@ namespace TestApp.WinRT
                           "ms-appx:///images/bomb-once.gif",
                           "ms-appx:///images/nonanimated.gif",
                           "ms-appx:///images/monster.gif",
-                          "ms-appx:///images/partialfirstframe.gif"
+                          "ms-appx:///images/partialfirstframe.gif",
+                          "ms-appx:///images/not-a-gif.png"
                       };
             DataContext = this;
         }
