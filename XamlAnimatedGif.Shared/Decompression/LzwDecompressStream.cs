@@ -122,11 +122,11 @@ namespace XamlAnimatedGif.Decompression
         [Conditional("DISABLED")]
         private static void ValidateReadArgs(byte[] buffer, int offset, int count)
         {
-            if (buffer == null) throw new ArgumentNullException("buffer");
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset", "Offset can't be negative");
+                throw new ArgumentOutOfRangeException(nameof(offset), "Offset can't be negative");
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count", "Count can't be negative");
+                throw new ArgumentOutOfRangeException(nameof(count), "Count can't be negative");
             if (offset + count > buffer.Length)
                 throw new ArgumentException("Buffer is to small to receive the requested data");
         }
