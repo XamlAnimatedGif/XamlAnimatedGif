@@ -1,20 +1,20 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace XamlAnimatedGif.Decoding
 {
 #if WPF
     [Serializable]
 #endif
-    internal class GifDecoderException : Exception
+    public abstract class GifDecoderException : Exception
     {
-        internal GifDecoderException() { }
-        internal GifDecoderException(string message) : base(message) { }
-        internal GifDecoderException(string message, Exception inner) : base(message, inner) { }
+        protected GifDecoderException(string message) : base(message) { }
+        protected GifDecoderException(string message, Exception inner) : base(message, inner) { }
 
 #if WPF
         protected GifDecoderException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context)
+          SerializationInfo info,
+          StreamingContext context)
             : base(info, context) { }
 #endif
     }

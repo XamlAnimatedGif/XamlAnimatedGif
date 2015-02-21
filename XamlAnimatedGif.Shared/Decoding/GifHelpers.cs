@@ -80,22 +80,22 @@ namespace XamlAnimatedGif.Decoding
 
         public static Exception UnexpectedEndOfStreamException()
         {
-            return new GifDecoderException("Unexpected end of stream before trailer was encountered");
+            return new UnexpectedEndOfStreamException("Unexpected end of stream before trailer was encountered");
         }
 
         public static Exception UnknownBlockTypeException(int blockId)
         {
-            return new GifDecoderException("Unknown block type: 0x" + blockId.ToString("x2"));
+            return new UnknownBlockTypeException("Unknown block type: 0x" + blockId.ToString("x2"));
         }
 
         public static Exception UnknownExtensionTypeException(int extensionLabel)
         {
-            return new GifDecoderException("Unknown extension type: 0x" + extensionLabel.ToString("x2"));
+            return new UnknownExtensionTypeException("Unknown extension type: 0x" + extensionLabel.ToString("x2"));
         }
 
         public static Exception InvalidBlockSizeException(string blockName, int expectedBlockSize, int actualBlockSize)
         {
-            return new GifDecoderException(
+            return new InvalidBlockSizeException(
                 string.Format(
                     "Invalid block size for {0}. Expected {1}, but was {2}",
                     blockName,
@@ -105,12 +105,12 @@ namespace XamlAnimatedGif.Decoding
 
         public static Exception InvalidSignatureException(string signature)
         {
-            return new GifDecoderException("Invalid file signature: " + signature);
+            return new InvalidSignatureException("Invalid file signature: " + signature);
         }
 
         public static Exception UnsupportedVersionException(string version)
         {
-            return new GifDecoderException("Unsupported version: " + version);
+            return new UnsupportedGifVersionException("Unsupported version: " + version);
         }
 
         public static string GetString(byte[] bytes)

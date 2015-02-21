@@ -19,6 +19,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifCommentExtension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDataStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDecoderException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Decoding\InvalidSignatureException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Decoding\UnexpectedEndOfStreamException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifExtension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifFrame.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifFrameDisposalMethod.cs" />
@@ -30,7 +32,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifLogicalScreenDescriptor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifPlainTextExtension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifTrailer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Decoding\UnknownBlockTypeException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Decoding\UnknownExtensionTypeException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Decoding\UnsupportedGifVersionException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\IGifRect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Decoding\InvalidBlockSizeException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decompression\BitReader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decompression\LzwDecompressStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\BitArrayExtensions.cs" />
