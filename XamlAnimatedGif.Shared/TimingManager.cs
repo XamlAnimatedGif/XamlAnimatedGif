@@ -101,27 +101,22 @@ namespace XamlAnimatedGif
         }
 
         private readonly Task _completedTask = TaskEx.FromResult(0);
-        private bool _isPaused;
         private TaskCompletionSource<int> _pauseCompletionSource;
         public void Pause()
         {
-            _isPaused = true;
+            IsPaused = true;
             _pauseCompletionSource = new TaskCompletionSource<int>();
         }
 
         public void Resume()
         {
             var tcs = _pauseCompletionSource;
-            if (tcs != null)
-                tcs.TrySetResult(0);
+            tcs?.TrySetResult(0);
             _pauseCompletionSource = null;
-            _isPaused = false;
+            IsPaused = false;
         }
 
-        public bool IsPaused
-        {
-            get { return _isPaused; }
-        }
+        public bool IsPaused { get; private set; }
 
         private Task IsPausedAsync(CancellationToken cancellationToken)
         {

@@ -3,16 +3,12 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media.Animation;
-using System.Windows.Threading;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using XamlAnimatedGif;
 
 namespace TestApp.Wpf
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : INotifyPropertyChanged
     {
         public MainWindow()
@@ -68,11 +64,10 @@ namespace TestApp.Wpf
                 _selectedImage = value;
                 OnPropertyChanged("SelectedImage");
                 Completed = false;
-                Dispatcher.BeginInvoke(ImageChanged, DispatcherPriority.Background);
             }
         }
 
-        private void ImageChanged()
+        private void AnimationBehavior_OnLoaded(object sender, RoutedEventArgs e)
         {
             if (_animator != null)
             {
@@ -181,7 +176,6 @@ namespace TestApp.Wpf
                 _repeatBehavior = value;
                 OnPropertyChanged("RepeatBehavior");
                 Completed = false;
-                Dispatcher.BeginInvoke(ImageChanged, DispatcherPriority.Background);
             }
         }
 

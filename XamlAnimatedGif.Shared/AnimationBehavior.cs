@@ -171,21 +171,75 @@ namespace XamlAnimatedGif
 
         #region Error
 
-        public static event EventHandler<AnimationErrorEventArgs> Error;
+#if WPF
+        public static readonly RoutedEvent ErrorEvent =
+            EventManager.RegisterRoutedEvent(
+                "Error",
+                RoutingStrategy.Bubble,
+                typeof (AnimationErrorEventHandler),
+                typeof (AnimationBehavior));
 
-        internal static void OnError(object sender, Exception exception, AnimationErrorKind kind)
+        public static void AddErrorHandler(DependencyObject d, AnimationErrorEventHandler handler)
         {
-            EventHandler<AnimationErrorEventArgs> handler = Error;
-            if (handler != null)
-            {
-                var e = new AnimationErrorEventArgs(exception, kind);
-                handler(sender, e);
-            }
+            (d as UIElement)?.AddHandler(ErrorEvent, handler);
+        }
+
+        public static void RemoveErrorHandler(DependencyObject d, AnimationErrorEventHandler handler)
+        {
+            (d as UIElement)?.RemoveHandler(ErrorEvent, handler);
+        }
+#elif WINRT
+        // WinRT doesn't support custom attached events, use a normal CLR event instead
+        public static event EventHandler<AnimationErrorEventArgs> Error;
+#endif
+
+        internal static void OnError(Image image, Exception exception, AnimationErrorKind kind)
+        {
+#if WPF
+            image.RaiseEvent(new AnimationErrorEventArgs(image, exception, kind));
+#elif WINRT
+            Error?.Invoke(image, new AnimationErrorEventArgs(exception, kind));
+#endif
         }
 
         #endregion
 
+        #region Loaded
+
+#if WPF
+        public static readonly RoutedEvent LoadedEvent =
+            EventManager.RegisterRoutedEvent(
+                "Loaded",
+                RoutingStrategy.Bubble,
+                typeof (RoutedEventHandler),
+                typeof (AnimationBehavior));
+
+        public static void AddLoadedHandler(DependencyObject d, RoutedEventHandler handler)
+        {
+            (d as UIElement)?.AddHandler(LoadedEvent, handler);
+        }
+
+        public static void RemoveLoadedHandler(DependencyObject d, RoutedEventHandler handler)
+        {
+            (d as UIElement)?.RemoveHandler(LoadedEvent, handler);
+        }
+#elif WINRT
+        // WinRT doesn't support custom attached events, use a normal CLR event instead
+        public static event EventHandler Loaded;
+#endif
+
+        private static void OnLoaded(Image sender)
+        {
+#if WPF
+            sender.RaiseEvent(new RoutedEventArgs(LoadedEvent, sender));
+#elif WINRT
+            Loaded?.Invoke(sender, EventArgs.Empty);
+#endif
+        }
+
         #endregion
+
+#endregion
 
         private static void SourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
@@ -280,10 +334,12 @@ namespace XamlAnimatedGif
             {
                 var animator = await Animator.CreateAsync(sourceUri, repeatBehavior);
                 SetAnimatorCore(image, animator);
+                OnLoaded(image);
             }
             catch (InvalidSignatureException)
             {
                 image.Source = new BitmapImage(sourceUri);
+                OnLoaded(image);
             }
             catch(Exception ex)
             {
@@ -300,6 +356,7 @@ namespace XamlAnimatedGif
             {
                 var animator = await Animator.CreateAsync(stream, repeatBehavior);
                 SetAnimatorCore(image, animator);
+                OnLoaded(image);
             }
             catch (InvalidSignatureException)
             {
@@ -312,6 +369,7 @@ namespace XamlAnimatedGif
                 bmp.SetSource(stream.AsRandomAccessStream());
 #endif
                 image.Source = bmp;
+                OnLoaded(image);
             }
             catch(Exception ex)
             {

@@ -26,12 +26,9 @@ namespace XamlAnimatedGif.Decoding
                 {
                     byte[] bytes = new byte[len];
                     await stream.ReadAsync(bytes, 0, len).ConfigureAwait(false);
-                    if (ms != null)
-                        ms.Write(bytes, 0, len);
+                    ms?.Write(bytes, 0, len);
                 }
-                if (ms != null)
-                    return ms.ToArray();
-                return null;
+                return ms?.ToArray();
             }
         }
 
@@ -96,11 +93,7 @@ namespace XamlAnimatedGif.Decoding
         public static Exception InvalidBlockSizeException(string blockName, int expectedBlockSize, int actualBlockSize)
         {
             return new InvalidBlockSizeException(
-                string.Format(
-                    "Invalid block size for {0}. Expected {1}, but was {2}",
-                    blockName,
-                    expectedBlockSize,
-                    actualBlockSize));
+                $"Invalid block size for {blockName}. Expected {expectedBlockSize}, but was {actualBlockSize}");
         }
 
         public static Exception InvalidSignatureException(string signature)

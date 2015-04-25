@@ -166,18 +166,14 @@ namespace XamlAnimatedGif
 
         protected virtual void OnCurrentFrameChanged()
         {
-            EventHandler handler = CurrentFrameChanged;
-            if (handler != null)
-                handler(this, EventArgs.Empty);
+            CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler AnimationCompleted;
 
         protected virtual void OnAnimationCompleted()
         {
-            EventHandler handler = AnimationCompleted;
-            if (handler != null)
-                handler(this, EventArgs.Empty);
+            AnimationCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         public int CurrentFrameIndex
@@ -421,38 +417,35 @@ namespace XamlAnimatedGif
 
         private void DisposePreviousFrame(GifFrame currentFrame)
         {
-            if (_previousFrame != null)
+            var pgce = _previousFrame?.GraphicControl;
+            if (pgce != null)
             {
-                var pgce = _previousFrame.GraphicControl;
-                if (pgce != null)
+                switch (pgce.DisposalMethod)
                 {
-                    switch (pgce.DisposalMethod)
+                    case GifFrameDisposalMethod.None:
+                    case GifFrameDisposalMethod.DoNotDispose:
                     {
-                        case GifFrameDisposalMethod.None:
-                        case GifFrameDisposalMethod.DoNotDispose:
-                            {
-                                // Leave previous frame in place
-                                break;
-                            }
-                        case GifFrameDisposalMethod.RestoreBackground:
-                            {
-                                ClearArea(_previousFrame.Descriptor);
-                                break;
-                            }
-                        case GifFrameDisposalMethod.RestorePrevious:
-                            {
-                                CopyToBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
+                        // Leave previous frame in place
+                        break;
+                    }
+                    case GifFrameDisposalMethod.RestoreBackground:
+                    {
+                        ClearArea(_previousFrame.Descriptor);
+                        break;
+                    }
+                    case GifFrameDisposalMethod.RestorePrevious:
+                    {
+                        CopyToBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
 #if WPF
-                                var desc = _metadata.Header.LogicalScreenDescriptor;
-                                var rect = new Int32Rect(0, 0, desc.Width, desc.Height);
-                                _bitmap.AddDirtyRect(rect);
+                        var desc = _metadata.Header.LogicalScreenDescriptor;
+                        var rect = new Int32Rect(0, 0, desc.Width, desc.Height);
+                        _bitmap.AddDirtyRect(rect);
 #endif
-                                break;
-                            }
-                        default:
-                            {
-                                throw new ArgumentOutOfRangeException();
-                            }
+                        break;
+                    }
+                    default:
+                    {
+                        throw new ArgumentOutOfRangeException();
                     }
                 }
             }
@@ -551,30 +544,23 @@ namespace XamlAnimatedGif
 
         public override string ToString()
         {
-            string s = _sourceUri != null ? _sourceUri.ToString() : _sourceStream.ToString();
+            string s = _sourceUri?.ToString() ?? _sourceStream.ToString();
             return "GIF: " + s;
         }
 
         class GifPalette
         {
-            private readonly int? _transparencyIndex;
             private readonly Color[] _colors;
 
             public GifPalette(int? transparencyIndex, Color[] colors)
             {
-                _transparencyIndex = transparencyIndex;
+                TransparencyIndex = transparencyIndex;
                 _colors = colors;
             }
 
-            public int? TransparencyIndex
-            {
-                get { return _transparencyIndex; }
-            }
+            public int? TransparencyIndex { get; }
 
-            public Color this[int i]
-            {
-                get { return _colors[i]; }
-            }
+            public Color this[int i] => _colors[i];
         }
     }
 }

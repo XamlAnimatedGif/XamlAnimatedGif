@@ -166,55 +166,34 @@ namespace XamlAnimatedGif.Decompression
 
         struct Sequence
         {
-            private readonly byte[] _bytes;
-            private readonly bool _isClearCode;
-            private readonly bool _isStopCode;
-
             public Sequence(byte[] bytes)
                 : this()
             {
-                _bytes = bytes;
+                Bytes = bytes;
             }
 
             private Sequence(bool isClearCode, bool isStopCode)
                 : this()
             {
-                _isClearCode = isClearCode;
-                _isStopCode = isStopCode;
+                IsClearCode = isClearCode;
+                IsStopCode = isStopCode;
             }
 
-            public byte[] Bytes
-            {
-                get { return _bytes; }
-            }
+            public byte[] Bytes { get; }
 
-            public bool IsClearCode
-            {
-                get { return _isClearCode; }
-            }
+            public bool IsClearCode { get; }
 
-            public bool IsStopCode
-            {
-                get { return _isStopCode; }
-            }
+            public bool IsStopCode { get; }
 
-            private static readonly Sequence _clearCode = new Sequence(true, false);
-            public static Sequence ClearCode
-            {
-                get { return _clearCode; }
-            }
+            public static Sequence ClearCode { get; } = new Sequence(true, false);
 
-            private static readonly Sequence _stopCode = new Sequence(false, true);
-            public static Sequence StopCode
-            {
-                get { return _stopCode; }
-            }
+            public static Sequence StopCode { get; } = new Sequence(false, true);
 
             public Sequence Append(byte b)
             {
-                var bytes = new byte[_bytes.Length + 1];
-                _bytes.CopyTo(bytes, 0);
-                bytes[_bytes.Length] = b;
+                var bytes = new byte[Bytes.Length + 1];
+                Bytes.CopyTo(bytes, 0);
+                bytes[Bytes.Length] = b;
                 return new Sequence(bytes);
             }
         }

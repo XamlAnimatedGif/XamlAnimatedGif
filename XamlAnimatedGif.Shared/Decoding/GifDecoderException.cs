@@ -1,5 +1,7 @@
 using System;
+#if WPF
 using System.Runtime.Serialization;
+#endif
 
 namespace XamlAnimatedGif.Decoding
 {
