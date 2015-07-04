@@ -59,7 +59,7 @@ namespace XamlAnimatedGif
             _bitmap = CreateBitmap(metadata);
             var desc = metadata.Header.LogicalScreenDescriptor;
             _stride = 4 * ((desc.Width * 32 + 31) / 32);
-            _previousBackBuffer = new byte[metadata.Header.LogicalScreenDescriptor.Height * _stride];
+            _previousBackBuffer = new byte[desc.Height * _stride];
             _indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
             _timingManager = CreateTimingManager(metadata, repeatBehavior);
         }
@@ -320,7 +320,7 @@ namespace XamlAnimatedGif
 
                         int offset = (desc.Top + y) * _stride + desc.Left * 4;
 
-                        if (transparencyIndex > 0)
+                        if (transparencyIndex >= 0)
                         {
                             CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
                         }
