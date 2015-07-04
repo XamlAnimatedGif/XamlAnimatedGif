@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:gif="clr-namespace:XamlAnimatedGif;assembly=XamlAnimatedGif"
         WindowStartupLocation="CenterScreen"
-        Title="WPF Animated GIF demo" Height="640" Width="640">
+        Title="XAML Animated GIF demo" Height="640" Width="640">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="boolToVis" />
         <Storyboard x:Key="Blink">
