@@ -111,6 +111,8 @@ namespace XamlAnimatedGif
                 if (!_isStarted)
                 {
                     _isStarted = true;
+                    if (_timingManager.IsPaused)
+                        _timingManager.Resume();
                     await RunAsync(_cancellationTokenSource.Token);
                 }
                 else if (_timingManager.IsPaused)
@@ -561,6 +563,20 @@ namespace XamlAnimatedGif
             public int? TransparencyIndex { get; }
 
             public Color this[int i] => _colors[i];
+        }
+
+        internal async void ShowFirstFrame()
+        {
+            try
+            {
+                await RenderFrameAsync(0, CancellationToken.None);
+                CurrentFrameIndex = 0;
+                _timingManager.Pause();
+            }
+            catch (Exception ex)
+            {
+                AnimationBehavior.OnError(_image, ex, AnimationErrorKind.Rendering);
+            }
         }
     }
 }

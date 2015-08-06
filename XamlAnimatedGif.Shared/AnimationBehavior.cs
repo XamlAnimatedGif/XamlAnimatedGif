@@ -384,7 +384,7 @@ namespace XamlAnimatedGif
             if (GetAutoStart(image))
                 animator.Play();
             else
-                animator.CurrentFrameIndex = 0;
+                animator.ShowFirstFrame();
         }
 
         private static void ClearAnimatorCore(Image image)
