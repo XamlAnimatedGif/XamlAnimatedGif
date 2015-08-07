@@ -1,7 +1,7 @@
 XamlAnimatedGif
 ===============
 
-A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows Phone 8.1).
+A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows Phone 8.1, Universal Windows Platform).
 
 A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha5](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha5)
 
@@ -18,7 +18,7 @@ This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAni
 
 - Support for all recent XAML platforms, not just WPF
 
-  The WpfAnimatedGif library relied heavily on WPF-specific imaging features, which made it pretty much impossible to adapt to other platforms. XamlAnimatedGif, on the other hand, implements its own GIF decoding (metadata parsing and LZW decompression), which works on any XAML platform, and has as little dependency as possible on platform-specific types. The library currently works on WPF (.NET 4.x), Windows 8.1 and Windows Phone 8.1.
+  The WpfAnimatedGif library relied heavily on WPF-specific imaging features, which made it pretty much impossible to adapt to other platforms. XamlAnimatedGif, on the other hand, implements its own GIF decoding (metadata parsing and LZW decompression), which works on any XAML platform, and has as little dependency as possible on platform-specific types. The library currently works on WPF (.NET 4.x), Windows 8.1 Windows Phone 8.1 and Universal Windows Platform (Windows 10).
 
 - Resource efficiency
 
@@ -49,6 +49,7 @@ Supported platforms
 |Windows Phone (8.1) |       Yes |  |
 |Windows Phone (SL 8.1) |     No | Maybe |
 |Windows Phone (8.0) |        No | Maybe |
+|Universal Windows Platform (Windows 10) |Yes |  |
 |Silverlight         |        No | No idea |
 |Xamarin.iOS         |        No | No idea |
 |Xamarin.Android     |        No | No idea |
