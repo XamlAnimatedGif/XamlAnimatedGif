@@ -35,9 +35,4 @@ Added XML namespace mapping to https://github.com/XamlAnimatedGif/XamlAnimatedGi
       </group>
     </dependencies>
   </metadata>
-  <files>
-    <file src="XamlAnimatedGif.Wpf\bin\Release\XamlAnimatedGif.dll" target="lib\net45" />
-    <file src="XamlAnimatedGif.Wpf.4.0\bin\Release\XamlAnimatedGif.dll" target="lib\net40" />
-    <file src="XamlAnimatedGif.WinRT\bin\Release\XamlAnimatedGif.dll" target="lib\portable-win81+wpa81" />
-  </files>
 </package>
