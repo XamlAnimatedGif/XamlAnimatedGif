@@ -26,7 +26,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{ACF568AA-3061-4F73-AC5F-D52D2716EEE1}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
-		XamlAnimatedGif.nuspec = XamlAnimatedGif.nuspec
+		NuGet\XamlAnimatedGif.nuspec = NuGet\XamlAnimatedGif.nuspec
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlAnimatedGif.Wpf.4.0", "XamlAnimatedGif.Wpf.4.0\XamlAnimatedGif.Wpf.4.0.csproj", "{AFD68338-7468-4BBA-A936-52066FA0F226}"
