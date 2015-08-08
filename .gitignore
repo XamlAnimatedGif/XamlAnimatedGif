@@ -189,3 +189,7 @@ FakesAssemblies/
 # NDepend output
 NDependOut/
 
+# Cake
+tools/*
+!tools/packages.config
+
