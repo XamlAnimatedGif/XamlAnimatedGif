@@ -332,7 +332,7 @@ namespace XamlAnimatedGif
 
             try
             {
-                var animator = await Animator.CreateAsync(sourceUri, repeatBehavior);
+                var animator = await Animator.CreateAsync(image, sourceUri, repeatBehavior);
                 SetAnimatorCore(image, animator);
                 OnLoaded(image);
             }
@@ -354,7 +354,7 @@ namespace XamlAnimatedGif
 
             try
             {
-                var animator = await Animator.CreateAsync(stream, repeatBehavior);
+                var animator = await Animator.CreateAsync(image, stream, repeatBehavior);
                 SetAnimatorCore(image, animator);
                 OnLoaded(image);
             }

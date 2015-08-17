@@ -94,7 +94,8 @@
                        gif:AnimationBehavior.SourceUri="{Binding SelectedImage}"
                        gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}"
                        gif:AnimationBehavior.AutoStart="{Binding AutoStart}"
-                       gif:AnimationBehavior.Loaded="AnimationBehavior_OnLoaded"/>
+                       gif:AnimationBehavior.Loaded="AnimationBehavior_OnLoaded"
+                       gif:AnimationBehavior.Error="AnimationBehavior_OnError"/>
 
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top"
                         Visibility="{Binding Completed, Converter={StaticResource boolToVis}}">

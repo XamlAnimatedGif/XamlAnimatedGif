@@ -127,6 +127,7 @@
     <Resource Include="Images\nonanimated.gif" />
     <Resource Include="Images\newton-cradle.gif" />
     <Resource Include="Images\not-a-gif.png" />
+    <Resource Include="Images\optimized-full-code-table.gif" />
     <Content Include="Images\siteoforigin.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -64,7 +64,7 @@ namespace XamlAnimatedGif
             _timingManager = CreateTimingManager(metadata, repeatBehavior);
         }
 
-        internal static async Task<Animator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior), Image image = null)
+        internal static async Task<Animator> CreateAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior))
         {
             var loader = new UriLoader();
             var stream = await loader.GetStreamFromUriAsync(sourceUri);
@@ -79,7 +79,7 @@ namespace XamlAnimatedGif
             }
         }
 
-        internal static Task<Animator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior = default(RepeatBehavior), Image image = null)
+        internal static Task<Animator> CreateAsync(Image image, Stream sourceStream, RepeatBehavior repeatBehavior = default(RepeatBehavior))
         {
             return CreateAsync(sourceStream, null, repeatBehavior, image);
         }
