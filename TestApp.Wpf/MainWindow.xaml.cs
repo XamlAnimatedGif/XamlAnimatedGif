@@ -27,6 +27,7 @@ namespace TestApp.Wpf
                           "images/partialfirstframe.gif",
                           "images/newton-cradle.gif",
                           "images/not-a-gif.png",
+                          "images/optimized-full-code-table.gif",
                           "http://i.imgur.com/rCK6xzh.gif",
                           "http://media.giphy.com/media/zW2pe7UscHiq4/giphy.gif",
                           "http://media.giphy.com/media/nWn6ko2ygIeEU/giphy.gif"
@@ -252,6 +253,11 @@ namespace TestApp.Wpf
         private void btnBasicTests_Click(object sender, RoutedEventArgs e)
         {
             new BasicTestsWindow().ShowDialog();
+        }
+
+        private void AnimationBehavior_OnError(DependencyObject d, AnimationErrorEventArgs e)
+        {
+            MessageBox.Show($"An error occurred ({e.Kind}): {e.Exception}");
         }
     }
 }

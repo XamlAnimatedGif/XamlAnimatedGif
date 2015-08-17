@@ -232,6 +232,10 @@ namespace XamlAnimatedGif.Decompression
 #endif
             public void Add(Sequence sequence)
             {
+                // Code table is full, stop adding new codes
+                if (_count >= _table.Length)
+                    return;
+
                 _table[_count++] = sequence;
                 if ((_count & (_count - 1)) == 0 && _codeLength < MaxCodeLength)
                     _codeLength++;

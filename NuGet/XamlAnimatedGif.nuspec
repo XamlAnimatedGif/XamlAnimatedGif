@@ -3,7 +3,7 @@
   <metadata>
     <id>XamlAnimatedGif</id>
     <title>XAML Animated GIF</title>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <summary>A simple library to display animated GIF images in XAML applications</summary>
     <description>A simple library to display animated GIF images in XAML applications. Currently supported platforms include WPF (.NET 4.5), Windows 8.1 and Windows Phone 8.1.</description>
     <authors>Thomas Levesque</authors>
@@ -11,12 +11,11 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
     <projectUrl>https://github.com/XamlAnimatedGif/XamlAnimatedGif</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <releaseNotes>
-First stable release
-
-Added XML namespace mapping to https://github.com/XamlAnimatedGif/XamlAnimatedGif
+    <releaseNotes xml:space="preserve">
+- 1.0.1: Fixed LZW decoding issue in some optimized images when the code table is full (#19)
+         Fixed bug in error reporting (failed to raise the Error event)
+- 1.0.0: First stable release
     </releaseNotes>
-    <copyright>Copyright 2014</copyright>
     <tags>xaml animated gif winrt wpf windows-phone</tags>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="WindowsBase" targetFramework="net40, net45" />
