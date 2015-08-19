@@ -95,10 +95,7 @@ namespace XamlAnimatedGif
 
         #region Animation
 
-        public int FrameCount
-        {
-            get { return _metadata.Frames.Count; }
-        }
+        public int FrameCount => _metadata.Frames.Count;
 
         private bool _isStarted;
         private CancellationTokenSource _cancellationTokenSource;
@@ -151,10 +148,7 @@ namespace XamlAnimatedGif
             _timingManager.Pause();
         }
 
-        public bool IsPaused
-        {
-            get { return _timingManager.IsPaused; }
-        }
+        public bool IsPaused => _timingManager.IsPaused;
 
         public bool IsComplete
         {
@@ -488,10 +482,7 @@ namespace XamlAnimatedGif
             return lzwStream;
         }
 
-        internal BitmapSource Bitmap
-        {
-            get { return _bitmap; }
-        }
+        internal BitmapSource Bitmap => _bitmap;
 
         #endregion
 
