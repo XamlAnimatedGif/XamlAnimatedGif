@@ -35,7 +35,7 @@ namespace XamlAnimatedGif.Decoding
         public static async Task CopyDataBlocksToStreamAsync(Stream sourceStream, Stream targetStream, CancellationToken cancellationToken = default(CancellationToken))
         {
             int len;
-            while ((len = await sourceStream.ReadByteAsync()) > 0)
+            while ((len = await sourceStream.ReadByteAsync(cancellationToken)) > 0)
             {
                 byte[] bytes = new byte[len];
                 await sourceStream.ReadAsync(bytes, 0, len, cancellationToken).ConfigureAwait(false);

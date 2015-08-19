@@ -95,21 +95,18 @@ namespace XamlAnimatedGif
 
         #region Animation
 
-        public int FrameCount
-        {
-            get { return _metadata.Frames.Count; }
-        }
+        public int FrameCount => _metadata.Frames.Count;
 
         private bool _isStarted;
-
         private CancellationTokenSource _cancellationTokenSource;
+
         public async void Play()
         {
-            _cancellationTokenSource = new CancellationTokenSource();
             try
             {
                 if (!_isStarted)
                 {
+                    _cancellationTokenSource = new CancellationTokenSource();
                     _isStarted = true;
                     if (_timingManager.IsPaused)
                         _timingManager.Resume();
@@ -125,7 +122,9 @@ namespace XamlAnimatedGif
             }
             catch (Exception ex)
             {
-                AnimationBehavior.OnError(_image, ex, AnimationErrorKind.Rendering);
+                // ignore errors that might occur during Dispose
+                if (!_disposing)
+                    AnimationBehavior.OnError(_image, ex, AnimationErrorKind.Rendering);
             }
         }
 
@@ -149,10 +148,7 @@ namespace XamlAnimatedGif
             _timingManager.Pause();
         }
 
-        public bool IsPaused
-        {
-            get { return _timingManager.IsPaused; }
-        }
+        public bool IsPaused => _timingManager.IsPaused;
 
         public bool IsComplete
         {
@@ -486,10 +482,7 @@ namespace XamlAnimatedGif
             return lzwStream;
         }
 
-        internal BitmapSource Bitmap
-        {
-            get { return _bitmap; }
-        }
+        internal BitmapSource Bitmap => _bitmap;
 
         #endregion
 
@@ -528,16 +521,16 @@ namespace XamlAnimatedGif
             GC.SuppressFinalize(this);
         }
 
+        private volatile bool _disposing;
         private bool _disposed;
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
             {
-                if (disposing)
-                {
-                    _cancellationTokenSource?.Cancel();
-                    _sourceStream.Dispose();
-                }
+                _disposing = true;
+                _timingManager.Completed -= TimingManagerCompleted;
+                _cancellationTokenSource?.Cancel();
+                try { _sourceStream?.Dispose(); } catch { /* ignored */ }
                 _disposed = true;
             }
         }

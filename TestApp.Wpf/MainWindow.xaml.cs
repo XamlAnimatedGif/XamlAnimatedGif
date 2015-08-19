@@ -248,6 +248,7 @@ namespace TestApp.Wpf
         private void btnGC_Click(object sender, RoutedEventArgs e)
         {
             GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
 
         private void btnBasicTests_Click(object sender, RoutedEventArgs e)
