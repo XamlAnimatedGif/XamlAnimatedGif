@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace XamlAnimatedGif.Extensions
@@ -29,10 +30,10 @@ namespace XamlAnimatedGif.Extensions
             }
         }
 
-        public static async Task<int> ReadByteAsync(this Stream stream)
+        public static async Task<int> ReadByteAsync(this Stream stream, CancellationToken cancellationToken = default(CancellationToken))
         {
             var buffer = new byte[1];
-            int n = await stream.ReadAsync(buffer, 0, 1);
+            int n = await stream.ReadAsync(buffer, 0, 1, cancellationToken);
             if (n == 0)
                 return -1;
             return buffer[0];
