@@ -3,7 +3,7 @@
   <metadata>
     <id>XamlAnimatedGif</id>
     <title>XAML Animated GIF</title>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <summary>A simple library to display animated GIF images in XAML applications</summary>
     <description>A simple library to display animated GIF images in XAML applications. Currently supported platforms include WPF (.NET 4.5), Windows 8.1 and Windows Phone 8.1.</description>
     <authors>Thomas Levesque</authors>
@@ -12,6 +12,7 @@
     <projectUrl>https://github.com/XamlAnimatedGif/XamlAnimatedGif</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes xml:space="preserve">
+- 1.0.3: Fixed memory leak when animation source is changed before previous animation is completely loaded
 - 1.0.2: Fixed bug in Animator.Dispose where Cancel was called on the wrong CancellationTokenSource
 - 1.0.1: Fixed LZW decoding issue in some optimized images when the code table is full (#19)
          Fixed bug in error reporting (failed to raise the Error event)
