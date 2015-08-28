@@ -239,7 +239,24 @@ namespace XamlAnimatedGif
 
         #endregion
 
-#endregion
+        #endregion
+
+        #region Private attached properties
+
+        private static int GetSeqNum(DependencyObject obj)
+        {
+            return (int)obj.GetValue(SeqNumProperty);
+        }
+
+        private static void SetSeqNum(DependencyObject obj, int value)
+        {
+            obj.SetValue(SeqNumProperty, value);
+        }
+
+        private static readonly DependencyProperty SeqNumProperty =
+            DependencyProperty.RegisterAttached("SeqNum", typeof(int), typeof(AnimationBehavior), new PropertyMetadata(0));
+
+        #endregion
 
         private static void SourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
@@ -290,42 +307,58 @@ namespace XamlAnimatedGif
 
         private static void InitAnimation(Image image)
         {
+            int seqNum = GetSeqNum(image) + 1;
+            SetSeqNum(image, seqNum);
+
             image.Source = null;
             ClearAnimatorCore(image);
 
-            var stream = GetSourceStream(image);
-            if (stream != null)
+            try
             {
-                InitAnimationAsync(image, stream, GetRepeatBehavior(image));
-            }
-            else
-            {
-                var uri = GetSourceUri(image);
+                var stream = GetSourceStream(image);
+                if (stream != null)
+                {
+                    InitAnimationAsync(image, stream, GetRepeatBehavior(image), seqNum);
+                    return;
+                }
+
+                var uri = GetAbsoluteUri(image);
                 if (uri != null)
                 {
-                    if (!uri.IsAbsoluteUri)
-                    {
-#if WPF
-                        var baseUri = ((IUriContext) image).BaseUri;
-#elif WINRT
-                        var baseUri = image.BaseUri;
-#endif
-                        if (baseUri != null)
-                        {
-                            uri = new Uri(baseUri, uri);
-                        }
-                        else
-                        {
-                            OnError(image, new InvalidOperationException("Relative URI can't be resolved"), AnimationErrorKind.Loading);
-                            return;
-                        }
-                    }
-                    InitAnimationAsync(image, uri, GetRepeatBehavior(image));
+                    InitAnimationAsync(image, uri, GetRepeatBehavior(image), seqNum);
                 }
+            }
+            catch (Exception ex)
+            {
+                OnError(image, ex, AnimationErrorKind.Loading);
             }
         }
 
-        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior)
+        private static Uri GetAbsoluteUri(Image image)
+        {
+            var uri = GetSourceUri(image);
+            if (uri == null)
+                return null;
+            if (!uri.IsAbsoluteUri)
+            {
+#if WPF
+                var baseUri = ((IUriContext)image).BaseUri;
+#elif WINRT
+                var baseUri = image.BaseUri;
+#endif
+                if (baseUri != null)
+                {
+                    uri = new Uri(baseUri, uri);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Relative URI can't be resolved");
+                }
+            }
+            return uri;
+        }
+
+        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior, int seqNum)
         {
             if (!CheckDesignMode(image, sourceUri, null))
                 return;
@@ -333,6 +366,12 @@ namespace XamlAnimatedGif
             try
             {
                 var animator = await Animator.CreateAsync(image, sourceUri, repeatBehavior);
+                // Check that the source hasn't changed while we were loading the animation
+                if (GetSeqNum(image) != seqNum)
+                {
+                    animator.Dispose();
+                    return;
+                }
                 SetAnimatorCore(image, animator);
                 OnLoaded(image);
             }
@@ -347,7 +386,7 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior)
+        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior, int seqNum)
         {
             if (!CheckDesignMode(image, null, stream))
                 return;
@@ -356,6 +395,12 @@ namespace XamlAnimatedGif
             {
                 var animator = await Animator.CreateAsync(image, stream, repeatBehavior);
                 SetAnimatorCore(image, animator);
+                // Check that the source hasn't changed while we were loading the animation
+                if (GetSeqNum(image) != seqNum)
+                {
+                    animator.Dispose();
+                    return;
+                }
                 OnLoaded(image);
             }
             catch (InvalidSignatureException)
