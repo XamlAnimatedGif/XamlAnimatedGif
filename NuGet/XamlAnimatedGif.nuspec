@@ -10,6 +10,7 @@
     <owners>Thomas Levesque</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
     <projectUrl>https://github.com/XamlAnimatedGif/XamlAnimatedGif</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/XamlAnimatedGif/XamlAnimatedGif/master/NuGet/XamlAnimatedGif-128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes xml:space="preserve">
 - 1.0.3: Fixed memory leak when animation source is changed before previous animation is completely loaded
