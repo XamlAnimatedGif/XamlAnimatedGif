@@ -441,10 +441,6 @@ namespace XamlAnimatedGif
 #endif
                         break;
                     }
-                    default:
-                    {
-                        throw new ArgumentOutOfRangeException();
-                    }
                 }
             }
 
