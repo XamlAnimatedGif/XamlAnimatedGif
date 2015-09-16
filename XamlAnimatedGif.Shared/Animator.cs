@@ -45,7 +45,7 @@ namespace XamlAnimatedGif
         private readonly byte[] _previousBackBuffer;
         private readonly byte[] _indexStreamBuffer;
         private readonly TimingManager _timingManager;
-        
+
 
         #region Constructor and factory methods
 
@@ -64,10 +64,10 @@ namespace XamlAnimatedGif
             _timingManager = CreateTimingManager(metadata, repeatBehavior);
         }
 
-        internal static async Task<Animator> CreateAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior))
+        internal static async Task<Animator> CreateAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior), Action<int> Progress = null)
         {
             var loader = new UriLoader();
-            var stream = await loader.GetStreamFromUriAsync(sourceUri);
+            var stream = await loader.GetStreamFromUriAsync(sourceUri, Progress);
             try
             {
                 return await CreateAsync(stream, sourceUri, repeatBehavior, image);
@@ -115,6 +115,11 @@ namespace XamlAnimatedGif
                 else if (_timingManager.IsPaused)
                 {
                     _timingManager.Resume();
+                    await RunAsync(_cancellationTokenSource.Token);
+                }
+                else
+                {
+
                 }
             }
             catch (OperationCanceledException)
@@ -131,7 +136,7 @@ namespace XamlAnimatedGif
         private int _frameIndex;
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!_timingManager.IsPaused)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var timing = _timingManager.NextAsync(cancellationToken);
@@ -218,7 +223,7 @@ namespace XamlAnimatedGif
 #elif WINRT
             var bitmap = new WriteableBitmap(desc.Width, desc.Height);
 #else
-            #error Not implemented
+#error Not implemented
 #endif
             return bitmap;
         }
@@ -294,46 +299,46 @@ namespace XamlAnimatedGif
                 try
                 {
 #endif
-                    if (frameIndex < _previousFrameIndex)
-                        ClearArea(_metadata.Header.LogicalScreenDescriptor);
-                    else
-                        DisposePreviousFrame(frame);
+                if (frameIndex < _previousFrameIndex)
+                    ClearArea(_metadata.Header.LogicalScreenDescriptor);
+                else
+                    DisposePreviousFrame(frame);
 
-                    int bufferLength = 4 * desc.Width;
-                    byte[] indexBuffer = new byte[desc.Width];
-                    byte[] lineBuffer = new byte[bufferLength];
+                int bufferLength = 4 * desc.Width;
+                byte[] indexBuffer = new byte[desc.Width];
+                byte[] lineBuffer = new byte[bufferLength];
 
-                    var palette = _palettes[frameIndex];
-                    int transparencyIndex = palette.TransparencyIndex ?? -1;
+                var palette = _palettes[frameIndex];
+                int transparencyIndex = palette.TransparencyIndex ?? -1;
 
-                    var rows = frame.Descriptor.Interlace
-                        ? InterlacedRows(frame.Descriptor.Height)
-                        : NormalRows(frame.Descriptor.Height);
+                var rows = frame.Descriptor.Interlace
+                    ? InterlacedRows(frame.Descriptor.Height)
+                    : NormalRows(frame.Descriptor.Height);
 
-                    foreach (int y in rows)
+                foreach (int y in rows)
+                {
+                    int read = indexStream.Read(indexBuffer, 0, desc.Width);
+                    if (read != desc.Width)
+                        throw new EndOfStreamException();
+
+                    int offset = (desc.Top + y) * _stride + desc.Left * 4;
+
+                    if (transparencyIndex >= 0)
                     {
-                        int read = indexStream.Read(indexBuffer, 0, desc.Width);
-                        if (read != desc.Width)
-                            throw new EndOfStreamException();
-
-                        int offset = (desc.Top + y) * _stride + desc.Left * 4;
-
-                        if (transparencyIndex >= 0)
-                        {
-                            CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
-                        }
-
-                        for (int x = 0; x < desc.Width; x++)
-                        {
-                            byte index = indexBuffer[x];
-                            int i = 4 * x;
-                            if (index != transparencyIndex)
-                            {
-                                WriteColor(lineBuffer, palette[index], i);
-                            }
-                        }
-                        CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
+                        CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
                     }
+
+                    for (int x = 0; x < desc.Width; x++)
+                    {
+                        byte index = indexBuffer[x];
+                        int i = 4 * x;
+                        if (index != transparencyIndex)
+                        {
+                            WriteColor(lineBuffer, palette[index], i);
+                        }
+                    }
+                    CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
+                }
 #if WPF
                     var rect = new Int32Rect(desc.Left, desc.Top, desc.Width, desc.Height);
                     _bitmap.AddDirtyRect(rect);
@@ -389,7 +394,7 @@ namespace XamlAnimatedGif
 #elif WINRT
             buffer.CopyTo(0, bitmap.PixelBuffer, (uint)offset, length);
 #else
-            #error Not implemented
+#error Not implemented
 #endif
         }
 
@@ -401,7 +406,7 @@ namespace XamlAnimatedGif
 
             bitmap.PixelBuffer.CopyTo((uint)offset, buffer, 0, length);
 #else
-            #error Not implemented
+#error Not implemented
 #endif
         }
 
@@ -422,25 +427,25 @@ namespace XamlAnimatedGif
                 {
                     case GifFrameDisposalMethod.None:
                     case GifFrameDisposalMethod.DoNotDispose:
-                    {
-                        // Leave previous frame in place
-                        break;
-                    }
+                        {
+                            // Leave previous frame in place
+                            break;
+                        }
                     case GifFrameDisposalMethod.RestoreBackground:
-                    {
-                        ClearArea(_previousFrame.Descriptor);
-                        break;
-                    }
+                        {
+                            ClearArea(_previousFrame.Descriptor);
+                            break;
+                        }
                     case GifFrameDisposalMethod.RestorePrevious:
-                    {
-                        CopyToBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
+                        {
+                            CopyToBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
 #if WPF
                         var desc = _metadata.Header.LogicalScreenDescriptor;
                         var rect = new Int32Rect(0, 0, desc.Width, desc.Height);
                         _bitmap.AddDirtyRect(rect);
 #endif
-                        break;
-                    }
+                            break;
+                        }
                 }
             }
 
@@ -523,6 +528,7 @@ namespace XamlAnimatedGif
         {
             if (!_disposed)
             {
+                _isStarted = false;
                 _disposing = true;
                 _timingManager.Completed -= TimingManagerCompleted;
                 _cancellationTokenSource?.Cancel();
