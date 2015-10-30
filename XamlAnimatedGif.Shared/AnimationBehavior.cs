@@ -14,6 +14,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Media;
 #endif
 
 namespace XamlAnimatedGif
@@ -307,12 +308,22 @@ namespace XamlAnimatedGif
 
         private static void InitAnimation(Image image)
         {
+            if (IsLoaded(image))
+            {
+                image.Unloaded += Image_Unloaded;
+            }
+            else
+            {
+                image.Loaded += Image_Loaded;
+                return;
+            }
+
             int seqNum = GetSeqNum(image) + 1;
             SetSeqNum(image, seqNum);
 
             image.Source = null;
             ClearAnimatorCore(image);
-
+            
             try
             {
                 var stream = GetSourceStream(image);
@@ -332,6 +343,30 @@ namespace XamlAnimatedGif
             {
                 OnError(image, ex, AnimationErrorKind.Loading);
             }
+        }
+
+        private static void Image_Loaded(object sender, RoutedEventArgs e)
+        {
+            var image = (Image) sender;
+            image.Loaded -= Image_Loaded;
+            InitAnimation(image);
+        }
+
+        private static void Image_Unloaded(object sender, RoutedEventArgs e)
+        {
+            var image = (Image) sender;
+            image.Unloaded -= Image_Unloaded;
+            image.Loaded += Image_Loaded;
+            ClearAnimatorCore(image);
+        }
+
+        private static bool IsLoaded(FrameworkElement element)
+        {
+#if WPF
+            return element.IsLoaded;
+#elif WINRT
+            return VisualTreeHelper.GetParent(element) != null;
+#endif
         }
 
         private static Uri GetAbsoluteUri(Image image)
