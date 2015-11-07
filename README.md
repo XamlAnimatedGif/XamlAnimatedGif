@@ -13,6 +13,8 @@ A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha5](http://www.nug
 <Image gif:AnimationBehavior.SourceUri="/Images/animated.gif" />
 ```
 
+For more details, see the [documentation page](https://github.com/XamlAnimatedGif/XamlAnimatedGif/wiki/Documentation) in the wiki.
+
 About this project
 ------------------
 
@@ -28,7 +30,7 @@ This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAni
 
 - Simplicity
 
-  One major issue of WpfAnimatedGif was that it accepted an `ImageSource` as its input. The idea was to make it more natural to use, but it also made the code much more complex. To access the frames, it had to obtain a `BitmapDecoder` from the source; depending on the type of the source, this means it had to reload the image from a URL or stream, or use the `Decoder` property directly if the source was a `BitmapFrame`; if the image was from a remote URI and wasn't completely downloaded yet, this case had to be handled as well. It had to handle many different scenarios, which made for very complex and inefficient code, and it still didn't work in all cases... XamlAnimatedGif is much more conservative in what it accepts (either a URL to a local file or app resource, or a stream), which makes it simpler, more maintainable, and more reliable.
+  One major issue of WpfAnimatedGif was that it accepted an `ImageSource` as its input. The idea was to make it more natural to use, but it also made the code much more complex. To access the frames, it had to obtain a `BitmapDecoder` from the source; depending on the type of the source, this means it had to reload the image from a URL or stream, or use the `Decoder` property directly if the source was a `BitmapFrame`; if the image was from a remote URI and wasn't completely downloaded yet, this case had to be handled as well. It had to handle many different scenarios, which made for very complex and inefficient code, and it still didn't work in all cases... XamlAnimatedGif is much more conservative in what it accepts (either a file or HTTP URI, a resource URI, or a stream), which makes it simpler, more maintainable, and more reliable.
 
 Why didn't I just make a new version of WpfAnimatedGif?
 -------------------------------------------------------
@@ -75,7 +77,7 @@ GIF Features
 How to build
 ------------
 
-You will need VS2015 Preview, because the code uses a few features from C# 6. You will also need a Windows Store developer license to be able to compile the WinRT targets.
+You will need Visual Studio 2015, because the code uses a few features from C# 6. You will also need a Windows Store developer license to be able to compile the WinRT targets.
 
 
 How to contribute
