@@ -45,18 +45,18 @@ Supported platforms
 
 |Platform            | Supported | Could be supported |
 |:-------------------|:---------:|:------------------:|
-|WPF (.NET 4.5)      |       Yes |  |
-|WPF (.NET 4.0)      |       Yes |  |
-|WPF (.NET 3.5 and earlier) | No | No |
-|Windows Store apps (8.1) |  Yes | |
-|Windows Store apps (8.0) |   No | Maybe |
-|Windows Phone (8.1) |       Yes |  |
-|Windows Phone (SL 8.1) |     No | Maybe |
-|Windows Phone (8.0) |        No | Maybe |
-|Universal Windows Platform (Windows 10) |Yes |  |
-|Silverlight         |        No | No idea |
-|Xamarin.iOS         |        No | No idea |
-|Xamarin.Android     |        No | No idea |
+|WPF (.NET 4.5)      | :white_check_mark: |  |
+|WPF (.NET 4.0)      |  :white_check_mark: |  |
+|WPF (.NET 3.5 and earlier) |  | No |
+|Windows Store apps (8.1) |  :white_check_mark: | |
+|Windows Store apps (8.0) |  | Maybe |
+|Windows Phone (8.1) |  :white_check_mark: |  |
+|Windows Phone (SL 8.1) |  | Maybe |
+|Windows Phone (8.0) |  | Maybe |
+|Universal Windows Platform (Windows 10) | :white_check_mark: |  |
+|Silverlight         |  | No idea |
+|Xamarin.iOS         |  | No idea |
+|Xamarin.Android     |  | No idea |
 
 As you can see, there aren't many supported platforms yet. So far, I only focused on making it work, and didn't worry too much about platform support. I don't want to spend time supporting older platforms (SL, Win 8.0, WP 8.0), and haven't looked into Xamarin yet for iOS and Android, but I'll be glad to accept contributions.
 
@@ -65,13 +65,13 @@ GIF Features
 
 | Feature | Supported | Comments |
 |:--------|:---------:|:---------|
-|Transparency|Yes||
-|Frame local color table|Yes||
-|Interlaced images|Yes||
-|Various frame disposal methods|Yes||
-|Frame delay|Yes||
-|Automatic repeat count|Yes|from the [Netscape Application Block](http://www.vurdalakov.net/misc/gif/netscape-looping-application-extension)|
-|Override repeat count|Yes|Specify repeat count manually|
+|Transparency|:white_check_mark:||
+|Frame local color table|:white_check_mark:||
+|Interlaced images|:white_check_mark:||
+|Various frame disposal methods|:white_check_mark:||
+|Frame delay|:white_check_mark:||
+|Automatic repeat count|:white_check_mark:|from the [Netscape Application Block](http://www.vurdalakov.net/misc/gif/netscape-looping-application-extension)|
+|Override repeat count|:white_check_mark:|Specify repeat count manually|
 |Manual animation control|Partially|Only pause/resume are supported; support for next/previous/seek might be added later|
 
 How to build
