@@ -1,6 +1,7 @@
 ﻿using XamlAnimatedGif.Decoding;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 #if WPF
 using System.ComponentModel;
 using System.Windows;
@@ -407,7 +408,7 @@ namespace XamlAnimatedGif
                     animator.Dispose();
                     return;
                 }
-                SetAnimatorCore(image, animator);
+                await SetAnimatorCoreAsync(image, animator);
                 OnLoaded(image);
             }
             catch (InvalidSignatureException)
@@ -429,7 +430,7 @@ namespace XamlAnimatedGif
             try
             {
                 var animator = await Animator.CreateAsync(image, stream, repeatBehavior);
-                SetAnimatorCore(image, animator);
+                await SetAnimatorCoreAsync(image, animator);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
@@ -457,14 +458,14 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static void SetAnimatorCore(Image image, Animator animator)
+        private static async Task SetAnimatorCoreAsync(Image image, Animator animator)
         {
             SetAnimator(image, animator);
             image.Source = animator.Bitmap;
             if (GetAutoStart(image))
                 animator.Play();
             else
-                animator.ShowFirstFrame();
+                await animator.ShowFirstFrameAsync();
         }
 
         private static void ClearAnimatorCore(Image image)

@@ -554,7 +554,7 @@ namespace XamlAnimatedGif
             public Color this[int i] => _colors[i];
         }
 
-        internal async void ShowFirstFrame()
+        internal async Task ShowFirstFrameAsync()
         {
             try
             {
