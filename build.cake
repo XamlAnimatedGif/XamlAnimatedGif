@@ -1,3 +1,5 @@
+#tool "NUnit.Runners"
+
 using System.Xml.Linq;
 
 ////////////////////
@@ -75,9 +77,17 @@ Task("Clean")
     CleanDirectory(nugetDir);
 });
 
+// Restores NuGet packages
+Task("Restore")
+    .Does(() =>
+{
+    NuGetRestore(solutionFile);
+});
+
 // Builds the solution
 Task("Build")
     .IsDependentOn("Clean")
+    .IsDependentOn("Restore")
     .Does(() =>
 {
     foreach (var project in projects)
