@@ -40,9 +40,33 @@ var nupkgDir = $"{nugetDir}/nupkg";
 // Files to include in NuGet package for each target
 var nugetTargets = new[]
 {
-    new { Name = "net45", Files = new[] { $"{projectName}.Wpf/bin/{configuration}/{projectName}.dll" } },
-    new { Name = "net40", Files = new[] { $"{projectName}.Wpf.4.0/bin/{configuration}/{projectName}.dll" } },
-    new { Name = "portable-win81+wpa81", Files = new[] { $"{projectName}.WinRT/bin/{configuration}/{projectName}.dll" } },
+    new
+    {
+        Name = "net45",
+        Files = new[]
+        {
+            $"{projectName}.Wpf/bin/{configuration}/{projectName}.dll",
+            $"{projectName}.Wpf/bin/{configuration}/{projectName}.pdb"
+        }
+    },
+    new
+    {
+        Name = "net40",
+        Files = new[]
+        {
+            $"{projectName}.Wpf.4.0/bin/{configuration}/{projectName}.dll",
+            $"{projectName}.Wpf.4.0/bin/{configuration}/{projectName}.pdb"
+        }
+    },
+    new
+    {
+        Name = "portable-win81+wpa81",
+        Files = new[]
+        {
+            $"{projectName}.WinRT/bin/{configuration}/{projectName}.dll",
+            $"{projectName}.WinRT/bin/{configuration}/{projectName}.pdb"
+        }
+    },
 };
 
 //////////////////////
@@ -125,7 +149,8 @@ Task("Pack")
     var packSettings = new NuGetPackSettings
     {
         BasePath = nupkgDir,
-        OutputDirectory = nugetDir
+        OutputDirectory = nugetDir,
+        Symbols = true
     };
     NuGetPack(nuspecFile, packSettings);
 });
