@@ -104,8 +104,15 @@ namespace XamlAnimatedGif
         {
             try
             {
+                if (_timingManager.IsComplete)
+                {
+                    _timingManager.Reset();
+                    _isStarted = false;
+                }
+
                 if (!_isStarted)
                 {
+                    _cancellationTokenSource?.Dispose();
                     _cancellationTokenSource = new CancellationTokenSource();
                     _isStarted = true;
                     if (_timingManager.IsPaused)
@@ -565,6 +572,26 @@ namespace XamlAnimatedGif
             catch (Exception ex)
             {
                 AnimationBehavior.OnError(_image, ex, AnimationErrorKind.Rendering);
+            }
+        }
+
+        public async void Rewind()
+        {
+            CurrentFrameIndex = 0;
+            bool isStopped = _timingManager.IsPaused || _timingManager.IsComplete;
+            _timingManager.Reset();
+            if (isStopped)
+            {
+                _timingManager.Pause();
+                _isStarted = false;
+                try
+                {
+                    await RenderFrameAsync(0, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    AnimationBehavior.OnError(_image, ex, AnimationErrorKind.Rendering);
+                }
             }
         }
     }

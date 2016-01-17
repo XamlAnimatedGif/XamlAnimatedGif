@@ -1,4 +1,4 @@
-#tool "NUnit.Runners"
+#tool "NUnit.Console"
 
 using System.Xml.Linq;
 

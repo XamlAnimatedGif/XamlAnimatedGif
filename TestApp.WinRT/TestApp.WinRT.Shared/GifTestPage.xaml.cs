@@ -91,6 +91,8 @@ namespace TestApp.WinRT
             var picker = new FileOpenPicker();
             picker.FileTypeFilter.Add(".gif");
             var file = await picker.PickSingleFileAsync();
+            if (file == null)
+                return;
             StorageApplicationPermissions.FutureAccessList.Add(file);
             string uriString = new Uri(file.Path).AbsoluteUri;
             Images.Add(uriString);
