@@ -197,22 +197,20 @@ namespace TestApp.Wpf
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+            handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private Animator _animator;
 
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
-            if (_animator != null)
-                _animator.Pause();
+            _animator?.Pause();
             SetPlayPauseEnabled(true);
         }
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            if (_animator != null)
-                _animator.Play();
+            _animator?.Play();
             Completed = false;
             SetPlayPauseEnabled(false);
         }
@@ -233,6 +231,7 @@ namespace TestApp.Wpf
         {
             btnPause.IsEnabled = !isPaused;
             btnPlay.IsEnabled = isPaused;
+            btnRewind.IsEnabled = true;
         }
 
         private void btnOpenUrl_Click(object sender, RoutedEventArgs e)
@@ -259,6 +258,15 @@ namespace TestApp.Wpf
         private void AnimationBehavior_OnError(DependencyObject d, AnimationErrorEventArgs e)
         {
             MessageBox.Show($"An error occurred ({e.Kind}): {e.Exception}");
+        }
+
+        private void btnRewind_Click(object sender, RoutedEventArgs e)
+        {
+            if (_animator == null)
+                return;
+            _animator.Rewind();
+            SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
+            Completed = false;
         }
     }
 }
