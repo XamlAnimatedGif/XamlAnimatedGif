@@ -206,6 +206,41 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region DownloadProgress
+
+#if WPF
+        public static readonly RoutedEvent DownloadProgressEvent =
+            EventManager.RegisterRoutedEvent(
+                "DownloadProgress",
+                RoutingStrategy.Bubble,
+                typeof (DownloadProgressEventHandler),
+                typeof (AnimationBehavior));
+
+        public static void AddDownloadProgressHandler(DependencyObject d, DownloadProgressEventHandler handler)
+        {
+            (d as UIElement)?.AddHandler(DownloadProgressEvent, handler);
+        }
+
+        public static void RemoveDownloadProgressHandler(DependencyObject d, DownloadProgressEventHandler handler)
+        {
+            (d as UIElement)?.RemoveHandler(DownloadProgressEvent, handler);
+        }
+
+#elif WINRT
+        // WinRT doesn't support custom attached events, use a normal CLR event instead
+        public static event EventHandler<DownloadProgressEventArgs> DownloadProgress;
+#endif
+
+        internal static void OnDownloadProgress(Image image, int downloadPercentage)
+        {
+#if WPF
+            image.RaiseEvent(new DownloadProgressEventArgs(image, downloadPercentage));
+#elif WINRT
+            DownloadProgress?.Invoke(image, new DownloadProgressEventArgs(downloadPercentage));
+#endif
+        }
+        #endregion
+
         #region Loaded
 
 #if WPF

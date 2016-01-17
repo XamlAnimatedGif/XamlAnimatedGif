@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -50,6 +51,19 @@ namespace XamlAnimatedGif.Extensions
             // WinRT stream wrapper is already buffered
             return stream;
 #endif
+        }
+
+        public static async Task CopyToAsync(this Stream source, Stream destination, IProgress<long> progress, int bufferSize = 81920, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            byte[] buffer = new byte[bufferSize];
+            int bytesRead;
+            long bytesCopied = 0;
+            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) != 0)
+            {
+                await destination.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
+                bytesCopied += bytesRead;
+                progress?.Report(bytesCopied);
+            }
         }
     }
 }
