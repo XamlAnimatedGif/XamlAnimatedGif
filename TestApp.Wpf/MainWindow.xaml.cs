@@ -70,6 +70,8 @@ namespace TestApp.Wpf
 
         private void AnimationBehavior_OnLoaded(object sender, RoutedEventArgs e)
         {
+            IsDownloading = false;
+
             if (_animator != null)
             {
                 _animator.CurrentFrameChanged -= CurrentFrameChanged;
@@ -190,7 +192,39 @@ namespace TestApp.Wpf
                 OnPropertyChanged("AutoStart");
             }
         }
-        
+
+        private bool _isDownloading;
+        public bool IsDownloading
+        {
+            get { return _isDownloading; }
+            set
+            {
+                _isDownloading = value;
+                OnPropertyChanged("IsDownloading");
+            }
+        }
+
+        private int _downloadProgress;
+        public int DownloadProgress
+        {
+            get { return _downloadProgress; }
+            set
+            {
+                _downloadProgress = value;
+                OnPropertyChanged("DownloadProgress");
+            }
+        }
+
+        private bool _isDownloadProgressIndeterminate;
+        public bool IsDownloadProgressIndeterminate
+        {
+            get { return _isDownloadProgressIndeterminate; }
+            set
+            {
+                _isDownloadProgressIndeterminate = value;
+                OnPropertyChanged("IsDownloadProgressIndeterminate");
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -257,6 +291,9 @@ namespace TestApp.Wpf
 
         private void AnimationBehavior_OnError(DependencyObject d, AnimationErrorEventArgs e)
         {
+            if (e.Kind == AnimationErrorKind.Loading)
+                IsDownloading = false;
+
             MessageBox.Show($"An error occurred ({e.Kind}): {e.Exception}");
         }
 
@@ -267,6 +304,20 @@ namespace TestApp.Wpf
             _animator.Rewind();
             SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
             Completed = false;
+        }
+
+        private void AnimationBehavior_OnDownloadProgress(DependencyObject d, DownloadProgressEventArgs e)
+        {
+            IsDownloading = true;
+            if (e.Progress >= 0)
+            {
+                DownloadProgress = e.Progress;
+                IsDownloadProgressIndeterminate = false;
+            }
+            else
+            {
+                IsDownloadProgressIndeterminate = true;
+            }
         }
     }
 }

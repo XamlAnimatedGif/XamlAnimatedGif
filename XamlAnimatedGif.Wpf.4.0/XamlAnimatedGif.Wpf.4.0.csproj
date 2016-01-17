@@ -77,6 +77,7 @@
       <Link>Properties\Xmlns.cs</Link>
     </Compile>
     <Compile Include="..\XamlAnimatedGif.Wpf\UriLoader.cs" />
+    <Compile Include="Progress.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -67,7 +67,11 @@ namespace XamlAnimatedGif
         internal static async Task<Animator> CreateAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior))
         {
             var loader = new UriLoader();
-            var stream = await loader.GetStreamFromUriAsync(sourceUri);
+            var progress = new Progress<int>(percentage =>
+            {
+                AnimationBehavior.OnDownloadProgress(image, percentage);
+            });
+            var stream = await loader.GetStreamFromUriAsync(sourceUri, progress);
             try
             {
                 return await CreateAsync(stream, sourceUri, repeatBehavior, image);

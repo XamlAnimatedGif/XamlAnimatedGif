@@ -7,9 +7,9 @@ using Windows.UI.Xaml;
 
 namespace XamlAnimatedGif
 {
+#if WPF
     public delegate void AnimationErrorEventHandler(DependencyObject d, AnimationErrorEventArgs e);
 
-#if WPF
     public class AnimationErrorEventArgs : RoutedEventArgs
     {
         public AnimationErrorEventArgs(object source, Exception exception, AnimationErrorKind kind)
