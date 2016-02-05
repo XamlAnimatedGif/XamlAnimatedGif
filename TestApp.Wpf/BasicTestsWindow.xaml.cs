@@ -7,6 +7,7 @@ using Microsoft.Win32;
 using XamlAnimatedGif;
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
+using System;
 
 namespace TestApp.Wpf
 {
@@ -19,7 +20,7 @@ namespace TestApp.Wpf
 
         private void BtnBrowse_OnClick(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog {Filter = "GIF files|*.gif"};
+            var dlg = new OpenFileDialog { Filter = "GIF files|*.gif" };
             if (dlg.ShowDialog() == true)
             {
                 txtFileName.Text = dlg.FileName;
@@ -80,6 +81,21 @@ namespace TestApp.Wpf
                         }
                     }
                 }
+            }
+        }
+
+        private async void BtnTestImageBrush_OnClick(object sender, RoutedEventArgs e)
+        {
+            string fileName = txtFileName.Text;
+            if (string.IsNullOrEmpty(fileName))
+                return;
+
+            using (var anim = await Animator.CreateAsync(null, new Uri(fileName)))
+            {
+                anim.Play();
+                var img = new ImageBrush(anim.Bitmap);
+                var wnd = new Window { Background = img };
+                wnd.ShowDialog();
             }
         }
     }
