@@ -1,5 +1,5 @@
 ﻿using System;
-#if WPF
+#if WPF || SILVERLIGHT
 using System.Windows;
 #elif WINRT
 using Windows.UI.Xaml;
@@ -14,7 +14,7 @@ namespace XamlAnimatedGif
     {
         public AnimationErrorEventArgs(object source, Exception exception, AnimationErrorKind kind)
             : base(AnimationBehavior.ErrorEvent, source)
-#elif WINRT
+#elif WINRT || SILVERLIGHT
     public class AnimationErrorEventArgs : EventArgs
     {
         public AnimationErrorEventArgs(Exception exception, AnimationErrorKind kind)

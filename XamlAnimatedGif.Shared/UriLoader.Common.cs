@@ -10,7 +10,7 @@ namespace XamlAnimatedGif
     {
         public Task<Stream> GetStreamFromUriAsync(Uri uri, IProgress<int> progress)
         {
-            if (uri.Scheme == "http" || uri.Scheme == "https")
+            if (uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https"))
                 return GetNetworkStreamAsync(uri, progress);
             return GetStreamFromUriCoreAsync(uri);
         }

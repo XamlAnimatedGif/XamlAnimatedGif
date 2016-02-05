@@ -47,7 +47,7 @@ namespace XamlAnimatedGif.Extensions
             if (bs != null)
                 return bs;
             return new BufferedStream(stream);
-#elif WINRT
+#elif WINRT || SILVERLIGHT
             // WinRT stream wrapper is already buffered
             return stream;
 #endif
