@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-#if WPF
+#if WPF || SILVERLIGHT
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -20,7 +20,7 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media.Animation;
 using System.Runtime.InteropServices.WindowsRuntime;
 #endif
-#if !NET40
+#if !NET40 && !SILVERLIGHT
 using TaskEx = System.Threading.Tasks.Task;
 #endif
 
@@ -226,7 +226,7 @@ namespace XamlAnimatedGif
             var desc = metadata.Header.LogicalScreenDescriptor;
 #if WPF
             var bitmap = new WriteableBitmap(desc.Width, desc.Height, 96, 96, PixelFormats.Bgra32, null);
-#elif WINRT
+#elif WINRT || SILVERLIGHT
             var bitmap = new WriteableBitmap(desc.Width, desc.Height);
 #else
             #error Not implemented
@@ -353,7 +353,7 @@ namespace XamlAnimatedGif
                 {
                     _bitmap.Unlock();
                 }
-#elif WINRT
+#elif WINRT || SILVERLIGHT
                 _bitmap.Invalidate();
 #endif
                 _previousFrame = frame;
@@ -399,6 +399,8 @@ namespace XamlAnimatedGif
             Marshal.Copy(buffer, 0, bitmap.BackBuffer + offset, length);
 #elif WINRT
             buffer.CopyTo(0, bitmap.PixelBuffer, (uint)offset, length);
+#elif SILVERLIGHT
+            Buffer.BlockCopy(buffer, 0, bitmap.Pixels, offset, length);
 #else
             #error Not implemented
 #endif
@@ -409,8 +411,9 @@ namespace XamlAnimatedGif
 #if WPF
             Marshal.Copy(bitmap.BackBuffer + offset, buffer, 0, length);
 #elif WINRT
-
             bitmap.PixelBuffer.CopyTo((uint)offset, buffer, 0, length);
+#elif SILVERLIGHT
+            Buffer.BlockCopy(bitmap.Pixels, offset, buffer, 0, length);
 #else
             #error Not implemented
 #endif

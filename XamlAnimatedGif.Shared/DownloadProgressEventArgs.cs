@@ -6,7 +6,7 @@ namespace XamlAnimatedGif
     public delegate void DownloadProgressEventHandler(DependencyObject d, DownloadProgressEventArgs e);
 
     public class DownloadProgressEventArgs : RoutedEventArgs
-#elif WINRT
+#elif WINRT || SILVERLIGHT
     public class DownloadProgressEventArgs : System.EventArgs
 #endif
     {
@@ -14,7 +14,7 @@ namespace XamlAnimatedGif
 
 #if WPF
         public DownloadProgressEventArgs(object source, int progress) : base(AnimationBehavior.DownloadProgressEvent, source)
-#elif WINRT
+#elif WINRT || SILVERLIGHT
         public DownloadProgressEventArgs(int progress)
 #endif
         {
