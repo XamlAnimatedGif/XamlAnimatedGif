@@ -2,11 +2,12 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-#if WPF
+#if WPF || SILVERLIGHT
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 #elif WINRT
@@ -190,7 +191,7 @@ namespace XamlAnimatedGif
         {
             (d as UIElement)?.RemoveHandler(ErrorEvent, handler);
         }
-#elif WINRT
+#elif WINRT || SILVERLIGHT
         // WinRT doesn't support custom attached events, use a normal CLR event instead
         public static event EventHandler<AnimationErrorEventArgs> Error;
 #endif
@@ -199,7 +200,7 @@ namespace XamlAnimatedGif
         {
 #if WPF
             image.RaiseEvent(new AnimationErrorEventArgs(image, exception, kind));
-#elif WINRT
+#elif WINRT || SILVERLIGHT
             Error?.Invoke(image, new AnimationErrorEventArgs(exception, kind));
 #endif
         }
@@ -226,7 +227,7 @@ namespace XamlAnimatedGif
             (d as UIElement)?.RemoveHandler(DownloadProgressEvent, handler);
         }
 
-#elif WINRT
+#elif WINRT || SILVERLIGHT
         // WinRT doesn't support custom attached events, use a normal CLR event instead
         public static event EventHandler<DownloadProgressEventArgs> DownloadProgress;
 #endif
@@ -235,7 +236,7 @@ namespace XamlAnimatedGif
         {
 #if WPF
             image.RaiseEvent(new DownloadProgressEventArgs(image, downloadPercentage));
-#elif WINRT
+#elif WINRT || SILVERLIGHT
             DownloadProgress?.Invoke(image, new DownloadProgressEventArgs(downloadPercentage));
 #endif
         }
@@ -260,7 +261,7 @@ namespace XamlAnimatedGif
         {
             (d as UIElement)?.RemoveHandler(LoadedEvent, handler);
         }
-#elif WINRT
+#elif WINRT || SILVERLIGHT
         // WinRT doesn't support custom attached events, use a normal CLR event instead
         public static event EventHandler Loaded;
 #endif
@@ -269,7 +270,7 @@ namespace XamlAnimatedGif
         {
 #if WPF
             sender.RaiseEvent(new RoutedEventArgs(LoadedEvent, sender));
-#elif WINRT
+#elif WINRT || SILVERLIGHT
             Loaded?.Invoke(sender, EventArgs.Empty);
 #endif
         }
@@ -327,6 +328,8 @@ namespace XamlAnimatedGif
                     bmp.StreamSource = sourceStream;
 #elif WINRT
                     bmp.SetSource(sourceStream.AsRandomAccessStream());
+#elif SILVERLIGHT
+                    bmp.SetSource(sourceStream);
 #endif
                 }
                 else if (sourceUri != null)
@@ -400,7 +403,7 @@ namespace XamlAnimatedGif
         {
 #if WPF
             return element.IsLoaded;
-#elif WINRT
+#elif WINRT || SILVERLIGHT
             return VisualTreeHelper.GetParent(element) != null;
 #endif
         }
@@ -412,10 +415,14 @@ namespace XamlAnimatedGif
                 return null;
             if (!uri.IsAbsoluteUri)
             {
+                Uri baseUri = null;
 #if WPF
-                var baseUri = ((IUriContext)image).BaseUri;
+                baseUri = ((IUriContext)image).BaseUri;
 #elif WINRT
-                var baseUri = image.BaseUri;
+                baseUri = image.BaseUri;
+#elif SILVERLIGHT 
+                // no BaseUri in silverlight, keep relative uri
+                return uri;
 #endif
                 if (baseUri != null)
                 {
@@ -483,6 +490,8 @@ namespace XamlAnimatedGif
                 bmp.EndInit();
 #elif WINRT
                 bmp.SetSource(stream.AsRandomAccessStream());
+#elif SILVERLIGHT
+                bmp.SetSource(stream);
 #endif
                 image.Source = bmp;
                 OnLoaded(image);
@@ -520,8 +529,9 @@ namespace XamlAnimatedGif
             return DesignerProperties.GetIsInDesignMode(obj);
 #elif WINRT
             return DesignMode.DesignModeEnabled;
+#elif SILVERLIGHT
+            return DesignerProperties.IsInDesignTool;
 #endif
-
         }
     }
 }
