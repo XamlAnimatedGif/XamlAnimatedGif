@@ -64,7 +64,7 @@ namespace XamlAnimatedGif
             _timingManager = CreateTimingManager(metadata, repeatBehavior);
         }
 
-        public static async Task<Animator> CreateAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior))
+        internal static async Task<Animator> CreateAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior))
         {
             var loader = new UriLoader();
             var progress = new Progress<int>(percentage =>
@@ -492,7 +492,7 @@ namespace XamlAnimatedGif
             return lzwStream;
         }
 
-        public BitmapSource Bitmap => _bitmap;
+        internal BitmapSource Bitmap => _bitmap;
 
         #endregion
 

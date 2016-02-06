@@ -7,6 +7,5 @@
         <Button Name="btnBrowse" Content="Browse..." Click="BtnBrowse_OnClick" />
         <Button Name="btnTestLzw" Content="Test LZW decompression" Click="BtnTestLzw_OnClick" />
         <Button Name="btnTestStream" Content="Using stream" Click="BtnTestStream_OnClick" />
-        <Button Name="btnTestImageBrush" Content="ImageBrush" Click="BtnTestImageBrush_OnClick" />
     </StackPanel>
 </Window>
