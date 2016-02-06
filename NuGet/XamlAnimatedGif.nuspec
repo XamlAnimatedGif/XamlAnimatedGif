@@ -41,6 +41,10 @@
         <dependency id="Microsoft.Bcl.Async" version="1.0.168" />
         <dependency id="Microsoft.Net.Http" version="2.2.29" />
       </group>
+      <group targetFramework="sl5">
+        <dependency id="Microsoft.Bcl.Async" version="1.0.168" />
+        <dependency id="Microsoft.Net.Http" version="2.2.29" />
+      </group>
     </dependencies>
   </metadata>
 </package>
