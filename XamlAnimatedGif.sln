@@ -56,6 +56,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "TestApp.Silverlight.Web", "
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "33113"
 		SlnRelativePath = "TestApp.Silverlight\TestApp.Silverlight.Web\"
+		ProjOutputReferences = "{AC67FFFC-7348-4225-8A71-EE40BB8C861C}|ClientBin|false;"
 	EndProjectSection
 EndProject
 Global

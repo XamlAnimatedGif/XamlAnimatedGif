@@ -415,13 +415,14 @@ namespace XamlAnimatedGif
                 return null;
             if (!uri.IsAbsoluteUri)
             {
-#if WPF
-                var baseUri = ((IUriContext)image).BaseUri;
-#elif WINRT
-                var baseUri = image.BaseUri;
-#elif SILVERLIGHT 
-                return uri;
                 Uri baseUri = null;
+#if WPF
+                baseUri = ((IUriContext)image).BaseUri;
+#elif WINRT
+                baseUri = image.BaseUri;
+#elif SILVERLIGHT 
+                // no BaseUri in silverlight, keep relative uri
+                return uri;
 #endif
                 if (baseUri != null)
                 {
