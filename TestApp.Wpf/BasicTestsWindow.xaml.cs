@@ -1,8 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 using Microsoft.Win32;
 using XamlAnimatedGif;
 using XamlAnimatedGif.Decoding;
@@ -80,6 +83,27 @@ namespace TestApp.Wpf
                         }
                     }
                 }
+            }
+        }
+
+        private async void BtnTestBrush_OnClick(object sender, RoutedEventArgs e)
+        {
+            var uri = new Uri("pack://application:,,,/images/earth.gif");
+            using (var animator = await BrushAnimator.CreateAsync(uri, RepeatBehavior.Forever))
+            {
+                var window = new Window
+                {
+                    Width = 500,
+                    Height = 250,
+                    Content = new Ellipse
+                    {
+                        Width = 400,
+                        Height = 200,
+                        Fill = animator.Brush
+                    }
+                };
+                animator.Play();
+                window.ShowDialog();
             }
         }
     }
