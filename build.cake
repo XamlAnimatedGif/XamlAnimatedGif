@@ -20,9 +20,10 @@ var solutionFile = $"./{projectName}.sln";
 // Projects in the solution
 var projects = new[]
 {
-    $"{projectName}.Wpf",
-    $"{projectName}.Wpf.4.0",
-    $"{projectName}.WinRT"
+    new { Name = $"{projectName}.Wpf", MSBuildPlatform = MSBuildPlatform.Automatic },
+    new { Name = $"{projectName}.Wpf.4.0", MSBuildPlatform = MSBuildPlatform.Automatic },
+    new { Name = $"{projectName}.WinRT", MSBuildPlatform = MSBuildPlatform.Automatic },
+    new { Name = $"{projectName}.Silverlight", MSBuildPlatform = MSBuildPlatform.x86 }
 };
 var projectDirsToClean = new[] { "bin", "obj", "AppPackages" };
 
@@ -67,6 +68,15 @@ var nugetTargets = new[]
             $"{projectName}.WinRT/bin/{configuration}/{projectName}.pdb"
         }
     },
+    new
+    {
+        Name = "sl5",
+        Files = new[]
+        {
+            $"{projectName}.Silverlight/bin/{configuration}/{projectName}.dll",
+            $"{projectName}.Silverlight/bin/{configuration}/{projectName}.pdb"
+        }
+    },
 };
 
 //////////////////////
@@ -96,7 +106,7 @@ Task("Clean")
     var dirsToClean =
         from p in projects
         from d in projectDirsToClean
-        select $"{p}/{d}";
+        select $"{p.Name}/{d}";
     CleanDirectories(dirsToClean);
     CleanDirectory(nugetDir);
 });
@@ -117,8 +127,9 @@ Task("Build")
     foreach (var project in projects)
     {
         MSBuild(
-            $"{project}/{project}.csproj",
-            settings => settings.SetConfiguration(configuration));
+            $"{project.Name}/{project.Name}.csproj",
+            settings => settings.SetMSBuildPlatform(project.MSBuildPlatform)
+                                .SetConfiguration(configuration));
     }
 });
 

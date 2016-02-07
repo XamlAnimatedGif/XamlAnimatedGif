@@ -193,3 +193,6 @@ NDependOut/
 tools/*
 !tools/packages.config
 
+# Visual Studio per-user solution settings
+.vs/
+
