@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 #if WPF || SILVERLIGHT
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -24,7 +23,6 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using TaskEx = System.Threading.Tasks.Task;
 #endif
 
-using XamlAnimatedGif.Extensions;
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
 
@@ -33,12 +31,11 @@ namespace XamlAnimatedGif
 #if WINRT
     [Bindable]
 #endif
-    public class Animator : DependencyObject, IDisposable
+    public abstract class Animator : DependencyObject, IDisposable
     {
         private readonly Stream _sourceStream;
         private readonly Uri _sourceUri;
         private readonly GifDataStream _metadata;
-        private readonly Image _image;
         private readonly Dictionary<int, GifPalette> _palettes;
         private readonly WriteableBitmap _bitmap;
         private readonly int _stride;
@@ -46,15 +43,13 @@ namespace XamlAnimatedGif
         private readonly byte[] _indexStreamBuffer;
         private readonly TimingManager _timingManager;
         
-
         #region Constructor and factory methods
 
-        private Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior, Image image)
+        internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior)
         {
             _sourceStream = sourceStream;
             _sourceUri = sourceUri;
             _metadata = metadata;
-            _image = image;
             _palettes = CreatePalettes(metadata);
             _bitmap = CreateBitmap(metadata);
             var desc = metadata.Header.LogicalScreenDescriptor;
@@ -64,17 +59,18 @@ namespace XamlAnimatedGif
             _timingManager = CreateTimingManager(metadata, repeatBehavior);
         }
 
-        internal static async Task<Animator> CreateAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior = default(RepeatBehavior))
+        internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
+            Uri sourceUri,
+            IProgress<int> progress,
+            Func<Stream, GifDataStream, TAnimator> create)
+            where TAnimator : Animator
         {
             var loader = new UriLoader();
-            var progress = new Progress<int>(percentage =>
-            {
-                AnimationBehavior.OnDownloadProgress(image, percentage);
-            });
             var stream = await loader.GetStreamFromUriAsync(sourceUri, progress);
             try
             {
-                return await CreateAsync(stream, sourceUri, repeatBehavior, image);
+                // ReSharper disable once AccessToDisposedClosure
+                return await CreateAsyncCore(stream, metadata => create(stream, metadata));
             }
             catch
             {
@@ -83,16 +79,13 @@ namespace XamlAnimatedGif
             }
         }
 
-        internal static Task<Animator> CreateAsync(Image image, Stream sourceStream, RepeatBehavior repeatBehavior = default(RepeatBehavior))
+        internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
+            Stream sourceStream,
+            Func<GifDataStream, TAnimator> create)
+            where TAnimator : Animator
         {
-            return CreateAsync(sourceStream, null, repeatBehavior, image);
-        }
-
-        private static async Task<Animator> CreateAsync(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior, Image image)
-        {
-            var stream = sourceStream.AsBuffered();
-            var metadata = await GifDataStream.ReadAsync(stream);
-            return new Animator(stream, sourceUri, metadata, repeatBehavior, image);
+            var metadata = await GifDataStream.ReadAsync(sourceStream);
+            return create(metadata);
         }
 
         #endregion
@@ -135,7 +128,7 @@ namespace XamlAnimatedGif
             {
                 // ignore errors that might occur during Dispose
                 if (!_disposing)
-                    AnimationBehavior.OnError(_image, ex, AnimationErrorKind.Rendering);
+                    OnError(ex, AnimationErrorKind.Rendering);
             }
         }
 
@@ -183,6 +176,13 @@ namespace XamlAnimatedGif
         protected virtual void OnAnimationCompleted()
         {
             AnimationCompleted?.Invoke(this, EventArgs.Empty);
+        }
+
+        public event EventHandler<AnimationErrorEventArgs> Error;
+
+        protected virtual void OnError(Exception ex, AnimationErrorKind kind)
+        {
+            Error?.Invoke(this, new AnimationErrorEventArgs(ErrorSource, ex, kind));
         }
 
         public int CurrentFrameIndex
@@ -578,7 +578,7 @@ namespace XamlAnimatedGif
             }
             catch (Exception ex)
             {
-                AnimationBehavior.OnError(_image, ex, AnimationErrorKind.Rendering);
+                OnError(ex, AnimationErrorKind.Rendering);
             }
         }
 
@@ -597,9 +597,11 @@ namespace XamlAnimatedGif
                 }
                 catch (Exception ex)
                 {
-                    AnimationBehavior.OnError(_image, ex, AnimationErrorKind.Rendering);
+                    OnError(ex, AnimationErrorKind.Rendering);
                 }
             }
         }
+
+        protected abstract object ErrorSource { get; }
     }
 }
