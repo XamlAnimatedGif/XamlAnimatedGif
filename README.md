@@ -3,7 +3,7 @@ XamlAnimatedGif
 
 [![Build status](https://ci.appveyor.com/api/projects/status/huf6heqkc2hvu7qd?svg=true)](https://ci.appveyor.com/project/thomaslevesque/xamlanimatedgif)
 
-A library to display animated GIF images in XAML apps (WPF, Windows 8.1, Windows Phone 8.1, Universal Windows Platform).
+A library to display animated GIF images in XAML apps (WPF, Silverlight, Windows 8.1, Windows Phone 8.1, Universal Windows Platform).
 
 A NuGet package is available here: [XamlAnimatedGif 1.0.0-alpha5](http://www.nuget.org/packages/XamlAnimatedGif/1.0.0-alpha5)
 
@@ -54,7 +54,7 @@ Supported platforms
 |Windows Phone (SL 8.1) |  | Maybe |
 |Windows Phone (8.0) |  | Maybe |
 |Universal Windows Platform (Windows 10) | :white_check_mark: |  |
-|Silverlight         |  | No idea |
+|Silverlight         | :white_check_mark: |  |
 |Xamarin.iOS         |  | No idea |
 |Xamarin.Android     |  | No idea |
 
