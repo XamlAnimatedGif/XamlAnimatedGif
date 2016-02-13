@@ -2,12 +2,12 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using XamlAnimatedGif.Extensions;
 #if WPF || SILVERLIGHT
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 #elif WINRT
@@ -17,6 +17,9 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media;
+#endif
+#if SILVERLIGHT
+using System.Windows.Media;
 #endif
 
 namespace XamlAnimatedGif
@@ -201,7 +204,17 @@ namespace XamlAnimatedGif
 #if WPF
             image.RaiseEvent(new AnimationErrorEventArgs(image, exception, kind));
 #elif WINRT || SILVERLIGHT
-            Error?.Invoke(image, new AnimationErrorEventArgs(exception, kind));
+            Error?.Invoke(image, new AnimationErrorEventArgs(image, exception, kind));
+#endif
+        }
+
+        private static void AnimatorError(object sender, AnimationErrorEventArgs e)
+        {
+#if WPF
+            var source = e.Source as UIElement;
+            source?.RaiseEvent(e);
+#elif WINRT || SILVERLIGHT
+            Error?.Invoke(e.Source, e);
 #endif
         }
 
@@ -368,7 +381,7 @@ namespace XamlAnimatedGif
                 var stream = GetSourceStream(image);
                 if (stream != null)
                 {
-                    InitAnimationAsync(image, stream, GetRepeatBehavior(image), seqNum);
+                    InitAnimationAsync(image, stream.AsBuffered(), GetRepeatBehavior(image), seqNum);
                     return;
                 }
 
@@ -441,7 +454,8 @@ namespace XamlAnimatedGif
 
             try
             {
-                var animator = await Animator.CreateAsync(image, sourceUri, repeatBehavior);
+                var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
+                var animator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
@@ -469,7 +483,7 @@ namespace XamlAnimatedGif
 
             try
             {
-                var animator = await Animator.CreateAsync(image, stream, repeatBehavior);
+                var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image);
                 await SetAnimatorCoreAsync(image, animator);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
@@ -503,6 +517,7 @@ namespace XamlAnimatedGif
         private static async Task SetAnimatorCoreAsync(Image image, Animator animator)
         {
             SetAnimator(image, animator);
+            animator.Error += AnimatorError;
             image.Source = animator.Bitmap;
             if (GetAutoStart(image))
                 animator.Play();
@@ -516,6 +531,7 @@ namespace XamlAnimatedGif
             if (animator == null)
                 return;
 
+            animator.Error -= AnimatorError;
             animator.Dispose();
             SetAnimator(image, null);
         }

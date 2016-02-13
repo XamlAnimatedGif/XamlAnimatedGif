@@ -14,12 +14,14 @@ namespace XamlAnimatedGif
     {
         public AnimationErrorEventArgs(object source, Exception exception, AnimationErrorKind kind)
             : base(AnimationBehavior.ErrorEvent, source)
+        {
 #elif WINRT || SILVERLIGHT
     public class AnimationErrorEventArgs : EventArgs
     {
-        public AnimationErrorEventArgs(Exception exception, AnimationErrorKind kind)
-#endif
+        public AnimationErrorEventArgs(object source, Exception exception, AnimationErrorKind kind)
         {
+            Source = source;
+#endif
             Exception = exception;
             Kind = kind;
         }
@@ -27,6 +29,10 @@ namespace XamlAnimatedGif
         public Exception Exception { get; }
 
         public AnimationErrorKind Kind { get; }
+
+#if WINRT || SILVERLIGHT
+        public object Source { get; }
+#endif
     }
 
     public enum AnimationErrorKind
