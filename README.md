@@ -85,7 +85,6 @@ How to contribute
 
 There are a few things that I would like to include in the library, but I don't have the time or will to do it myself, so I'd be glad to accept contributions:
 - support for Windows 8.0 and Windows Phone 8.0
-- support for Silverlight (is anyone still using Silverlight out there?)
 - support for iOS and Android via Xamarin (is it even possible? I haven't played with Xamarin yet, so I'm not sure). I don't even know if it would be useful; perhaps these platforms already have some support for animated GIFs. If not the implementation would probably be quite different, but the basic blocks (GiF decoding and decompression) could probably be reused.
 
 Before you start working on something, please create an issue to discuss it and make sure we're on the same page regarding how it should be done.
