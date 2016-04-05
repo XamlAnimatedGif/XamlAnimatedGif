@@ -1,5 +1,3 @@
-#tool "NUnit.Console"
-
 using System.Xml.Linq;
 
 ////////////////////
@@ -26,9 +24,6 @@ var projects = new[]
     new { Name = $"{projectName}.Silverlight", MSBuildPlatform = MSBuildPlatform.x86 }
 };
 var projectDirsToClean = new[] { "bin", "obj", "AppPackages" };
-
-// Assemblies containing unit tests
-var unitTestAssemblies = new string[] { };
 
 // NuGet package ID; change if different from project name
 var nugetId = projectName;
@@ -133,18 +128,9 @@ Task("Build")
     }
 });
 
-// Runs the unit tests
-Task("Test")
-    .WithCriteria(unitTestAssemblies.Any())
-    .IsDependentOn("Build")
-    .Does(() =>
-{
-    NUnit(unitTestAssemblies);
-});
-
 // Creates the NuGet package
 Task("Pack")
-    .IsDependentOn("Test")
+    .IsDependentOn("Build")
     .Does(() =>
 {
     CreateDirectory(nupkgDir);
@@ -183,7 +169,7 @@ Task("Push")
 /////////////
 
 Task("Default")
-    .IsDependentOn("Test");
+    .IsDependentOn("Build");
 
 ///////////////
 // Execution //
