@@ -67,6 +67,7 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right">
+                    <Button Name="btnClear" Content="Clear" Click="btnClear_Click" />
                     <Button Name="btnGC" Content="GC" Click="btnGC_Click"  />
                     <Button Name="btnBasicTests" Content="..." Click="btnBasicTests_Click" />
                 </StackPanel>

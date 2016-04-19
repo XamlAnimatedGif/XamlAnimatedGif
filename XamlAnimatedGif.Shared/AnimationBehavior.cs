@@ -467,7 +467,16 @@ namespace XamlAnimatedGif
             }
             catch (InvalidSignatureException)
             {
-                image.Source = new BitmapImage(sourceUri);
+                var bmp = new BitmapImage();
+#if WPF
+                bmp.BeginInit();
+                bmp.UriSource = sourceUri;
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.EndInit();
+#elif WINRT || SILVERLIGHT
+                bmp.UriSource = sourceUri;
+#endif
+                image.Source = bmp;
                 OnLoaded(image);
             }
             catch(Exception ex)

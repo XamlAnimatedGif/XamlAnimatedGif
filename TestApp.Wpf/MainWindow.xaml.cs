@@ -319,5 +319,10 @@ namespace TestApp.Wpf
                 IsDownloadProgressIndeterminate = true;
             }
         }
+
+        private void btnClear_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedImage = null;
+        }
     }
 }
