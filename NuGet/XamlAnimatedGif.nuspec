@@ -3,9 +3,9 @@
   <metadata>
     <id>XamlAnimatedGif</id>
     <title>XAML Animated GIF</title>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
     <summary>A simple library to display animated GIF images in XAML applications</summary>
-    <description>A simple library to display animated GIF images in XAML applications. Currently supported platforms include WPF (.NET 4.5), Windows 8.1 and Windows Phone 8.1.</description>
+    <description>A simple library to display animated GIF images in XAML applications. Supported platforms: WPF (4.0 and later) UWP (Windows 10), Windows 8.1, Windows Phone 8.1, Silverlight 5.</description>
     <authors>Thomas Levesque</authors>
     <owners>Thomas Levesque</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
@@ -13,6 +13,7 @@
     <iconUrl>https://raw.githubusercontent.com/XamlAnimatedGif/XamlAnimatedGif/master/NuGet/XamlAnimatedGif-128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes xml:space="preserve">
+- 1.1.2: Fixed #66: source files were kept open for non-GIF images even after they were unloaded
 - 1.1.1: Implemented #54: add support for animated brush
 - 1.1.0: Added support for Silverlight (thanks @tpola!)
 - 1.0.9: Implemented #28: add DownloadProgress event to AnimationBehavior class
