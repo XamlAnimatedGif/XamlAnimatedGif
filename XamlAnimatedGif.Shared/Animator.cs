@@ -346,7 +346,7 @@ namespace XamlAnimatedGif
                         CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
                     }
 #if WPF
-                    var rect = new Int32Rect(desc.Left, desc.Top, desc.Width, desc.Height);
+                    var rect = new Int32Rect(desc.Left, desc.Top, desc.Width - desc.Left, desc.Height - desc.Top);
                     _bitmap.AddDirtyRect(rect);
                 }
                 finally
@@ -475,7 +475,7 @@ namespace XamlAnimatedGif
                 CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
             }
 #if WPF
-            _bitmap.AddDirtyRect(new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+            _bitmap.AddDirtyRect(new Int32Rect(rect.Left, rect.Top, rect.Width - rect.Left, rect.Height - rect.Top));
 #endif
         }
 
