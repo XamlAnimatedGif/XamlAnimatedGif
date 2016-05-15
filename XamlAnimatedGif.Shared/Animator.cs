@@ -13,7 +13,6 @@ using System.Runtime.InteropServices;
 #elif WINRT
 using Windows.UI;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media.Animation;
@@ -298,6 +297,7 @@ namespace XamlAnimatedGif
 
             var frame = _metadata.Frames[frameIndex];
             var desc = frame.Descriptor;
+            var rect = GetFixedUpFrameRect(desc);
             using (var indexStream = await GetIndexStreamAsync(frame, cancellationToken))
             {
 #if WPF
@@ -310,16 +310,16 @@ namespace XamlAnimatedGif
                     else
                         DisposePreviousFrame(frame);
 
-                    int bufferLength = 4 * desc.Width;
+                    int bufferLength = 4 * rect.Width;
                     byte[] indexBuffer = new byte[desc.Width];
                     byte[] lineBuffer = new byte[bufferLength];
 
                     var palette = _palettes[frameIndex];
                     int transparencyIndex = palette.TransparencyIndex ?? -1;
 
-                    var rows = frame.Descriptor.Interlace
-                        ? InterlacedRows(frame.Descriptor.Height)
-                        : NormalRows(frame.Descriptor.Height);
+                    var rows = desc.Interlace
+                        ? InterlacedRows(rect.Height)
+                        : NormalRows(rect.Height);
 
                     foreach (int y in rows)
                     {
@@ -334,7 +334,7 @@ namespace XamlAnimatedGif
                             CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
                         }
 
-                        for (int x = 0; x < desc.Width; x++)
+                        for (int x = 0; x < rect.Width; x++)
                         {
                             byte index = indexBuffer[x];
                             int i = 4 * x;
@@ -346,7 +346,6 @@ namespace XamlAnimatedGif
                         CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
                     }
 #if WPF
-                    var rect = new Int32Rect(desc.Left, desc.Top, desc.Width, desc.Height);
                     _bitmap.AddDirtyRect(rect);
                 }
                 finally
@@ -442,7 +441,7 @@ namespace XamlAnimatedGif
                     }
                     case GifFrameDisposalMethod.RestoreBackground:
                     {
-                        ClearArea(_previousFrame.Descriptor);
+                        ClearArea(GetFixedUpFrameRect(_previousFrame.Descriptor));
                         break;
                     }
                     case GifFrameDisposalMethod.RestorePrevious:
@@ -467,15 +466,20 @@ namespace XamlAnimatedGif
 
         private void ClearArea(IGifRect rect)
         {
+            ClearArea(new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+        }
+
+        private void ClearArea(Int32Rect rect)
+        {
             int bufferLength = 4 * rect.Width;
             byte[] lineBuffer = new byte[bufferLength];
             for (int y = 0; y < rect.Height; y++)
             {
-                int offset = (rect.Top + y) * _stride + 4 * rect.Left;
+                int offset = (rect.Y + y) * _stride + 4 * rect.X;
                 CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
             }
 #if WPF
-            _bitmap.AddDirtyRect(new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+            _bitmap.AddDirtyRect(new Int32Rect(rect.X, rect.Y, rect.Width, rect.Height));
 #endif
         }
 
@@ -514,6 +518,13 @@ namespace XamlAnimatedGif
             if (metadata.RepeatCount == 0)
                 return RepeatBehavior.Forever;
             return new RepeatBehavior(metadata.RepeatCount);
+        }
+
+        private Int32Rect GetFixedUpFrameRect(GifImageDescriptor desc)
+        {
+            int width = Math.Min(desc.Width, _bitmap.PixelWidth - desc.Left);
+            int height = Math.Min(desc.Height, _bitmap.PixelHeight - desc.Top);
+            return new Int32Rect(desc.Left, desc.Top, width, height);
         }
 
         #endregion
@@ -604,4 +615,22 @@ namespace XamlAnimatedGif
 
         protected abstract object ErrorSource { get; }
     }
+
+#if !WPF
+    struct Int32Rect
+    {
+        public int X { get; }
+        public int Y { get; }
+        public int Width { get; }
+        public int Height { get; }
+
+        public Int32Rect(int x, int y, int width, int height)
+        {
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+        }
+    }
+#endif
 }

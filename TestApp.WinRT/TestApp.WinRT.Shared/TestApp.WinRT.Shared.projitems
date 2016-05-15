@@ -29,6 +29,7 @@
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)Images\bomb-once.gif" />
     <Content Include="$(MSBuildThisFileDirectory)Images\bomb.gif" />
+    <Content Include="$(MSBuildThisFileDirectory)Images\corrupt-frame-size.gif" />
     <Content Include="$(MSBuildThisFileDirectory)Images\earth.gif" />
     <Content Include="$(MSBuildThisFileDirectory)Images\monster.gif" />
     <Content Include="$(MSBuildThisFileDirectory)Images\nonanimated.gif" />
