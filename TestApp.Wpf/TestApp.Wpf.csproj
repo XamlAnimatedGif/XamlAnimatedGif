@@ -129,6 +129,7 @@
     <Resource Include="Images\not-a-gif.png" />
     <Resource Include="Images\optimized-full-code-table.gif" />
     <Resource Include="Images\rewind.png" />
+    <Resource Include="Images\corrupt-frame-size.gif" />
     <Content Include="Images\siteoforigin.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
