@@ -332,27 +332,34 @@ namespace XamlAnimatedGif
             if (IsInDesignMode(image) && !GetAnimateInDesignMode(image))
             {
                 var bmp = new BitmapImage();
-#if WPF
-                bmp.BeginInit();
-#endif
-                if (sourceStream != null)
+                try
                 {
 #if WPF
-                    bmp.StreamSource = sourceStream;
+                    bmp.BeginInit();
+#endif
+                    if (sourceStream != null)
+                    {
+#if WPF
+                        bmp.StreamSource = sourceStream;
 #elif WINRT
                     bmp.SetSource(sourceStream.AsRandomAccessStream());
 #elif SILVERLIGHT
                     bmp.SetSource(sourceStream);
 #endif
-                }
-                else if (sourceUri != null)
-                {
-                    bmp.UriSource = sourceUri;
-                }
+                    }
+                    else if (sourceUri != null)
+                    {
+                        bmp.UriSource = sourceUri;
+                    }
 #if WPF
-                bmp.EndInit();
+                    bmp.EndInit();
 #endif
-                image.Source = bmp;
+                    image.Source = bmp;
+                }
+                catch
+                {
+                    image.Source = null;
+                }
                 return false;
             }
             return true;
