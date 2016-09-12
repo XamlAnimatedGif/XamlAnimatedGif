@@ -3,7 +3,7 @@
   <metadata>
     <id>XamlAnimatedGif</id>
     <title>XAML Animated GIF</title>
-    <version>1.1.4</version>
+    <version>1.1.5</version>
     <summary>A simple library to display animated GIF images in XAML applications</summary>
     <description>A simple library to display animated GIF images in XAML applications. Supported platforms: WPF (4.0 and later) UWP (Windows 10), Windows 8.1, Windows Phone 8.1, Silverlight 5.</description>
     <authors>Thomas Levesque</authors>
