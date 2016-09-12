@@ -549,7 +549,7 @@ namespace XamlAnimatedGif
             if (!_disposed)
             {
                 _disposing = true;
-                _timingManager.Completed -= TimingManagerCompleted;
+                if (_timingManager != null) _timingManager.Completed -= TimingManagerCompleted;
                 _cancellationTokenSource?.Cancel();
                 try { _sourceStream?.Dispose(); } catch { /* ignored */ }
                 _disposed = true;
