@@ -14,12 +14,17 @@ namespace XamlAnimatedGif
 {
     internal class ImageAnimator : Animator
     {
+        private readonly Image _image;
+
         public ImageAnimator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior, Image image) : base(sourceStream, sourceUri, metadata, repeatBehavior)
         {
-            ErrorSource = image;
+            _image = image;
+            OnRepeatBehaviorChanged(); // in case the value has changed during creation
         }
 
-        protected override object ErrorSource { get; }
+        protected override RepeatBehavior GetSpecifiedRepeatBehavior() => AnimationBehavior.GetRepeatBehavior(_image);
+
+        protected override object ErrorSource => _image;
 
         public static Task<ImageAnimator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior, IProgress<int> progress, Image image)
         {
