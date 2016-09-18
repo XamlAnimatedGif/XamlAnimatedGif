@@ -34,6 +34,7 @@ namespace XamlAnimatedGif
     {
         private readonly Stream _sourceStream;
         private readonly Uri _sourceUri;
+        private readonly bool _isSourceStreamOwner;
         private readonly GifDataStream _metadata;
         private readonly Dictionary<int, GifPalette> _palettes;
         private readonly WriteableBitmap _bitmap;
@@ -48,6 +49,7 @@ namespace XamlAnimatedGif
         {
             _sourceStream = sourceStream;
             _sourceUri = sourceUri;
+            _isSourceStreamOwner = sourceUri != null; // stream opened from URI, should close it
             _metadata = metadata;
             _palettes = CreatePalettes(metadata);
             _bitmap = CreateBitmap(metadata);
@@ -196,10 +198,7 @@ namespace XamlAnimatedGif
 
         private TimingManager CreateTimingManager(GifDataStream metadata, RepeatBehavior repeatBehavior)
         {
-            var actualRepeatBehavior =
-                repeatBehavior == default(RepeatBehavior)
-                    ? GetRepeatBehavior(metadata)
-                    : repeatBehavior;
+            var actualRepeatBehavior = GetActualRepeatBehavior(metadata, repeatBehavior);
 
             var manager = new TimingManager(actualRepeatBehavior);
             foreach (var frame in metadata.Frames)
@@ -210,6 +209,15 @@ namespace XamlAnimatedGif
             manager.Completed += TimingManagerCompleted;
             return manager;
         }
+
+        private RepeatBehavior GetActualRepeatBehavior(GifDataStream metadata, RepeatBehavior repeatBehavior)
+        {
+            return repeatBehavior == default(RepeatBehavior)
+                    ? GetRepeatBehaviorFromGif(metadata)
+                    : repeatBehavior;
+        }
+
+        protected abstract RepeatBehavior GetSpecifiedRepeatBehavior();
 
         private void TimingManagerCompleted(object sender, EventArgs e)
         {
@@ -513,7 +521,7 @@ namespace XamlAnimatedGif
             return TimeSpan.FromMilliseconds(100);
         }
 
-        private static RepeatBehavior GetRepeatBehavior(GifDataStream metadata)
+        private static RepeatBehavior GetRepeatBehaviorFromGif(GifDataStream metadata)
         {
             if (metadata.RepeatCount == 0)
                 return RepeatBehavior.Forever;
@@ -551,7 +559,17 @@ namespace XamlAnimatedGif
                 _disposing = true;
                 if (_timingManager != null) _timingManager.Completed -= TimingManagerCompleted;
                 _cancellationTokenSource?.Cancel();
-                try { _sourceStream?.Dispose(); } catch { /* ignored */ }
+                if (_isSourceStreamOwner)
+                {
+                    try
+                    {
+                        _sourceStream?.Dispose();
+                    }
+                    catch
+                    {
+                        /* ignored */
+                    }
+                }
                 _disposed = true;
             }
         }
@@ -614,6 +632,20 @@ namespace XamlAnimatedGif
         }
 
         protected abstract object ErrorSource { get; }
+
+        internal void OnRepeatBehaviorChanged()
+        {
+            if (_timingManager == null)
+                return;
+
+            var newValue = GetSpecifiedRepeatBehavior();
+            var newActualValue = GetActualRepeatBehavior(_metadata, newValue);
+            if (_timingManager.RepeatBehavior == newActualValue)
+                return;
+
+            _timingManager.RepeatBehavior = newActualValue;
+            Rewind();
+        }
     }
 
 #if !WPF

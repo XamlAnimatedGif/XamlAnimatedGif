@@ -102,7 +102,7 @@ namespace XamlAnimatedGif
               typeof(AnimationBehavior),
               new PropertyMetadata(
                 default(RepeatBehavior),
-                SourceChanged));
+                RepeatBehaviorChanged));
 
         #endregion
 
@@ -316,6 +316,11 @@ namespace XamlAnimatedGif
                 return;
 
             InitAnimation(image);
+        }
+
+        private static void RepeatBehaviorChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        {
+            GetAnimator(o)?.OnRepeatBehaviorChanged();
         }
 
         private static void AnimateInDesignModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
