@@ -23,6 +23,7 @@ namespace XamlAnimatedGif
             {
                 await DownloadToCacheFileAsync(uri, cacheFileName, progress);
             }
+            progress.Report(100);
             return await OpenTempFileStreamAsync(cacheFileName);
         }
 
