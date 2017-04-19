@@ -567,6 +567,7 @@ namespace XamlAnimatedGif
 
         private static void SetStaticImageCore(Image image, Stream stream)
         {
+            stream.Seek(0, SeekOrigin.Begin);
             var bmp = new BitmapImage();
 #if WPF
             bmp.BeginInit();

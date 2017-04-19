@@ -86,6 +86,9 @@ namespace XamlAnimatedGif
             Func<GifDataStream, TAnimator> create)
             where TAnimator : Animator
         {
+            if (!sourceStream.CanSeek)
+                throw new ArgumentException("The stream is not seekable");
+            sourceStream.Seek(0, SeekOrigin.Begin);
             var metadata = await GifDataStream.ReadAsync(sourceStream);
             return create(metadata);
         }
