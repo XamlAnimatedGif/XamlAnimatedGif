@@ -24,6 +24,7 @@ using TaskEx = System.Threading.Tasks.Task;
 
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
+using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif
 {
@@ -308,11 +309,8 @@ namespace XamlAnimatedGif
             var rect = GetFixedUpFrameRect(desc);
             using (var indexStream = await GetIndexStreamAsync(frame, cancellationToken))
             {
-#if WPF
-                _bitmap.Lock();
-                try
+                using (_bitmap.LockInScope())
                 {
-#endif
                     if (frameIndex < _previousFrameIndex)
                         ClearArea(_metadata.Header.LogicalScreenDescriptor);
                     else
@@ -355,12 +353,9 @@ namespace XamlAnimatedGif
                     }
 #if WPF
                     _bitmap.AddDirtyRect(rect);
+#endif
                 }
-                finally
-                {
-                    _bitmap.Unlock();
-                }
-#elif WINRT || SILVERLIGHT
+#if WINRT || SILVERLIGHT
                 _bitmap.Invalidate();
 #endif
                 _previousFrame = frame;

@@ -6,7 +6,7 @@
     <SharedGUID>d408eebd-d9f1-41fb-9161-546f5bc0dad4</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>XamlAnimatedGif.Shared</Import_RootNamespace>
+    <Import_RootNamespace>XamlAnimatedGif</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AnimationBehavior.cs" />
@@ -44,6 +44,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\BitArrayExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\CollectionExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\StreamExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\WritableBitmapExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ImageAnimator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\VersionInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TimingManager.cs" />

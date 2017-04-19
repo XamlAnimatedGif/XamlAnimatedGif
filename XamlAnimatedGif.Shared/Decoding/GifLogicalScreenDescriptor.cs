@@ -37,9 +37,9 @@ namespace XamlAnimatedGif.Decoding
             GlobalColorTableSize = 1 << ((packedFields & 0x07) + 1);
             BackgroundColorIndex = bytes[5];
             PixelAspectRatio =
-                bytes[5] == 0
+                bytes[6] == 0
                     ? 0.0
-                    : (15 + bytes[5]) / 64.0;
+                    : (15 + bytes[6]) / 64.0;
         }
 
         int IGifRect.Left

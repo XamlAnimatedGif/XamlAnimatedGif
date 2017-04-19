@@ -336,30 +336,18 @@ namespace XamlAnimatedGif
         {
             if (IsInDesignMode(image) && !GetAnimateInDesignMode(image))
             {
-                var bmp = new BitmapImage();
                 try
                 {
-#if WPF
-                    bmp.BeginInit();
-#endif
                     if (sourceStream != null)
                     {
-#if WPF
-                        bmp.StreamSource = sourceStream;
-#elif WINRT
-                    bmp.SetSource(sourceStream.AsRandomAccessStream());
-#elif SILVERLIGHT
-                    bmp.SetSource(sourceStream);
-#endif
+                        SetStaticImage(image, sourceStream);
                     }
                     else if (sourceUri != null)
                     {
+                        var bmp = new BitmapImage();
                         bmp.UriSource = sourceUri;
+                        image.Source = bmp;
                     }
-#if WPF
-                    bmp.EndInit();
-#endif
-                    image.Source = bmp;
                 }
                 catch
                 {
@@ -479,16 +467,7 @@ namespace XamlAnimatedGif
             }
             catch (InvalidSignatureException)
             {
-                var bmp = new BitmapImage();
-#if WPF
-                bmp.BeginInit();
-                bmp.UriSource = sourceUri;
-                bmp.CacheOption = BitmapCacheOption.OnLoad;
-                bmp.EndInit();
-#elif WINRT || SILVERLIGHT
-                bmp.UriSource = sourceUri;
-#endif
-                image.Source = bmp;
+                await SetStaticImageAsync(image, sourceUri);
                 OnLoaded(image);
             }
             catch(Exception ex)
@@ -516,17 +495,7 @@ namespace XamlAnimatedGif
             }
             catch (InvalidSignatureException)
             {
-                var bmp = new BitmapImage();
-#if WPF
-                bmp.BeginInit();
-                bmp.StreamSource = stream;
-                bmp.EndInit();
-#elif WINRT
-                bmp.SetSource(stream.AsRandomAccessStream());
-#elif SILVERLIGHT
-                bmp.SetSource(stream);
-#endif
-                image.Source = bmp;
+                SetStaticImage(image, stream);
                 OnLoaded(image);
             }
             catch(Exception ex)
@@ -567,6 +536,48 @@ namespace XamlAnimatedGif
 #elif SILVERLIGHT
             return DesignerProperties.IsInDesignTool;
 #endif
+        }
+
+        private static async Task SetStaticImageAsync(Image image, Uri sourceUri)
+        {
+            try
+            {
+                var loader = new UriLoader();
+                var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
+                var stream = await loader.GetStreamFromUriAsync(sourceUri, progress);
+                SetStaticImageCore(image, stream);
+            }
+            catch (Exception ex)
+            {
+                OnError(image, ex, AnimationErrorKind.Loading);
+            }
+        }
+
+        private static void SetStaticImage(Image image, Stream stream)
+        {
+            try
+            {
+                SetStaticImageCore(image, stream);
+            }
+            catch (Exception ex)
+            {
+                OnError(image, ex, AnimationErrorKind.Loading);
+            }
+        }
+
+        private static void SetStaticImageCore(Image image, Stream stream)
+        {
+            var bmp = new BitmapImage();
+#if WPF
+            bmp.BeginInit();
+            bmp.StreamSource = stream;
+            bmp.EndInit();
+#elif WINRT
+            bmp.SetSource(stream.AsRandomAccessStream());
+#elif SILVERLIGHT
+            bmp.SetSource(stream);
+#endif
+            image.Source = bmp;
         }
     }
 }
