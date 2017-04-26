@@ -61,7 +61,7 @@ namespace XamlAnimatedGif.Decoding
             ForegroundColorIndex = bytes[11];
             BackgroundColorIndex = bytes[12];
 
-            var dataBytes = await GifHelpers.ReadDataBlocksAsync(stream, false).ConfigureAwait(false);
+            var dataBytes = await GifHelpers.ReadDataBlocksAsync(stream).ConfigureAwait(false);
             Text = GifHelpers.GetString(dataBytes);
             Extensions = controlExtensions.ToList().AsReadOnly();
         }

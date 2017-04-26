@@ -23,7 +23,7 @@ namespace XamlAnimatedGif.Decoding
         {
             LzwMinimumCodeSize = (byte)stream.ReadByte();
             CompressedDataStartOffset = stream.Position;
-            await GifHelpers.ReadDataBlocksAsync(stream, true).ConfigureAwait(false);
+            await GifHelpers.ConsumeDataBlocksAsync(stream).ConfigureAwait(false);
         }
     }
 }
