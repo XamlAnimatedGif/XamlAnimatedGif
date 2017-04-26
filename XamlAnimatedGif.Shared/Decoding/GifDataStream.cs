@@ -54,31 +54,42 @@ namespace XamlAnimatedGif.Decoding
             List<GifExtension> specialExtensions = new List<GifExtension>();
             while (true)
             {
-                var block = await GifBlock.ReadAsync(stream, controlExtensions).ConfigureAwait(false);
-
-                if (block.Kind == GifBlockKind.GraphicRendering)
-                    controlExtensions = new List<GifExtension>();
-
-                if (block is GifFrame)
+                try
                 {
-                    frames.Add((GifFrame)block);
-                }
-                else if (block is GifExtension)
-                {
-                    var extension = (GifExtension)block;
-                    switch (extension.Kind)
+                    var block = await GifBlock.ReadAsync(stream, controlExtensions).ConfigureAwait(false);
+
+                    if (block.Kind == GifBlockKind.GraphicRendering)
+                        controlExtensions = new List<GifExtension>();
+
+                    if (block is GifFrame)
                     {
-                        case GifBlockKind.Control:
-                            controlExtensions.Add(extension);
-                            break;
-                        case GifBlockKind.SpecialPurpose:
-                            specialExtensions.Add(extension);
-                            break;
-                        
-                        // Just discard plain text extensions for now, since we have no use for it
+                        frames.Add((GifFrame)block);
+                    }
+                    else if (block is GifExtension)
+                    {
+                        var extension = (GifExtension)block;
+                        switch (extension.Kind)
+                        {
+                            case GifBlockKind.Control:
+                                controlExtensions.Add(extension);
+                                break;
+                            case GifBlockKind.SpecialPurpose:
+                                specialExtensions.Add(extension);
+                                break;
+
+                                // Just discard plain text extensions for now, since we have no use for it
+                        }
+                    }
+                    else if (block is GifTrailer)
+                    {
+                        break;
                     }
                 }
-                else if (block is GifTrailer)
+                // Follow the same approach as Firefox:
+                // If we find extraneous data between blocks, just assume the stream
+                // was successfully terminated if we have some successfully decoded frames
+                // https://dxr.mozilla.org/firefox/source/modules/libpr0n/decoders/gif/nsGIFDecoder2.cpp#894-909
+                catch (UnknownBlockTypeException) when (frames.Count > 0)
                 {
                     break;
                 }
