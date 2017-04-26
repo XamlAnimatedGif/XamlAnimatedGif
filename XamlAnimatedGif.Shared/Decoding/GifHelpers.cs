@@ -42,7 +42,6 @@ namespace XamlAnimatedGif.Decoding
             }
         }
 
-
         public static async Task<GifColor[]> ReadColorTableAsync(Stream stream, int size)
         {
             int length = 3 * size;
@@ -72,11 +71,6 @@ namespace XamlAnimatedGif.Decoding
                 return BitConverter.ToUInt16(ext.Data, 1);
             }
             return 1;
-        }
-
-        public static Exception UnexpectedEndOfStreamException()
-        {
-            return new UnexpectedEndOfStreamException("Unexpected end of stream before trailer was encountered");
         }
 
         public static Exception UnknownBlockTypeException(int blockId)

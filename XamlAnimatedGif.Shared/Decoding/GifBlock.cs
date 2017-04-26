@@ -11,7 +11,7 @@ namespace XamlAnimatedGif.Decoding
         {
             int blockId = await stream.ReadByteAsync().ConfigureAwait(false);
             if (blockId < 0)
-                throw GifHelpers.UnexpectedEndOfStreamException();
+                throw new EndOfStreamException();
             switch (blockId)
             {
                 case GifExtension.ExtensionIntroducer:

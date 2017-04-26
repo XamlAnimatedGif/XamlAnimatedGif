@@ -14,7 +14,7 @@ namespace XamlAnimatedGif.Decoding
 
             int label = stream.ReadByte();
             if (label < 0)
-                throw GifHelpers.UnexpectedEndOfStreamException();
+                throw new EndOfStreamException();
             switch (label)
             {
                 case GifGraphicControlExtension.ExtensionLabel:
