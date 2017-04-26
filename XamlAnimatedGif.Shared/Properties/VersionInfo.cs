@@ -7,9 +7,9 @@ using XamlAnimatedGif.Properties;
 
 namespace XamlAnimatedGif.Properties
 {
-    class VersionInfo
+    internal static class VersionInfo
     {
-        public const string Version = "1.1.8.0";
+        public const string Version = "1.1.9.0";
         public const string PreRelease = "";
     }
 }
