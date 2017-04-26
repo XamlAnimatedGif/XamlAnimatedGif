@@ -7,12 +7,12 @@ namespace XamlAnimatedGif.Extensions
 {
     static class StreamExtensions
     {
-        public static async Task ReadAllAsync(this Stream stream, byte[] buffer, int offset, int count)
+        public static async Task ReadAllAsync(this Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default(CancellationToken))
         {
             int totalRead = 0;
             while (totalRead < count)
             {
-                int n = await stream.ReadAsync(buffer, offset + totalRead, count - totalRead);
+                int n = await stream.ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken);
                 if (n == 0)
                     throw new EndOfStreamException();
                 totalRead += n;

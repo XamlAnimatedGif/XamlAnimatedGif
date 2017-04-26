@@ -16,33 +16,31 @@ namespace XamlAnimatedGif.Decoding
             return GetString(bytes);
         }
 
-        public static async Task<byte[]> ReadDataBlocksAsync(Stream stream, bool discard)
+        public static async Task ConsumeDataBlocksAsync(Stream sourceStream, CancellationToken cancellationToken = default(CancellationToken))
         {
-            MemoryStream ms = discard ? null : new MemoryStream();
-            using (ms)
+            await CopyDataBlocksToStreamAsync(sourceStream, Stream.Null, cancellationToken);
+        }
+
+        public static async Task<byte[]> ReadDataBlocksAsync(Stream stream, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            using (var ms = new MemoryStream())
             {
-                int len;
-                while ((len = stream.ReadByte()) > 0)
-                {
-                    byte[] bytes = new byte[len];
-                    await stream.ReadAsync(bytes, 0, len).ConfigureAwait(false);
-                    ms?.Write(bytes, 0, len);
-                }
-                return ms?.ToArray();
+                await CopyDataBlocksToStreamAsync(stream, ms, cancellationToken);
+                return ms.ToArray();
             }
         }
 
         public static async Task CopyDataBlocksToStreamAsync(Stream sourceStream, Stream targetStream, CancellationToken cancellationToken = default(CancellationToken))
         {
             int len;
+            // the length is on 1 byte, so each data sub-block can't be more than 255 bytes long
+            byte[] buffer = new byte[255];
             while ((len = await sourceStream.ReadByteAsync(cancellationToken)) > 0)
             {
-                byte[] bytes = new byte[len];
-                await sourceStream.ReadAsync(bytes, 0, len, cancellationToken).ConfigureAwait(false);
-                await targetStream.WriteAsync(bytes, 0, len, cancellationToken);
+                await sourceStream.ReadAllAsync(buffer, 0, len, cancellationToken).ConfigureAwait(false);
+                await targetStream.WriteAsync(buffer, 0, len, cancellationToken);
             }
         }
-
 
         public static async Task<GifColor[]> ReadColorTableAsync(Stream stream, int size)
         {
@@ -73,11 +71,6 @@ namespace XamlAnimatedGif.Decoding
                 return BitConverter.ToUInt16(ext.Data, 1);
             }
             return 1;
-        }
-
-        public static Exception UnexpectedEndOfStreamException()
-        {
-            return new UnexpectedEndOfStreamException("Unexpected end of stream before trailer was encountered");
         }
 
         public static Exception UnknownBlockTypeException(int blockId)

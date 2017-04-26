@@ -21,7 +21,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDataStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifDecoderException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\InvalidSignatureException.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Decoding\UnexpectedEndOfStreamException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifExtension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifFrame.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifFrameDisposalMethod.cs" />
