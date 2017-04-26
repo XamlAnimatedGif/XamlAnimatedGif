@@ -37,7 +37,7 @@ namespace XamlAnimatedGif.Decoding
             byte[] buffer = new byte[255];
             while ((len = await sourceStream.ReadByteAsync(cancellationToken)) > 0)
             {
-                await sourceStream.ReadAsync(buffer, 0, len, cancellationToken).ConfigureAwait(false);
+                await sourceStream.ReadAllAsync(buffer, 0, len, cancellationToken).ConfigureAwait(false);
                 await targetStream.WriteAsync(buffer, 0, len, cancellationToken);
             }
         }
