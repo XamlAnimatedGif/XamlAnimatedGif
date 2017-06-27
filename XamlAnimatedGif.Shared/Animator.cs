@@ -332,9 +332,7 @@ namespace XamlAnimatedGif
 
                     foreach (int y in rows)
                     {
-                        int read = indexStream.Read(indexBuffer, 0, desc.Width);
-                        if (read != desc.Width)
-                            throw new EndOfStreamException();
+                        indexStream.ReadAll(indexBuffer, 0, desc.Width);
 
                         int offset = (desc.Top + y) * _stride + desc.Left * 4;
 
