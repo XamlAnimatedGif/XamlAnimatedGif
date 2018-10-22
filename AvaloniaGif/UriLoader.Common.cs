@@ -12,7 +12,16 @@ namespace XamlAnimatedGif
         {
             if (uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https"))
                 return GetNetworkStreamAsync(uri, progress);
+            if (uri.IsAbsoluteUri && (uri.Scheme == "resm"))
+                return GetLocalResourceStreamAsync(uri);
+
             return GetStreamFromUriCoreAsync(uri);
+        }
+
+        private Task<Stream> GetLocalResourceStreamAsync(Uri uri)
+        {
+            var assetLocator = AvaloniaLocator.Current.GetService<IAssetLoader>();
+
         }
 
         private static async Task<Stream> GetNetworkStreamAsync(Uri uri, IProgress<int> progress)
@@ -47,7 +56,7 @@ namespace XamlAnimatedGif
                                 new Progress<long>(bytesCopied =>
                                 {
                                     if (length > 0)
-                                        progress.Report((int) (100*bytesCopied/length));
+                                        progress.Report((int)(100 * bytesCopied / length));
                                     else
                                         progress.Report(-1);
                                 });

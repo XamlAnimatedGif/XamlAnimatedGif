@@ -24,7 +24,7 @@ using System.Windows.Media;
 
 namespace XamlAnimatedGif
 {
-    public static class AnimationBehavior
+    public class AnimationBehavior
     {
         #region Public attached properties and events
 
@@ -288,24 +288,40 @@ namespace XamlAnimatedGif
 #endif
         }
 
+
+        
+
         #endregion
 
         #endregion
 
         #region Private attached properties
 
-        private static int GetSeqNum(DependencyObject obj)
-        {
-            return (int)obj.GetValue(SeqNumProperty);
-        }
+        // private static int GetSeqNum(DependencyObject obj)
+        // {
+        //     return (int)obj.GetValue(SeqNumProperty);
+        // }
 
-        private static void SetSeqNum(DependencyObject obj, int value)
-        {
-            obj.SetValue(SeqNumProperty, value);
-        }
+        // private static void SetSeqNum(DependencyObject obj, int value)
+        // {
+        //     obj.SetValue(SeqNumProperty, value);
+        // }
 
-        private static readonly DependencyProperty SeqNumProperty =
-            DependencyProperty.RegisterAttached("SeqNum", typeof(int), typeof(AnimationBehavior), new PropertyMetadata(0));
+        // private static readonly DependencyProperty SeqNumProperty =
+        //     DependencyProperty.RegisterAttached("SeqNum", typeof(int), typeof(AnimationBehavior), new PropertyMetadata(0));
+
+        private static readonly AttachedProperty<int> SeqNumProperty =
+                    AvaloniaProperty.RegisterAttached<AnimationBehavior, AnimationBehavior, int>("SeqNum");
+        
+        public static int GetSeqNum(AnimationBehavior target)
+        {
+            return target.GetValue(SeqNumProperty);
+        }
+        
+        public static void SetSeqNum(AnimationBehavior target, int value)
+        {
+            return target.SetValue(SeqNumProperty, value);
+        }
 
         #endregion
 

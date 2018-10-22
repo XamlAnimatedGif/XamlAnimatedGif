@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="**\*.xaml.cs">
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="**\*.xaml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\*" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.6.2-*" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.6.2-*" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.6.2-*" />
+    <PackageReference Include="ReactiveUI.Fody" Version="*" />
+    <ProjectReference Include="..\AvaloniaGif\AvaloniaGif.csproj"/>
+  </ItemGroup>
+</Project>
