@@ -159,6 +159,37 @@ namespace AvaloniaGif
             //  _timingManager.Pause();
         }
 
+
+        TimeSpan prevCall, x2;
+        bool firstRun = true;
+        TimeSpan currentTime => TimeSpan.FromMilliseconds(Environment.TickCount);
+        internal async void RunNext(TimeSpan start, CancellationToken token, Action inval)
+        {
+            if(firstRun)
+            {
+                prevCall = currentTime;
+                firstRun = false;
+            }
+            
+            prevCall = currentTime - prevCall;
+
+            if (prevCall > _gifFrames[CurrentFrameIndex])
+            {
+                await RenderFrameAsync(CurrentFrameIndex, token);
+                inval?.Invoke();
+                CurrentFrameIndex = (CurrentFrameIndex + 1) % FrameCount;
+                prevCall = currentTime;
+            }
+
+
+            //Thread.Sleep(k);
+            // await TaskEx.WhenAll(timing, rendering);
+            // if (!timing.Result)
+            //     break;
+
+            //throw new NotImplementedException();
+        }
+
         // public bool IsPaused => _timingManager.IsPaused;
 
         // public bool IsComplete
@@ -307,10 +338,10 @@ namespace AvaloniaGif
             var frame = _metadata.Frames[frameIndex];
             var desc = frame.Descriptor;
             var rect = GetFixedUpFrameRect(desc);
-            
+
             using (var indexStream = await GetIndexStreamAsync(frame, cancellationToken))
             {
-                
+
                 if (frameIndex < _previousFrameIndex)
                     ClearArea(new Int32Rect(0, 0, _metadata.Header.LogicalScreenDescriptor.Width, _metadata.Header.LogicalScreenDescriptor.Height));
                 else

@@ -1,10 +1,10 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:gif="clr-namespace:AvaloniaGif;assembly=AvaloniaGif"
-        Title="DesignTestWindow" Height="480" Width="680" Background="White">
-    <Grid>
-        <Image Stretch="None" Width="200" Height="200"
-               gif:AnimationBehavior.SourceUri="resm:AvaloniaGif.Demo.Images.bomb.gif"
-                />
-    </Grid>
+        Title="GIFs on Avalonia!" Height="480" Width="680" Background="White">
+    <StackPanel>
+        <Image Stretch="None" gif:AnimationBehavior.SourceUri="resm:AvaloniaGif.Demo.Images.bomb.gif"/>
+        <Image Stretch="None" gif:AnimationBehavior.SourceUri="resm:AvaloniaGif.Demo.Images.earth.gif"/>
+        <Image Stretch="None" gif:AnimationBehavior.SourceUri="resm:AvaloniaGif.Demo.Images.newton-cradle.gif"/>
+    </StackPanel>
 </Window>

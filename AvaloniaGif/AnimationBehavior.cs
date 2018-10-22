@@ -114,6 +114,21 @@ namespace AvaloniaGif
             target.SetValue(SeqNumProperty, value);
         }
 
+        public static readonly AttachedProperty<IDisposable> ClockSubscriptionProperty =
+                    AvaloniaProperty.RegisterAttached<AnimationBehavior, Image, IDisposable>("ClockSubscription");
+
+
+        public static IDisposable GetClockSubscription(Image target)
+        {
+            return target.GetValue(ClockSubscriptionProperty);
+        }
+
+
+        public static void SetClockSubscription(Image target, IDisposable value)
+        {
+            target.SetValue(ClockSubscriptionProperty, value);
+        }
+
         private static void SourceChanged(AvaloniaPropertyChangedEventArgs e)
         {
             var image = e.Sender as Image;
@@ -129,6 +144,8 @@ namespace AvaloniaGif
             {
                 ClearAnimatorCore(image);
             };
+
+
         }
 
         private static void RepeatCountChanged(AvaloniaPropertyChangedEventArgs e)
@@ -150,6 +167,9 @@ namespace AvaloniaGif
                 if (stream != null)
                 {
                     InitAnimationAsync(image, stream.AsBuffered(), GetRepeatCount(image), seqNum);
+
+
+
                     return;
                 }
 
@@ -258,7 +278,18 @@ namespace AvaloniaGif
             var k = new CancellationTokenSource();
             if (GetAutoStart(image))
             {
-                animator.Play(k.Token);
+                var curTime = TimeSpan.FromMilliseconds(Environment.TickCount);
+
+                var imageS = (image.Clock ?? new Clock())
+                                .Subscribe(delegate
+                                {
+                                    GetAnimator(image)?.RunNext(curTime, k.Token, ()=>image.InvalidateVisual());
+                                    ;
+                                });
+
+                SetClockSubscription(image, imageS);
+
+                //animator.Play(k.Token);
             }
             else
                 await animator.ShowFirstFrameAsync();
@@ -271,6 +302,7 @@ namespace AvaloniaGif
                 return;
 
             //   animator.Error -= AnimatorError;
+            GetClockSubscription(image)?.Dispose();
             animator.Dispose();
             SetAnimator(image, null);
         }
