@@ -25,13 +25,16 @@ using TaskEx = System.Threading.Tasks.Task;
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
 using XamlAnimatedGif.Extensions;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using System.Runtime.InteropServices;
+using Avalonia.Animation;
+using Avalonia;
+using Avalonia.Platform;
 
 namespace XamlAnimatedGif
 {
-#if WINRT
-    [Bindable]
-#endif
-    public abstract class Animator : DependencyObject, IDisposable
+    public abstract class Animator : AvaloniaObject, IDisposable
     {
         private readonly Stream _sourceStream;
         private readonly Uri _sourceUri;
@@ -43,7 +46,7 @@ namespace XamlAnimatedGif
         private readonly byte[] _previousBackBuffer;
         private readonly byte[] _indexStreamBuffer;
         private readonly TimingManager _timingManager;
-        
+
         #region Constructor and factory methods
 
         internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatCount RepeatCount)
@@ -235,13 +238,7 @@ namespace XamlAnimatedGif
         private static WriteableBitmap CreateBitmap(GifDataStream metadata)
         {
             var desc = metadata.Header.LogicalScreenDescriptor;
-#if WPF
-            var bitmap = new WriteableBitmap(desc.Width, desc.Height, 96, 96, PixelFormats.Bgra32, null);
-#elif WINRT || SILVERLIGHT
-            var bitmap = new WriteableBitmap(desc.Width, desc.Height);
-#else
-            #error Not implemented
-#endif
+            var bitmap = new WriteableBitmap(desc.Width, desc.Height, PixelFormat.Bgra8888);
             return bitmap;
         }
 
@@ -312,53 +309,46 @@ namespace XamlAnimatedGif
             var rect = GetFixedUpFrameRect(desc);
             using (var indexStream = await GetIndexStreamAsync(frame, cancellationToken))
             {
-                using (_bitmap.LockInScope())
+
+                if (frameIndex < _previousFrameIndex)
+                    ClearArea(_metadata.Header.LogicalScreenDescriptor);
+                else
+                    DisposePreviousFrame(frame);
+
+                int bufferLength = 4 * rect.Width;
+                byte[] indexBuffer = new byte[desc.Width];
+                byte[] lineBuffer = new byte[bufferLength];
+
+                var palette = _palettes[frameIndex];
+                int transparencyIndex = palette.TransparencyIndex ?? -1;
+
+                var rows = desc.Interlace
+                    ? InterlacedRows(rect.Height)
+                    : NormalRows(rect.Height);
+
+                foreach (int y in rows)
                 {
-                    if (frameIndex < _previousFrameIndex)
-                        ClearArea(_metadata.Header.LogicalScreenDescriptor);
-                    else
-                        DisposePreviousFrame(frame);
+                    indexStream.ReadAll(indexBuffer, 0, desc.Width);
 
-                    int bufferLength = 4 * rect.Width;
-                    byte[] indexBuffer = new byte[desc.Width];
-                    byte[] lineBuffer = new byte[bufferLength];
+                    int offset = (desc.Top + y) * _stride + desc.Left * 4;
 
-                    var palette = _palettes[frameIndex];
-                    int transparencyIndex = palette.TransparencyIndex ?? -1;
-
-                    var rows = desc.Interlace
-                        ? InterlacedRows(rect.Height)
-                        : NormalRows(rect.Height);
-
-                    foreach (int y in rows)
+                    if (transparencyIndex >= 0)
                     {
-                        indexStream.ReadAll(indexBuffer, 0, desc.Width);
-
-                        int offset = (desc.Top + y) * _stride + desc.Left * 4;
-
-                        if (transparencyIndex >= 0)
-                        {
-                            CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
-                        }
-
-                        for (int x = 0; x < rect.Width; x++)
-                        {
-                            byte index = indexBuffer[x];
-                            int i = 4 * x;
-                            if (index != transparencyIndex)
-                            {
-                                WriteColor(lineBuffer, palette[index], i);
-                            }
-                        }
-                        CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
+                        CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
                     }
-#if WPF
-                    _bitmap.AddDirtyRect(rect);
-#endif
+
+                    for (int x = 0; x < rect.Width; x++)
+                    {
+                        byte index = indexBuffer[x];
+                        int i = 4 * x;
+                        if (index != transparencyIndex)
+                        {
+                            WriteColor(lineBuffer, palette[index], i);
+                        }
+                    }
+                    CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
+
                 }
-#if WINRT || SILVERLIGHT
-                _bitmap.Invalidate();
-#endif
                 _previousFrame = frame;
                 _previousFrameIndex = frameIndex;
             }
@@ -398,28 +388,18 @@ namespace XamlAnimatedGif
 
         private static void CopyToBitmap(byte[] buffer, WriteableBitmap bitmap, int offset, int length)
         {
-#if WPF
-            Marshal.Copy(buffer, 0, bitmap.BackBuffer + offset, length);
-#elif WINRT
-            buffer.CopyTo(0, bitmap.PixelBuffer, (uint)offset, length);
-#elif SILVERLIGHT
-            Buffer.BlockCopy(buffer, 0, bitmap.Pixels, offset, length);
-#else
-            #error Not implemented
-#endif
+            using (var l = bitmap.Lock())
+            {
+                Marshal.Copy(buffer, 0, l.Address + offset, length);
+            }
         }
 
         private static void CopyFromBitmap(byte[] buffer, WriteableBitmap bitmap, int offset, int length)
         {
-#if WPF
-            Marshal.Copy(bitmap.BackBuffer + offset, buffer, 0, length);
-#elif WINRT
-            bitmap.PixelBuffer.CopyTo((uint)offset, buffer, 0, length);
-#elif SILVERLIGHT
-            Buffer.BlockCopy(bitmap.Pixels, offset, buffer, 0, length);
-#else
-            #error Not implemented
-#endif
+            using (var l = bitmap.Lock())
+            {
+                Marshal.Copy(l.Address + offset, buffer, 0, length);
+            }
         }
 
         private static void WriteColor(byte[] lineBuffer, Color color, int startIndex)
@@ -439,25 +419,25 @@ namespace XamlAnimatedGif
                 {
                     case GifFrameDisposalMethod.None:
                     case GifFrameDisposalMethod.DoNotDispose:
-                    {
-                        // Leave previous frame in place
-                        break;
-                    }
+                        {
+                            // Leave previous frame in place
+                            break;
+                        }
                     case GifFrameDisposalMethod.RestoreBackground:
-                    {
-                        ClearArea(GetFixedUpFrameRect(_previousFrame.Descriptor));
-                        break;
-                    }
+                        {
+                            ClearArea(GetFixedUpFrameRect(_previousFrame.Descriptor));
+                            break;
+                        }
                     case GifFrameDisposalMethod.RestorePrevious:
-                    {
-                        CopyToBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
+                        {
+                            CopyToBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
 #if WPF
                         var desc = _metadata.Header.LogicalScreenDescriptor;
                         var rect = new Int32Rect(0, 0, desc.Width, desc.Height);
                         _bitmap.AddDirtyRect(rect);
 #endif
-                        break;
-                    }
+                            break;
+                        }
                 }
             }
 
@@ -500,7 +480,7 @@ namespace XamlAnimatedGif
             return lzwStream;
         }
 
-        internal BitmapSource Bitmap => _bitmap;
+        internal Bitmap Bitmap => _bitmap;
 
         #endregion
 
@@ -520,7 +500,8 @@ namespace XamlAnimatedGif
         private static RepeatCount GetRepeatCountFromGif(GifDataStream metadata)
         {
             if (metadata.RepeatCount == 0)
-                return RepeatCount.Forever;
+                return RepeatCount.Loop;
+
             return new RepeatCount(metadata.RepeatCount);
         }
 

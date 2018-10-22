@@ -3,55 +3,60 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using XamlAnimatedGif.Extensions;
-#if WPF || SILVERLIGHT
-using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Markup;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-#elif WINRT
-using Windows.ApplicationModel;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Media;
-#endif
-#if SILVERLIGHT
-using System.Windows.Media;
-#endif
+using Avalonia;
+using Avalonia.Media.Imaging;
+
+using Avalonia.Animation;
+using Avalonia.Controls;
 
 namespace XamlAnimatedGif
 {
     public class AnimationBehavior
     {
+
+        static AnimationBehavior()
+        {
+            SourceUriProperty.Changed.Subscribe(SourceChanged);
+        }
         #region Public attached properties and events
 
         #region SourceUri
+        public static readonly AttachedProperty<Uri> SourceUriProperty =
+                    AvaloniaProperty.RegisterAttached<AnimationBehavior, Image, Uri>("SourceUri");
 
-#if WPF
-        [AttachedPropertyBrowsableForType(typeof(Image))]
-#endif
-        public static Uri GetSourceUri(Image image)
+
+        public static Uri GetSourceUri(Image target)
         {
-            return (Uri)image.GetValue(SourceUriProperty);
+            return target.GetValue(SourceUriProperty);
         }
 
-        public static void SetSourceUri(Image image, Uri value)
+        public static void SetSourceUri(Image target, Uri value)
         {
-            image.SetValue(SourceUriProperty, value);
+            target.SetValue(SourceUriProperty, value);
         }
+        /*
+        #if WPF
+                [AttachedPropertyBrowsableForType(typeof(Image))]
+        #endif
+                public static Uri GetSourceUri(Image image)
+                {
+                    return (Uri)image.GetValue(SourceUriProperty);
+                }
 
-        public static readonly DependencyProperty SourceUriProperty =
-            DependencyProperty.RegisterAttached(
-              "SourceUri",
-              typeof(Uri),
-              typeof(AnimationBehavior),
-              new PropertyMetadata(
-                null,
-                SourceChanged));
+                public static void SetSourceUri(Image image, Uri value)
+                {
+                    image.SetValue(SourceUriProperty, value);
+                }
 
+                public static readonly AvaloniaProperty SourceUriProperty =
+                    AvaloniaProperty.RegisterAttached(
+                      "SourceUri",
+                      typeof(Uri),
+                      typeof(AnimationBehavior),
+                      new PropertyMetadata(
+                        null,
+                        SourceChanged));
+        */
         #endregion
 
         #region SourceStream
@@ -59,18 +64,18 @@ namespace XamlAnimatedGif
 #if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
 #endif
-        public static Stream GetSourceStream(DependencyObject obj)
+        public static Stream GetSourceStream(AvaloniaObject obj)
         {
             return (Stream)obj.GetValue(SourceStreamProperty);
         }
 
-        public static void SetSourceStream(DependencyObject obj, Stream value)
+        public static void SetSourceStream(AvaloniaObject obj, Stream value)
         {
             obj.SetValue(SourceStreamProperty, value);
         }
 
-        public static readonly DependencyProperty SourceStreamProperty =
-            DependencyProperty.RegisterAttached(
+        public static readonly AvaloniaProperty SourceStreamProperty =
+            AvaloniaProperty.RegisterAttached(
                 "SourceStream",
                 typeof(Stream),
                 typeof(AnimationBehavior),
@@ -85,18 +90,18 @@ namespace XamlAnimatedGif
 #if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
 #endif
-        public static RepeatCount GetRepeatCount(DependencyObject obj)
+        public static RepeatCount GetRepeatCount(AvaloniaObject obj)
         {
             return (RepeatCount)obj.GetValue(RepeatCountProperty);
         }
 
-        public static void SetRepeatCount(DependencyObject obj, RepeatCount value)
+        public static void SetRepeatCount(AvaloniaObject obj, RepeatCount value)
         {
             obj.SetValue(RepeatCountProperty, value);
         }
 
-        public static readonly DependencyProperty RepeatCountProperty =
-            DependencyProperty.RegisterAttached(
+        public static readonly AvaloniaProperty RepeatCountProperty =
+            AvaloniaProperty.RegisterAttached(
               "RepeatCount",
               typeof(RepeatCount),
               typeof(AnimationBehavior),
@@ -111,18 +116,18 @@ namespace XamlAnimatedGif
 #if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
 #endif
-        public static bool GetAutoStart(DependencyObject obj)
+        public static bool GetAutoStart(AvaloniaObject obj)
         {
             return (bool)obj.GetValue(AutoStartProperty);
         }
 
-        public static void SetAutoStart(DependencyObject obj, bool value)
+        public static void SetAutoStart(AvaloniaObject obj, bool value)
         {
             obj.SetValue(AutoStartProperty, value);
         }
 
-        public static readonly DependencyProperty AutoStartProperty =
-            DependencyProperty.RegisterAttached(
+        public static readonly AvaloniaProperty AutoStartProperty =
+            AvaloniaProperty.RegisterAttached(
                 "AutoStart",
                 typeof(bool),
                 typeof(AnimationBehavior),
@@ -133,18 +138,18 @@ namespace XamlAnimatedGif
         #region AnimateInDesignMode
 
 
-        public static bool GetAnimateInDesignMode(DependencyObject obj)
+        public static bool GetAnimateInDesignMode(AvaloniaObject obj)
         {
             return (bool)obj.GetValue(AnimateInDesignModeProperty);
         }
 
-        public static void SetAnimateInDesignMode(DependencyObject obj, bool value)
+        public static void SetAnimateInDesignMode(AvaloniaObject obj, bool value)
         {
             obj.SetValue(AnimateInDesignModeProperty, value);
         }
 
-        public static readonly DependencyProperty AnimateInDesignModeProperty =
-            DependencyProperty.RegisterAttached(
+        public static readonly AvaloniaProperty AnimateInDesignModeProperty =
+            AvaloniaProperty.RegisterAttached(
                 "AnimateInDesignMode",
                 typeof(bool),
                 typeof(AnimationBehavior),
@@ -156,21 +161,21 @@ namespace XamlAnimatedGif
 
         #region Animator
 
-        public static Animator GetAnimator(DependencyObject obj)
+        public static Animator GetAnimator(AvaloniaObject obj)
         {
-            return (Animator) obj.GetValue(AnimatorProperty);
+            return (Animator)obj.GetValue(AnimatorProperty);
         }
 
-        private static void SetAnimator(DependencyObject obj, Animator value)
+        private static void SetAnimator(AvaloniaObject obj, Animator value)
         {
             obj.SetValue(AnimatorProperty, value);
         }
 
-        public static readonly DependencyProperty AnimatorProperty =
-            DependencyProperty.RegisterAttached(
+        public static readonly AvaloniaProperty AnimatorProperty =
+            AvaloniaProperty.RegisterAttached(
                 "Animator",
-                typeof (Animator),
-                typeof (AnimationBehavior),
+                typeof(Animator),
+                typeof(AnimationBehavior),
                 new PropertyMetadata(null));
 
         #endregion
@@ -185,12 +190,12 @@ namespace XamlAnimatedGif
                 typeof (AnimationErrorEventHandler),
                 typeof (AnimationBehavior));
 
-        public static void AddErrorHandler(DependencyObject d, AnimationErrorEventHandler handler)
+        public static void AddErrorHandler(AvaloniaObject d, AnimationErrorEventHandler handler)
         {
             (d as UIElement)?.AddHandler(ErrorEvent, handler);
         }
 
-        public static void RemoveErrorHandler(DependencyObject d, AnimationErrorEventHandler handler)
+        public static void RemoveErrorHandler(AvaloniaObject d, AnimationErrorEventHandler handler)
         {
             (d as UIElement)?.RemoveHandler(ErrorEvent, handler);
         }
@@ -230,12 +235,12 @@ namespace XamlAnimatedGif
                 typeof (DownloadProgressEventHandler),
                 typeof (AnimationBehavior));
 
-        public static void AddDownloadProgressHandler(DependencyObject d, DownloadProgressEventHandler handler)
+        public static void AddDownloadProgressHandler(AvaloniaObject d, DownloadProgressEventHandler handler)
         {
             (d as UIElement)?.AddHandler(DownloadProgressEvent, handler);
         }
 
-        public static void RemoveDownloadProgressHandler(DependencyObject d, DownloadProgressEventHandler handler)
+        public static void RemoveDownloadProgressHandler(AvaloniaObject d, DownloadProgressEventHandler handler)
         {
             (d as UIElement)?.RemoveHandler(DownloadProgressEvent, handler);
         }
@@ -265,12 +270,12 @@ namespace XamlAnimatedGif
                 typeof (RoutedEventHandler),
                 typeof (AnimationBehavior));
 
-        public static void AddLoadedHandler(DependencyObject d, RoutedEventHandler handler)
+        public static void AddLoadedHandler(AvaloniaObject d, RoutedEventHandler handler)
         {
             (d as UIElement)?.AddHandler(LoadedEvent, handler);
         }
 
-        public static void RemoveLoadedHandler(DependencyObject d, RoutedEventHandler handler)
+        public static void RemoveLoadedHandler(AvaloniaObject d, RoutedEventHandler handler)
         {
             (d as UIElement)?.RemoveHandler(LoadedEvent, handler);
         }
@@ -282,14 +287,14 @@ namespace XamlAnimatedGif
         private static void OnLoaded(Image sender)
         {
 #if WPF
-            sender.RaiseEvent(new RoutedEventArgs(LoadedEvent, sender));
+            sender.RaiseEvent(new EventArgs(LoadedEvent, sender));
 #elif WINRT || SILVERLIGHT
             Loaded?.Invoke(sender, EventArgs.Empty);
 #endif
         }
 
 
-        
+
 
         #endregion
 
@@ -297,49 +302,49 @@ namespace XamlAnimatedGif
 
         #region Private attached properties
 
-        // private static int GetSeqNum(DependencyObject obj)
+        // private static int GetSeqNum(AvaloniaObject obj)
         // {
         //     return (int)obj.GetValue(SeqNumProperty);
         // }
 
-        // private static void SetSeqNum(DependencyObject obj, int value)
+        // private static void SetSeqNum(AvaloniaObject obj, int value)
         // {
         //     obj.SetValue(SeqNumProperty, value);
         // }
 
-        // private static readonly DependencyProperty SeqNumProperty =
-        //     DependencyProperty.RegisterAttached("SeqNum", typeof(int), typeof(AnimationBehavior), new PropertyMetadata(0));
+        // private static readonly AvaloniaProperty SeqNumProperty =
+        //     AvaloniaProperty.RegisterAttached("SeqNum", typeof(int), typeof(AnimationBehavior), new PropertyMetadata(0));
 
         private static readonly AttachedProperty<int> SeqNumProperty =
-                    AvaloniaProperty.RegisterAttached<AnimationBehavior, AnimationBehavior, int>("SeqNum");
-        
-        public static int GetSeqNum(AnimationBehavior target)
+                    AvaloniaProperty.RegisterAttached<AnimationBehavior, Image, int>("SeqNum");
+
+        public static int GetSeqNum(Image target)
         {
             return target.GetValue(SeqNumProperty);
         }
-        
-        public static void SetSeqNum(AnimationBehavior target, int value)
+
+        public static void SetSeqNum(Image target, int value)
         {
-            return target.SetValue(SeqNumProperty, value);
+            target.SetValue(SeqNumProperty, value);
         }
 
         #endregion
 
-        private static void SourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        private static void SourceChanged(AvaloniaPropertyChangedEventArgs e)
         {
-            var image = o as Image;
+            var image = e.Sender as Image;
             if (image == null)
                 return;
 
             InitAnimation(image);
         }
 
-        private static void RepeatCountChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        private static void RepeatCountChanged(AvaloniaObject o, AvaloniaPropertyChangedEventArgs e)
         {
             GetAnimator(o)?.OnRepeatCountChanged();
         }
 
-        private static void AnimateInDesignModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void AnimateInDesignModeChanged(AvaloniaObject d, AvaloniaPropertyChangedEventArgs e)
         {
             var image = d as Image;
             if (image == null)
@@ -348,31 +353,31 @@ namespace XamlAnimatedGif
             InitAnimation(image);
         }
 
-        private static bool CheckDesignMode(Image image, Uri sourceUri, Stream sourceStream)
-        {
-            if (IsInDesignMode(image) && !GetAnimateInDesignMode(image))
-            {
-                try
-                {
-                    if (sourceStream != null)
-                    {
-                        SetStaticImage(image, sourceStream);
-                    }
-                    else if (sourceUri != null)
-                    {
-                        var bmp = new BitmapImage();
-                        bmp.UriSource = sourceUri;
-                        image.Source = bmp;
-                    }
-                }
-                catch
-                {
-                    image.Source = null;
-                }
-                return false;
-            }
-            return true;
-        }
+        // private static bool CheckDesignMode(Image image, Uri sourceUri, Stream sourceStream)
+        // {
+        //     if (IsInDesignMode(image) && !GetAnimateInDesignMode(image))
+        //     {
+        //         try
+        //         {
+        //             if (sourceStream != null)
+        //             {
+        //                 SetStaticImage(image, sourceStream);
+        //             }
+        //             else if (sourceUri != null)
+        //             {
+        //                 var bmp = new Bitmap();
+        //                 bmp.UriSource = ;
+        //                 image.Source = bmp;
+        //             }
+        //         }
+        //         catch
+        //         {
+        //             image.Source = null;
+        //         }
+        //         return false;
+        //     }
+        //     return true;
+        // }
 
         private static void InitAnimation(Image image)
         {
@@ -391,7 +396,7 @@ namespace XamlAnimatedGif
 
             image.Source = null;
             ClearAnimatorCore(image);
-            
+
             try
             {
                 var stream = GetSourceStream(image);
@@ -413,16 +418,16 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static void Image_Loaded(object sender, RoutedEventArgs e)
+        private static void Image_Loaded(object sender, EventArgs e)
         {
-            var image = (Image) sender;
+            var image = (Image)sender;
             image.Loaded -= Image_Loaded;
             InitAnimation(image);
         }
 
-        private static void Image_Unloaded(object sender, RoutedEventArgs e)
+        private static void Image_Unloaded(object sender, EventArgs e)
         {
-            var image = (Image) sender;
+            var image = (Image)sender;
             image.Unloaded -= Image_Unloaded;
             image.Loaded += Image_Loaded;
             ClearAnimatorCore(image);
@@ -486,7 +491,7 @@ namespace XamlAnimatedGif
                 await SetStaticImageAsync(image, sourceUri);
                 OnLoaded(image);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 OnError(image, ex, AnimationErrorKind.Loading);
             }
@@ -514,7 +519,7 @@ namespace XamlAnimatedGif
                 SetStaticImage(image, stream);
                 OnLoaded(image);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 OnError(image, ex, AnimationErrorKind.Loading);
             }
@@ -542,17 +547,17 @@ namespace XamlAnimatedGif
             SetAnimator(image, null);
         }
 
-        // ReSharper disable once UnusedParameter.Local (used in WPF)
-        private static bool IsInDesignMode(DependencyObject obj)
-        {
-#if WPF
-            return DesignerProperties.GetIsInDesignMode(obj);
-#elif WINRT
-            return DesignMode.DesignModeEnabled;
-#elif SILVERLIGHT
-            return DesignerProperties.IsInDesignTool;
-#endif
-        }
+//         // ReSharper disable once UnusedParameter.Local (used in WPF)
+//         private static bool IsInDesignMode(AvaloniaObject obj)
+//         {
+// #if WPF
+//             return DesignerProperties.GetIsInDesignMode(obj);
+// #elif WINRT
+//             return DesignMode.DesignModeEnabled;
+// #elif SILVERLIGHT
+//             return DesignerProperties.IsInDesignTool;
+// #endif
+//         }
 
         private static async Task SetStaticImageAsync(Image image, Uri sourceUri)
         {
@@ -584,16 +589,7 @@ namespace XamlAnimatedGif
         private static void SetStaticImageCore(Image image, Stream stream)
         {
             stream.Seek(0, SeekOrigin.Begin);
-            var bmp = new BitmapImage();
-#if WPF
-            bmp.BeginInit();
-            bmp.StreamSource = stream;
-            bmp.EndInit();
-#elif WINRT
-            bmp.SetSource(stream.AsRandomAccessStream());
-#elif SILVERLIGHT
-            bmp.SetSource(stream);
-#endif
+            var bmp = new Bitmap(stream);
             image.Source = bmp;
         }
     }
