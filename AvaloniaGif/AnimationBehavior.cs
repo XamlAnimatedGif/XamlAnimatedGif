@@ -80,29 +80,29 @@ namespace XamlAnimatedGif
 
         #endregion
 
-        #region RepeatBehavior
+        #region RepeatCount
 
 #if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
 #endif
-        public static RepeatBehavior GetRepeatBehavior(DependencyObject obj)
+        public static RepeatCount GetRepeatCount(DependencyObject obj)
         {
-            return (RepeatBehavior)obj.GetValue(RepeatBehaviorProperty);
+            return (RepeatCount)obj.GetValue(RepeatCountProperty);
         }
 
-        public static void SetRepeatBehavior(DependencyObject obj, RepeatBehavior value)
+        public static void SetRepeatCount(DependencyObject obj, RepeatCount value)
         {
-            obj.SetValue(RepeatBehaviorProperty, value);
+            obj.SetValue(RepeatCountProperty, value);
         }
 
-        public static readonly DependencyProperty RepeatBehaviorProperty =
+        public static readonly DependencyProperty RepeatCountProperty =
             DependencyProperty.RegisterAttached(
-              "RepeatBehavior",
-              typeof(RepeatBehavior),
+              "RepeatCount",
+              typeof(RepeatCount),
               typeof(AnimationBehavior),
               new PropertyMetadata(
-                default(RepeatBehavior),
-                RepeatBehaviorChanged));
+                default(RepeatCount),
+                RepeatCountChanged));
 
         #endregion
 
@@ -334,9 +334,9 @@ namespace XamlAnimatedGif
             InitAnimation(image);
         }
 
-        private static void RepeatBehaviorChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        private static void RepeatCountChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
-            GetAnimator(o)?.OnRepeatBehaviorChanged();
+            GetAnimator(o)?.OnRepeatCountChanged();
         }
 
         private static void AnimateInDesignModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -397,14 +397,14 @@ namespace XamlAnimatedGif
                 var stream = GetSourceStream(image);
                 if (stream != null)
                 {
-                    InitAnimationAsync(image, stream.AsBuffered(), GetRepeatBehavior(image), seqNum);
+                    InitAnimationAsync(image, stream.AsBuffered(), GetRepeatCount(image), seqNum);
                     return;
                 }
 
                 var uri = GetAbsoluteUri(image);
                 if (uri != null)
                 {
-                    InitAnimationAsync(image, uri, GetRepeatBehavior(image), seqNum);
+                    InitAnimationAsync(image, uri, GetRepeatCount(image), seqNum);
                 }
             }
             catch (Exception ex)
@@ -463,7 +463,7 @@ namespace XamlAnimatedGif
             return uri;
         }
 
-        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior, int seqNum)
+        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatCount RepeatCount, int seqNum)
         {
             if (!CheckDesignMode(image, sourceUri, null))
                 return;
@@ -471,7 +471,7 @@ namespace XamlAnimatedGif
             try
             {
                 var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
-                var animator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image);
+                var animator = await ImageAnimator.CreateAsync(sourceUri, RepeatCount, progress, image);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
@@ -492,14 +492,14 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior, int seqNum)
+        private static async void InitAnimationAsync(Image image, Stream stream, RepeatCount RepeatCount, int seqNum)
         {
             if (!CheckDesignMode(image, null, stream))
                 return;
 
             try
             {
-                var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image);
+                var animator = await ImageAnimator.CreateAsync(stream, RepeatCount, image);
                 await SetAnimatorCoreAsync(image, animator);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)

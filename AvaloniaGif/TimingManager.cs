@@ -21,12 +21,12 @@ namespace XamlAnimatedGif
         private bool _isComplete;
         private TimeSpan _elapsed;
 
-        public TimingManager(RepeatBehavior repeatBehavior)
+        public TimingManager(RepeatCount RepeatCount)
         {
-            RepeatBehavior = repeatBehavior;
+            RepeatCount = RepeatCount;
         }
 
-        public RepeatBehavior RepeatBehavior { get; set; }
+        public RepeatCount RepeatCount { get; set; }
 
         public void Add(TimeSpan timeSpan)
         {
@@ -40,16 +40,16 @@ namespace XamlAnimatedGif
 
             await IsPausedAsync(cancellationToken);
 
-            var repeatBehavior = RepeatBehavior;
+            var RepeatCount = RepeatCount;
 
             var ts = _timeSpans[_current];
             await TaskEx.Delay(ts, cancellationToken);
             _current++;
             _elapsed += ts;
 
-            if (repeatBehavior.HasDuration)
+            if (RepeatCount.HasDuration)
             {
-                if (_elapsed >= repeatBehavior.Duration)
+                if (_elapsed >= RepeatCount.Duration)
                 {
                     IsComplete = true;
                     return false;
@@ -59,9 +59,9 @@ namespace XamlAnimatedGif
             if (_current >= _timeSpans.Count)
             {
                 _count++;
-                if (repeatBehavior.HasCount)
+                if (RepeatCount.HasCount)
                 {
-                    if (_count < repeatBehavior.Count)
+                    if (_count < RepeatCount.Count)
                     {
                         _current = 0;
                         return true;

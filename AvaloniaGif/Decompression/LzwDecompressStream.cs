@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
-using Buffer = System.Buffer;
-#if !NET40
-using System.Runtime.CompilerServices;
-#endif
+using Buffer = System.Buffer; 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace XamlAnimatedGif.Decompression
 {
@@ -110,7 +108,6 @@ namespace XamlAnimatedGif.Decompression
                 _remainingBytes = CopySequenceToBuffer(_remainingBytes, buffer, offset, count, ref read);
         }
 
-        [Conditional("DISABLED")]
         private static void ValidateReadArgs(byte[] buffer, int offset, int count)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
@@ -209,18 +206,17 @@ namespace XamlAnimatedGif.Decompression
                 Add(Sequence.ClearCode);
                 Add(Sequence.StopCode);
             }
-#if !NET40
+
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
             public void Reset()
             {
                 _count = (1 << _minimumCodeLength) + 2;
                 _codeLength = _minimumCodeLength + 1;
             }
 
-#if !NET40
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
             public void Add(Sequence sequence)
             {
                 // Code table is full, stop adding new codes
@@ -234,9 +230,7 @@ namespace XamlAnimatedGif.Decompression
 
             public Sequence this[int index]
             {
-#if !NET40
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
                 get
                 {
                     return _table[index];
@@ -245,17 +239,13 @@ namespace XamlAnimatedGif.Decompression
 
             public int Count
             {
-#if !NET40
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
                 get { return _count; }
             }
 
             public int CodeLength
             {
-#if !NET40
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
                 get { return _codeLength; }
             }
         }

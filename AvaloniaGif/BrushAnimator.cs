@@ -14,42 +14,42 @@ namespace XamlAnimatedGif
 {
     public class BrushAnimator : Animator
     {
-        private BrushAnimator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior) : base(sourceStream, sourceUri, metadata, repeatBehavior)
+        private BrushAnimator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatCount RepeatCount) : base(sourceStream, sourceUri, metadata, RepeatCount)
         {
             Brush = new ImageBrush {ImageSource = Bitmap};
-            RepeatBehavior = _repeatBehavior;
+            RepeatCount = _RepeatCount;
         }
 
-        protected override RepeatBehavior GetSpecifiedRepeatBehavior() => RepeatBehavior;
+        protected override RepeatCount GetSpecifiedRepeatCount() => RepeatCount;
 
         protected override object ErrorSource => Brush;
 
         public ImageBrush Brush { get; }
 
-        private RepeatBehavior _repeatBehavior;
-        public RepeatBehavior RepeatBehavior
+        private RepeatCount _RepeatCount;
+        public RepeatCount RepeatCount
         {
-            get { return _repeatBehavior; }
+            get { return _RepeatCount; }
             set
             {
-                _repeatBehavior = value;
-                OnRepeatBehaviorChanged();
+                _RepeatCount = value;
+                OnRepeatCountChanged();
             }
         }
 
-        public static Task<BrushAnimator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior, IProgress<int> progress = null)
+        public static Task<BrushAnimator> CreateAsync(Uri sourceUri, RepeatCount RepeatCount, IProgress<int> progress = null)
         {
             return CreateAsyncCore(
                 sourceUri,
                 progress,
-                (stream, metadata) => new BrushAnimator(stream, sourceUri, metadata, repeatBehavior));
+                (stream, metadata) => new BrushAnimator(stream, sourceUri, metadata, RepeatCount));
         }
 
-        public static Task<BrushAnimator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior)
+        public static Task<BrushAnimator> CreateAsync(Stream sourceStream, RepeatCount RepeatCount)
         {
             return CreateAsyncCore(
                 sourceStream,
-                metadata => new BrushAnimator(sourceStream, null, metadata, repeatBehavior));
+                metadata => new BrushAnimator(sourceStream, null, metadata, RepeatCount));
         }
     }
 }

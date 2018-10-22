@@ -46,7 +46,7 @@ namespace XamlAnimatedGif
         
         #region Constructor and factory methods
 
-        internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior)
+        internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatCount RepeatCount)
         {
             _sourceStream = sourceStream;
             _sourceUri = sourceUri;
@@ -58,7 +58,7 @@ namespace XamlAnimatedGif
             _stride = 4 * ((desc.Width * 32 + 31) / 32);
             _previousBackBuffer = new byte[desc.Height * _stride];
             _indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
-            _timingManager = CreateTimingManager(metadata, repeatBehavior);
+            _timingManager = CreateTimingManager(metadata, RepeatCount);
         }
 
         internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
@@ -200,11 +200,11 @@ namespace XamlAnimatedGif
             }
         }
 
-        private TimingManager CreateTimingManager(GifDataStream metadata, RepeatBehavior repeatBehavior)
+        private TimingManager CreateTimingManager(GifDataStream metadata, RepeatCount RepeatCount)
         {
-            var actualRepeatBehavior = GetActualRepeatBehavior(metadata, repeatBehavior);
+            var actualRepeatCount = GetActualRepeatCount(metadata, RepeatCount);
 
-            var manager = new TimingManager(actualRepeatBehavior);
+            var manager = new TimingManager(actualRepeatCount);
             foreach (var frame in metadata.Frames)
             {
                 manager.Add(GetFrameDelay(frame));
@@ -214,14 +214,14 @@ namespace XamlAnimatedGif
             return manager;
         }
 
-        private RepeatBehavior GetActualRepeatBehavior(GifDataStream metadata, RepeatBehavior repeatBehavior)
+        private RepeatCount GetActualRepeatCount(GifDataStream metadata, RepeatCount RepeatCount)
         {
-            return repeatBehavior == default(RepeatBehavior)
-                    ? GetRepeatBehaviorFromGif(metadata)
-                    : repeatBehavior;
+            return RepeatCount == default(RepeatCount)
+                    ? GetRepeatCountFromGif(metadata)
+                    : RepeatCount;
         }
 
-        protected abstract RepeatBehavior GetSpecifiedRepeatBehavior();
+        protected abstract RepeatCount GetSpecifiedRepeatCount();
 
         private void TimingManagerCompleted(object sender, EventArgs e)
         {
@@ -517,11 +517,11 @@ namespace XamlAnimatedGif
             return TimeSpan.FromMilliseconds(100);
         }
 
-        private static RepeatBehavior GetRepeatBehaviorFromGif(GifDataStream metadata)
+        private static RepeatCount GetRepeatCountFromGif(GifDataStream metadata)
         {
             if (metadata.RepeatCount == 0)
-                return RepeatBehavior.Forever;
-            return new RepeatBehavior(metadata.RepeatCount);
+                return RepeatCount.Forever;
+            return new RepeatCount(metadata.RepeatCount);
         }
 
         private Int32Rect GetFixedUpFrameRect(GifImageDescriptor desc)
@@ -629,17 +629,17 @@ namespace XamlAnimatedGif
 
         protected abstract object ErrorSource { get; }
 
-        internal void OnRepeatBehaviorChanged()
+        internal void OnRepeatCountChanged()
         {
             if (_timingManager == null)
                 return;
 
-            var newValue = GetSpecifiedRepeatBehavior();
-            var newActualValue = GetActualRepeatBehavior(_metadata, newValue);
-            if (_timingManager.RepeatBehavior == newActualValue)
+            var newValue = GetSpecifiedRepeatCount();
+            var newActualValue = GetActualRepeatCount(_metadata, newValue);
+            if (_timingManager.RepeatCount == newActualValue)
                 return;
 
-            _timingManager.RepeatBehavior = newActualValue;
+            _timingManager.RepeatCount = newActualValue;
             Rewind();
         }
     }
