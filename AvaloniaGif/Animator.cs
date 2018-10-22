@@ -66,7 +66,7 @@ namespace AvaloniaGif
                 while (true)
                 {
                     // var timing = _timingManager.NextAsync(cancellationToken);
-                    var k = _gifFrames[CurrentFrameIndex].Item1;
+                    var k = _gifFrames[CurrentFrameIndex];
                     Thread.Sleep(k);
                     var rendering = RenderFrameAsync(CurrentFrameIndex, cancellationToken);
                     // await TaskEx.WhenAll(timing, rendering);
