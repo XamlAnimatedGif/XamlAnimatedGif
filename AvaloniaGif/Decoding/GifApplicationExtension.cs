@@ -1,7 +1,11 @@
+
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AvaloniaGif.Extensions;
+
+ [assembly: InternalsVisibleTo("AvaloniaGif.Demo")]
 
 namespace AvaloniaGif.Decoding
 {

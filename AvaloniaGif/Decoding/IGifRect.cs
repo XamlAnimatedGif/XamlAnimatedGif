@@ -7,4 +7,6 @@ namespace AvaloniaGif.Decoding
         int Width { get; }
         int Height { get; }
     }
+ 
+
 }

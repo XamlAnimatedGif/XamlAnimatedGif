@@ -2,7 +2,8 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+		<GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+		<DefineConstants>$(DefineConstants);WPF</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Update="**\*.xaml.cs">
@@ -14,8 +15,6 @@
 		<EmbeddedResource Include="Assets\*" />
 	</ItemGroup>
 	<ItemGroup>
- 		<PackageReference Include="Avalonia" Version="0.6.2-*" />  
-		<PackageReference Include="Avalonia.ReactiveUI" Version="0.6.2-*" /> 
-		<PackageReference Include="ReactiveUI.Fody" Version="*" /> 
+		<PackageReference Include="Avalonia" Version="0.6.2-*" />
 	</ItemGroup>
 </Project>

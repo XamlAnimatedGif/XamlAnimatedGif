@@ -1,13 +1,16 @@
 ﻿using System;
-using Avalonia;  
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace AvaloniaGif
-{
+{ 
     public delegate void AnimationErrorEventHandler(AvaloniaObject d, AnimationErrorEventArgs e);
 
-    public class AnimationErrorEventArgs : EventArgs
+    public class AnimationErrorEventArgs : RoutedEventArgs
     {
-        public AnimationErrorEventArgs(object source, Exception exception, AnimationErrorKind kind)
+        public AnimationErrorEventArgs(Control source, Exception exception, AnimationErrorKind kind)
+
         { 
             Exception = exception;
             Kind = kind;

@@ -4,24 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-#if WPF || SILVERLIGHT
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Runtime.InteropServices;
-#elif WINRT
-using Windows.UI;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Media.Animation;
-using System.Runtime.InteropServices.WindowsRuntime;
-#endif
-#if !NET40 && !SILVERLIGHT
 using TaskEx = System.Threading.Tasks.Task;
-#endif
-
 using AvaloniaGif.Decoding;
 using AvaloniaGif.Decompression;
 using AvaloniaGif.Extensions;
@@ -45,7 +28,7 @@ namespace AvaloniaGif
         private readonly int _stride;
         private readonly byte[] _previousBackBuffer;
         private readonly byte[] _indexStreamBuffer;
-        private readonly TimingManager _timingManager;
+        //private readonly TimingManager _timingManager;
 
         #region Constructor and factory methods
 
@@ -61,7 +44,37 @@ namespace AvaloniaGif
             _stride = 4 * ((desc.Width * 32 + 31) / 32);
             _previousBackBuffer = new byte[desc.Height * _stride];
             _indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
-            _timingManager = CreateTimingManager(metadata, RepeatCount);
+            InitialFrames(metadata, RepeatCount);
+            //  _timingManager = CreateTimingManager(metadata, RepeatCount);
+        }
+
+        List<TimeSpan> _gifFrames = new List<TimeSpan>();
+
+
+        private void InitialFrames(GifDataStream metadata, RepeatCount repeatCount)
+        {
+            foreach (var frame in metadata.Frames)
+            {
+                _gifFrames.Add(GetFrameDelay(frame));
+            }
+        }
+
+        public async void Play(CancellationToken cancellationToken)
+        {
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    // var timing = _timingManager.NextAsync(cancellationToken);
+                    var k = _gifFrames[CurrentFrameIndex].Item1;
+                    Thread.Sleep(k);
+                    var rendering = RenderFrameAsync(CurrentFrameIndex, cancellationToken);
+                    // await TaskEx.WhenAll(timing, rendering);
+                    // if (!timing.Result)
+                    //     break;
+                    CurrentFrameIndex = (CurrentFrameIndex + 1) % FrameCount;
+                }
+            });
         }
 
         internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
@@ -105,72 +118,58 @@ namespace AvaloniaGif
         private bool _isStarted;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public async void Play()
-        {
-            try
-            {
-                if (_timingManager.IsComplete)
-                {
-                    _timingManager.Reset();
-                    _isStarted = false;
-                }
 
-                if (!_isStarted)
-                {
-                    _cancellationTokenSource?.Dispose();
-                    _cancellationTokenSource = new CancellationTokenSource();
-                    _isStarted = true;
-                    if (_timingManager.IsPaused)
-                        _timingManager.Resume();
-                    await RunAsync(_cancellationTokenSource.Token);
-                }
-                else if (_timingManager.IsPaused)
-                {
-                    _timingManager.Resume();
-                }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception ex)
-            {
-                // ignore errors that might occur during Dispose
-                if (!_disposing)
-                    OnError(ex, AnimationErrorKind.Rendering);
-            }
-        }
+        // try
+        // {
+        //     if (_timingManager.IsComplete)
+        //     {
+        //         _timingManager.Reset();
+        //         _isStarted = false;
+        //     }
+
+        //     if (!_isStarted)
+        //     {
+        //         _cancellationTokenSource?.Dispose();
+        //         _cancellationTokenSource = new CancellationTokenSource();
+        //         _isStarted = true;
+        //         if (_timingManager.IsPaused)
+        //             _timingManager.Resume();
+        //         await RunAsync(_cancellationTokenSource.Token);
+        //     }
+        //     else if (_timingManager.IsPaused)
+        //     {
+        //         _timingManager.Resume();
+        //     }
+        // }
+        // catch (OperationCanceledException)
+        // {
+        // }
+        // catch (Exception ex)
+        // {
+        //     // ignore errors that might occur during Dispose
+        //     if (!_disposing)
+        //         OnError(ex, AnimationErrorKind.Rendering);
+        // }
+        //}
 
         private int _frameIndex;
-        private async Task RunAsync(CancellationToken cancellationToken)
-        {
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var timing = _timingManager.NextAsync(cancellationToken);
-                var rendering = RenderFrameAsync(CurrentFrameIndex, cancellationToken);
-                await TaskEx.WhenAll(timing, rendering);
-                if (!timing.Result)
-                    break;
-                CurrentFrameIndex = (CurrentFrameIndex + 1) % FrameCount;
-            }
-        }
 
         public void Pause()
         {
-            _timingManager.Pause();
+            //  _timingManager.Pause();
         }
 
-        public bool IsPaused => _timingManager.IsPaused;
+        // public bool IsPaused => _timingManager.IsPaused;
 
-        public bool IsComplete
-        {
-            get
-            {
-                if (_isStarted)
-                    return _timingManager.IsComplete;
-                return false;
-            }
-        }
+        // public bool IsComplete
+        // {
+        //     get
+        //     {
+        //         if (_isStarted)
+        //             return _timingManager.IsComplete;
+        //         return false;
+        //     }
+        // }
 
         public event EventHandler CurrentFrameChanged;
 
@@ -190,7 +189,7 @@ namespace AvaloniaGif
 
         protected virtual void OnError(Exception ex, AnimationErrorKind kind)
         {
-            Error?.Invoke(this, new AnimationErrorEventArgs(ErrorSource, ex, kind));
+            Error?.Invoke(this, new AnimationErrorEventArgs(null, ex, kind));
         }
 
         public int CurrentFrameIndex
@@ -203,19 +202,20 @@ namespace AvaloniaGif
             }
         }
 
-        private TimingManager CreateTimingManager(GifDataStream metadata, RepeatCount RepeatCount)
-        {
-            var actualRepeatCount = GetActualRepeatCount(metadata, RepeatCount);
+        // private TimingManager CreateTimingManager(GifDataStream metadata, RepeatCount RepeatCount)
+        // {
+        //     var actualRepeatCount = GetActualRepeatCount(metadata, RepeatCount);
 
-            var manager = new TimingManager(actualRepeatCount);
-            foreach (var frame in metadata.Frames)
-            {
-                manager.Add(GetFrameDelay(frame));
-            }
+        //     var manager = new TimingManager(actualRepeatCount);
 
-            manager.Completed += TimingManagerCompleted;
-            return manager;
-        }
+        //     foreach (var frame in metadata.Frames)
+        //     {
+        //         manager.Add(GetFrameDelay(frame));
+        //     }
+
+        //     manager.Completed += TimingManagerCompleted;
+        //     return manager;
+        // }
 
         private RepeatCount GetActualRepeatCount(GifDataStream metadata, RepeatCount RepeatCount)
         {
@@ -307,11 +307,12 @@ namespace AvaloniaGif
             var frame = _metadata.Frames[frameIndex];
             var desc = frame.Descriptor;
             var rect = GetFixedUpFrameRect(desc);
+            
             using (var indexStream = await GetIndexStreamAsync(frame, cancellationToken))
             {
-
+                
                 if (frameIndex < _previousFrameIndex)
-                    ClearArea(_metadata.Header.LogicalScreenDescriptor);
+                    ClearArea(new Int32Rect(0, 0, _metadata.Header.LogicalScreenDescriptor.Width, _metadata.Header.LogicalScreenDescriptor.Height));
                 else
                     DisposePreviousFrame(frame);
 
@@ -431,11 +432,7 @@ namespace AvaloniaGif
                     case GifFrameDisposalMethod.RestorePrevious:
                         {
                             CopyToBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
-#if WPF
-                        var desc = _metadata.Header.LogicalScreenDescriptor;
-                        var rect = new Int32Rect(0, 0, desc.Width, desc.Height);
-                        _bitmap.AddDirtyRect(rect);
-#endif
+
                             break;
                         }
                 }
@@ -448,11 +445,6 @@ namespace AvaloniaGif
             }
         }
 
-        private void ClearArea(IGifRect rect)
-        {
-            ClearArea(new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
-        }
-
         private void ClearArea(Int32Rect rect)
         {
             int bufferLength = 4 * rect.Width;
@@ -462,9 +454,7 @@ namespace AvaloniaGif
                 int offset = (rect.Y + y) * _stride + 4 * rect.X;
                 CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
             }
-#if WPF
-            _bitmap.AddDirtyRect(new Int32Rect(rect.X, rect.Y, rect.Width, rect.Height));
-#endif
+
         }
 
         private async Task<Stream> GetIndexStreamAsync(GifFrame frame, CancellationToken cancellationToken)
@@ -480,7 +470,7 @@ namespace AvaloniaGif
             return lzwStream;
         }
 
-        internal Bitmap Bitmap => _bitmap;
+        internal WriteableBitmap Bitmap => _bitmap;
 
         #endregion
 
@@ -534,8 +524,8 @@ namespace AvaloniaGif
             if (!_disposed)
             {
                 _disposing = true;
-                if (_timingManager != null) _timingManager.Completed -= TimingManagerCompleted;
-                _cancellationTokenSource?.Cancel();
+                // if (_timingManager != null) _timingManager.Completed -= TimingManagerCompleted;
+                // _cancellationTokenSource?.Cancel();
                 if (_isSourceStreamOwner)
                 {
                     try
@@ -580,7 +570,7 @@ namespace AvaloniaGif
             {
                 await RenderFrameAsync(0, CancellationToken.None);
                 CurrentFrameIndex = 0;
-                _timingManager.Pause();
+                // _timingManager.Pause();
             }
             catch (Exception ex)
             {
@@ -590,42 +580,42 @@ namespace AvaloniaGif
 
         public async void Rewind()
         {
-            CurrentFrameIndex = 0;
-            bool isStopped = _timingManager.IsPaused || _timingManager.IsComplete;
-            _timingManager.Reset();
-            if (isStopped)
-            {
-                _timingManager.Pause();
-                _isStarted = false;
-                try
-                {
-                    await RenderFrameAsync(0, CancellationToken.None);
-                }
-                catch (Exception ex)
-                {
-                    OnError(ex, AnimationErrorKind.Rendering);
-                }
-            }
+            // CurrentFrameIndex = 0;
+            // bool isStopped = _timingManager.IsPaused || _timingManager.IsComplete;
+            // _timingManager.Reset();
+            // if (isStopped)
+            // {
+            //     _timingManager.Pause();
+            //     _isStarted = false;
+            //     try
+            //     {
+            //         await RenderFrameAsync(0, CancellationToken.None);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         OnError(ex, AnimationErrorKind.Rendering);
+            //     }
+            // }
         }
 
         protected abstract object ErrorSource { get; }
 
         internal void OnRepeatCountChanged()
         {
-            if (_timingManager == null)
-                return;
+            // if (_timingManager == null)
+            //     return;
 
-            var newValue = GetSpecifiedRepeatCount();
-            var newActualValue = GetActualRepeatCount(_metadata, newValue);
-            if (_timingManager.RepeatCount == newActualValue)
-                return;
+            // var newValue = GetSpecifiedRepeatCount();
+            // var newActualValue = GetActualRepeatCount(_metadata, newValue);
+            // if (_timingManager.RepeatCount == newActualValue)
+            //     return;
 
-            _timingManager.RepeatCount = newActualValue;
-            Rewind();
+            // _timingManager.RepeatCount = newActualValue;
+            // Rewind();
         }
     }
 
-#if !WPF
+
     struct Int32Rect
     {
         public int X { get; }
@@ -641,5 +631,4 @@ namespace AvaloniaGif
             Height = height;
         }
     }
-#endif
 }

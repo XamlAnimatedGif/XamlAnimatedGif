@@ -1,22 +1,18 @@
-﻿using System.Windows;
+﻿
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace AvaloniaGif
 {
-#if WPF
-    public delegate void DownloadProgressEventHandler(DependencyObject d, DownloadProgressEventArgs e);
+
+    public delegate void DownloadProgressEventHandler(AvaloniaObject d, DownloadProgressEventArgs e);
 
     public class DownloadProgressEventArgs : RoutedEventArgs
-#elif WINRT || SILVERLIGHT
-    public class DownloadProgressEventArgs : System.EventArgs
-#endif
     {
         public int Progress { get; set; }
 
-#if WPF
-        public DownloadProgressEventArgs(object source, int progress) : base(AnimationBehavior.DownloadProgressEvent, source)
-#elif WINRT || SILVERLIGHT
-        public DownloadProgressEventArgs(int progress)
-#endif
+        public DownloadProgressEventArgs(Control source, int progress) : base(AnimationBehavior.DownloadProgressEvent, source)
         {
             Progress = progress;
         }
