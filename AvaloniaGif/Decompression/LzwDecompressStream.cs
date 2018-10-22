@@ -4,7 +4,7 @@ using Buffer = System.Buffer;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace XamlAnimatedGif.Decompression
+namespace AvaloniaGif.Decompression
 {
     class LzwDecompressStream : Stream
     {

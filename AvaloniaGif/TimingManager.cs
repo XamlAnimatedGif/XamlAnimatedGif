@@ -11,7 +11,7 @@ using Windows.UI.Xaml.Media.Animation;
 using TaskEx = System.Threading.Tasks.Task;
 #endif
 
-namespace XamlAnimatedGif
+namespace AvaloniaGif
 {
     class TimingManager
     {

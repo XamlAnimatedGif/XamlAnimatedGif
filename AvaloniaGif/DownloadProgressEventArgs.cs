@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace XamlAnimatedGif
+namespace AvaloniaGif
 {
 #if WPF
     public delegate void DownloadProgressEventHandler(DependencyObject d, DownloadProgressEventArgs e);

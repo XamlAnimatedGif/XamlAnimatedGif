@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace XamlAnimatedGif.Extensions
+namespace AvaloniaGif.Extensions
 {
     static class StreamExtensions
     {

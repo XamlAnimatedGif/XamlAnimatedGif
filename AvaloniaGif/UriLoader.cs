@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using XamlAnimatedGif.Extensions;
+using AvaloniaGif.Extensions;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,7 +12,7 @@ using TaskEx = System.Threading.Tasks.Task;
 using Avalonia;
 using Avalonia.Platform;
 
-namespace XamlAnimatedGif
+namespace AvaloniaGif
 {
 
     partial class UriLoader

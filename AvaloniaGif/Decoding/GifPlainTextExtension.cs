@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using XamlAnimatedGif.Extensions;
+using AvaloniaGif.Extensions;
 
-namespace XamlAnimatedGif.Decoding
+namespace AvaloniaGif.Decoding
 {
     // label 0x01
     internal class GifPlainTextExtension : GifExtension

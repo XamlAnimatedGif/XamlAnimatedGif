@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using XamlAnimatedGif.Extensions;
+using AvaloniaGif.Extensions;
 
-namespace XamlAnimatedGif.Decoding
+namespace AvaloniaGif.Decoding
 {
     internal class GifImageDescriptor : IGifRect
     {

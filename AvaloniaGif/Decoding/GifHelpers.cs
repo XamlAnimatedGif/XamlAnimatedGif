@@ -3,9 +3,9 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using XamlAnimatedGif.Extensions;
+using AvaloniaGif.Extensions;
 
-namespace XamlAnimatedGif.Decoding
+namespace AvaloniaGif.Decoding
 {
     internal static class GifHelpers
     {

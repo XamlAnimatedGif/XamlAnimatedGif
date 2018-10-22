@@ -8,9 +8,9 @@ using System.Windows.Media.Animation;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 #endif
-using XamlAnimatedGif.Decoding;
+using AvaloniaGif.Decoding;
 
-namespace XamlAnimatedGif
+namespace AvaloniaGif
 {
     public class BrushAnimator : Animator
     {

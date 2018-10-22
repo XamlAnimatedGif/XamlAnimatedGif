@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 #if WINRT
-using XamlAnimatedGif.Extensions;
+using AvaloniaGif.Extensions;
 #endif
 
-namespace XamlAnimatedGif.Decoding
+namespace AvaloniaGif.Decoding
 {
     internal class GifDataStream
     {

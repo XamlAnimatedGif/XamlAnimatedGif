@@ -3,7 +3,7 @@
 using System.Runtime.Serialization;
 #endif
 
-namespace XamlAnimatedGif.Decoding
+namespace AvaloniaGif.Decoding
 {
 #if WPF
     [Serializable]

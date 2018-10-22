@@ -1,15 +1,15 @@
-﻿using XamlAnimatedGif.Decoding;
+﻿using AvaloniaGif.Decoding;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using XamlAnimatedGif.Extensions;
+using AvaloniaGif.Extensions;
 using Avalonia;
 using Avalonia.Media.Imaging;
 
 using Avalonia.Animation;
 using Avalonia.Controls;
 
-namespace XamlAnimatedGif
+namespace AvaloniaGif
 {
     public class AnimationBehavior
     {

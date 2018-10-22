@@ -3,9 +3,9 @@ using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Animation;
 using Avalonia.Controls;
-using XamlAnimatedGif.Decoding;
+using AvaloniaGif.Decoding;
 
-namespace XamlAnimatedGif
+namespace AvaloniaGif
 {
     internal class ImageAnimator : Animator
     {

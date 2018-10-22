@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using TaskEx = System.Threading.Tasks.Task;
 #endif
 
-namespace XamlAnimatedGif.Decoding
+namespace AvaloniaGif.Decoding
 {
     internal class GifTrailer : GifBlock
     {

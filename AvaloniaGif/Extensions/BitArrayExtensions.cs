@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace XamlAnimatedGif.Extensions
+namespace AvaloniaGif.Extensions
 {
     static class BitArrayExtensions
     {

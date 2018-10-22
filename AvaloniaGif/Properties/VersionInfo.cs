@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
-using XamlAnimatedGif.Properties;
+using AvaloniaGif.Properties;
 
 [assembly: AssemblyVersion(VersionInfo.Version)]
 [assembly: AssemblyFileVersion(VersionInfo.Version)]
 [assembly: AssemblyInformationalVersion(VersionInfo.Version + VersionInfo.PreRelease)]
 
-namespace XamlAnimatedGif.Properties
+namespace AvaloniaGif.Properties
 {
     internal static class VersionInfo
     {

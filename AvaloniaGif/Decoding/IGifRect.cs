@@ -1,4 +1,4 @@
-namespace XamlAnimatedGif.Decoding
+namespace AvaloniaGif.Decoding
 {
     internal interface IGifRect
     {

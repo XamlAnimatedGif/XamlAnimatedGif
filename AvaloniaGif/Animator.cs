@@ -22,9 +22,9 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using TaskEx = System.Threading.Tasks.Task;
 #endif
 
-using XamlAnimatedGif.Decoding;
-using XamlAnimatedGif.Decompression;
-using XamlAnimatedGif.Extensions;
+using AvaloniaGif.Decoding;
+using AvaloniaGif.Decompression;
+using AvaloniaGif.Extensions;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using System.Runtime.InteropServices;
@@ -32,7 +32,7 @@ using Avalonia.Animation;
 using Avalonia;
 using Avalonia.Platform;
 
-namespace XamlAnimatedGif
+namespace AvaloniaGif
 {
     public abstract class Animator : AvaloniaObject, IDisposable
     {

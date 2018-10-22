@@ -1,4 +1,4 @@
-﻿namespace XamlAnimatedGif.Decompression
+﻿namespace AvaloniaGif.Decompression
 {
     class BitReader
     {

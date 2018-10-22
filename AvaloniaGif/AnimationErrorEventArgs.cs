@@ -1,7 +1,7 @@
 ﻿using System;
 using Avalonia;  
 
-namespace XamlAnimatedGif
+namespace AvaloniaGif
 {
     public delegate void AnimationErrorEventHandler(AvaloniaObject d, AnimationErrorEventArgs e);
 

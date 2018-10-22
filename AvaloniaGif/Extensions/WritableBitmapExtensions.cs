@@ -5,7 +5,7 @@ using System.Windows.Media.Imaging;
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-namespace XamlAnimatedGif.Extensions
+namespace AvaloniaGif.Extensions
 {
     static class WritableBitmapExtensions
     {

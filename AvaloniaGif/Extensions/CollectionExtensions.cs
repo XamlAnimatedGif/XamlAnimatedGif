@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 #endif
 
-namespace XamlAnimatedGif.Extensions
+namespace AvaloniaGif.Extensions
 {
     static class CollectionExtensions
     {
