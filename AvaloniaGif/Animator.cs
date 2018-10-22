@@ -470,7 +470,7 @@ namespace AvaloniaGif
             return lzwStream;
         }
 
-        internal WriteableBitmap Bitmap => _bitmap;
+        internal Bitmap Bitmap => _bitmap;
 
         #endregion
 
