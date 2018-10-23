@@ -3,8 +3,11 @@
         xmlns:gif="clr-namespace:AvaloniaGif;assembly=AvaloniaGif"
         Title="GIFs on Avalonia!" Height="480" Width="680" Background="White">
     <StackPanel>
-        <Image Stretch="None" gif:AnimationBehavior.SourceUri="resm:AvaloniaGif.Demo.Images.bomb.gif"/>
-        <Image Stretch="None" gif:AnimationBehavior.SourceUri="resm:AvaloniaGif.Demo.Images.earth.gif"/>
-        <Image Stretch="None" gif:AnimationBehavior.SourceUri="resm:AvaloniaGif.Demo.Images.newton-cradle.gif"/>
+        <StackPanel Orientation="Horizontal">
+            <Image Stretch="None" gif:GifImage.SourceUri="resm:AvaloniaGif.Demo.Images.bomb.gif"/>
+            <Image Stretch="None" gif:GifImage.SourceUri="resm:AvaloniaGif.Demo.Images.radar.gif"/>
+            <Image Stretch="None" gif:GifImage.SourceUri="resm:AvaloniaGif.Demo.Images.earth.gif"/>
+            <Image Stretch="None" gif:GifImage.SourceUri="resm:AvaloniaGif.Demo.Images.newton-cradle.gif"/>
+        </StackPanel>
     </StackPanel>
 </Window>
