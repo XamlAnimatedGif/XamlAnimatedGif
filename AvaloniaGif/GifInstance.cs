@@ -18,7 +18,7 @@ namespace AvaloniaGif
         public int FrameCount { get; private set; }
         public Stream Stream { get; private set; }
         public RepeatCount RepeatCount { get; private set; }
-        public bool AutoStart { get; private set; }
+        public bool AutoStart { get; private set; } = true;
         public Progress<int> Progress { get; private set; }
         internal GifDataStream GifDataStream { get; private set; }
         internal CancellationTokenSource _rendererSignal = new CancellationTokenSource();
@@ -27,6 +27,7 @@ namespace AvaloniaGif
         int CurrentFrame;
         IDisposable sub1;
         bool streamCanDispose, _isFirstRun;
+        int hashCode;
 
         public void Dispose()
         {
@@ -40,6 +41,31 @@ namespace AvaloniaGif
 
         public async void SetSource(object newValue)
         {
+            Console.WriteLine(newValue);
+            if (Stream != null)
+            {
+                if (streamCanDispose)
+                    Stream.Dispose();
+
+                _rendererSignal?.Cancel();
+                _rendererSignal = new CancellationTokenSource();
+                _prevTime = TimeSpan.Zero;
+                _delta = TimeSpan.Zero;
+                CurrentFrame = 0;
+                sub1?.Dispose();
+                streamCanDispose = false;
+                _isFirstRun = false;
+            }
+
+            if (newValue.GetHashCode() == hashCode)
+            {
+                return;
+            }
+            else
+            {
+                hashCode = newValue.GetHashCode();
+            }
+
             var sourceUri = newValue as Uri;
             var sourceStr = newValue as Stream;
 
@@ -62,16 +88,18 @@ namespace AvaloniaGif
 
             Stream = stream;
 
-            Image.AttachedToLogicalTree += delegate
-            {
-                Run();
-            };
-
             Image.DetachedFromVisualTree += delegate
             {
                 Dispose();
             };
 
+            if (Image?.IsInitialized ?? false)
+                Run();
+            else
+                Image.AttachedToVisualTree += delegate
+                {
+                    Run();
+                };
         }
 
         private async void Run()
@@ -84,20 +112,28 @@ namespace AvaloniaGif
             Renderer = new GifRenderer(Stream, GifDataStream);
 
             this.Clock = Image.Clock ?? new Clock();
-            sub1 = Clock.Subscribe(Step);
+            sub1 = Clock.Subscribe((x) => Step(x, _rendererSignal.Token));
             this.FrameCount = Renderer.FrameCount;
 
             Image.Source = Renderer.GifBitmap;
         }
 
-        public async void Step(TimeSpan Time)
+        public async void Step(TimeSpan Time, CancellationToken token)
         {
+            if (token.IsCancellationRequested) return;
+
+            if (!_isFirstRun)
+            {
+                await Renderer.RenderFrameAsync(0, token);
+                _isFirstRun = false;
+            }
+
             _delta = Time - _prevTime;
 
-            if (_delta.Ticks >= Renderer.GifFrameTimes[CurrentFrame].Ticks)
+            if (_delta >= Renderer.GifFrameTimes[CurrentFrame])
             {
                 _prevTime = Time;
-                await Renderer.RenderFrameAsync(CurrentFrame, _rendererSignal.Token);
+                await Renderer.RenderFrameAsync(CurrentFrame, token);
                 CurrentFrame = (CurrentFrame + 1) % FrameCount;
                 Image.InvalidateVisual();
             }

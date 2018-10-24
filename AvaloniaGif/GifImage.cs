@@ -114,6 +114,7 @@ namespace AvaloniaGif
             if (image == null)
                 return;
 
+
             var instance = GetInstance(image);
             if (instance == null)
             {

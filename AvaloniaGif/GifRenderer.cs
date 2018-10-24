@@ -290,7 +290,6 @@ namespace AvaloniaGif
             return lzwStream;
         }
 
-        TimeSpan slice = TimeSpan.FromSeconds(1f / 60f);
         private TimeSpan GetFrameDelay(GifFrame frame)
         {
             var gce = frame.GraphicControl;
@@ -298,7 +297,15 @@ namespace AvaloniaGif
             {
                 if (gce.Delay != 0)
                 {
-                    return TimeSpan.FromMilliseconds(gce.Delay);
+                    var delay = TimeSpan.FromMilliseconds(gce.Delay);
+                    
+                    // HACK: Basically this prevents frames with delay under 30ms
+                    // to display twice.
+
+                    if (delay < TimeSpan.FromMilliseconds(31))
+                        return TimeSpan.FromMilliseconds(15);
+                    else
+                        return delay;
                 }
             }
             return TimeSpan.FromMilliseconds(100);

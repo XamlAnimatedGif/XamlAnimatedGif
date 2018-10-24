@@ -14,8 +14,8 @@ namespace AvaloniaGif.Demo
         public MainWindow()
         {
             AvaloniaXamlLoader.Load(this);
+            this.DataContext = new MainWindowViewModel();
         }
-
 
         static void Main(string[] args)
         {
