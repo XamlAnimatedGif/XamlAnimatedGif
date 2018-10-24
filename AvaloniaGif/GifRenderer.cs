@@ -19,7 +19,7 @@ using TaskEx = System.Threading.Tasks.Task;
 
 namespace AvaloniaGif
 {
-    public partial class GifRenderer : AvaloniaObject
+    public partial class GifRenderer : AvaloniaObject, IDisposable
     {
         public Stream _sourceStream;
         private readonly bool _isSourceStreamOwner;
@@ -324,6 +324,11 @@ namespace AvaloniaGif
             int width = Math.Min(desc.Width, _bitmap.PixelWidth - desc.Left);
             int height = Math.Min(desc.Height, _bitmap.PixelHeight - desc.Top);
             return new Int32Rect(desc.Left, desc.Top, width, height);
+        }
+
+        public void Dispose()
+        {
+            _bitmap.Dispose();
         }
     }
 }

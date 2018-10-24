@@ -32,40 +32,15 @@ namespace AvaloniaGif
         public void Dispose()
         {
             if (streamCanDispose)
-                Stream.Dispose();
+                Stream?.Dispose();
 
-            sub1.Dispose();
-
-            _rendererSignal.Cancel();
+            sub1?.Dispose();
+            _rendererSignal?.Cancel();
+            Renderer?.Dispose();
         }
 
         public async void SetSource(object newValue)
         {
-            Console.WriteLine(newValue);
-            if (Stream != null)
-            {
-                if (streamCanDispose)
-                    Stream.Dispose();
-
-                _rendererSignal?.Cancel();
-                _rendererSignal = new CancellationTokenSource();
-                _prevTime = TimeSpan.Zero;
-                _delta = TimeSpan.Zero;
-                CurrentFrame = 0;
-                sub1?.Dispose();
-                streamCanDispose = false;
-                _isFirstRun = false;
-            }
-
-            if (newValue.GetHashCode() == hashCode)
-            {
-                return;
-            }
-            else
-            {
-                hashCode = newValue.GetHashCode();
-            }
-
             var sourceUri = newValue as Uri;
             var sourceStr = newValue as Stream;
 
@@ -93,13 +68,10 @@ namespace AvaloniaGif
                 Dispose();
             };
 
-            if (Image?.IsInitialized ?? false)
                 Run();
-            else
-                Image.AttachedToVisualTree += delegate
-                {
-                    Run();
-                };
+        
+
+
         }
 
         private async void Run()
@@ -114,8 +86,8 @@ namespace AvaloniaGif
             this.Clock = Image.Clock ?? new Clock();
             sub1 = Clock.Subscribe((x) => Step(x, _rendererSignal.Token));
             this.FrameCount = Renderer.FrameCount;
-
             Image.Source = Renderer.GifBitmap;
+
         }
 
         public async void Step(TimeSpan Time, CancellationToken token)
@@ -125,7 +97,7 @@ namespace AvaloniaGif
             if (!_isFirstRun)
             {
                 await Renderer.RenderFrameAsync(0, token);
-                _isFirstRun = false;
+                _isFirstRun = true;
             }
 
             _delta = Time - _prevTime;

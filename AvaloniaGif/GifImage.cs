@@ -92,8 +92,8 @@ namespace AvaloniaGif
 
             if (image == null)
                 return;
-            
-            
+
+
             GetInstance(image)?.AutoStartChanged(e);
         }
 
@@ -114,16 +114,17 @@ namespace AvaloniaGif
             if (image == null)
                 return;
 
-
             var instance = GetInstance(image);
-            if (instance == null)
+
+            if (instance != null)
             {
-                instance = new GifInstance();
-                instance.Image = image;
-                SetInstance(image, instance);
+                instance?.Dispose();
             }
 
+            instance = new GifInstance();
+            instance.Image = image;
             instance.SetSource(e.NewValue);
+            SetInstance(image, instance);
         }
     }
 }
