@@ -68,10 +68,7 @@ namespace AvaloniaGif
                 Dispose();
             };
 
-                Run();
-        
-
-
+            Run();
         }
 
         private async void Run()
