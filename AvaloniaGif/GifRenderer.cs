@@ -32,6 +32,7 @@ namespace AvaloniaGif
         public int FrameCount => _metadata.Frames.Count;
         public Bitmap GifBitmap => _bitmap;
         public readonly List<TimeSpan> GifFrameTimes = new List<TimeSpan>();
+        public Vector DPI { get; set; } = new Vector(96, 96);
         private int _previousFrameIndex;
         private GifFrame _previousFrame;
 
@@ -61,7 +62,7 @@ namespace AvaloniaGif
         private WriteableBitmap CreateBitmap(GifDataStream metadata)
         {
             var desc = metadata.Header.LogicalScreenDescriptor;
-            var bitmap = new WriteableBitmap(desc.Width, desc.Height, PixelFormat.Bgra8888);
+            var bitmap = new WriteableBitmap(new PixelSize(desc.Width, desc.Height), DPI, PixelFormat.Bgra8888);
             return bitmap;
         }
 
@@ -298,7 +299,7 @@ namespace AvaloniaGif
                 if (gce.Delay != 0)
                 {
                     var delay = TimeSpan.FromMilliseconds(gce.Delay);
-                    
+
                     // HACK: Basically this prevents frames with delay under 30ms
                     // to display twice.
 
@@ -321,8 +322,8 @@ namespace AvaloniaGif
 
         private Int32Rect GetFixedUpFrameRect(GifImageDescriptor desc)
         {
-            int width = Math.Min(desc.Width, _bitmap.PixelWidth - desc.Left);
-            int height = Math.Min(desc.Height, _bitmap.PixelHeight - desc.Top);
+            int width = Math.Min(desc.Width, _bitmap.PixelSize.Width - desc.Left);
+            int height = Math.Min(desc.Height, _bitmap.PixelSize.Height - desc.Top);
             return new Int32Rect(desc.Left, desc.Top, width, height);
         }
 

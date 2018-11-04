@@ -1,7 +1,5 @@
 using System.Threading.Tasks;
-#if !NET40 && !SILVERLIGHT
 using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace AvaloniaGif.Decoding
 {
