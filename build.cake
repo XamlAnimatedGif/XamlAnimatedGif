@@ -78,13 +78,13 @@ var nugetTargets = new[]
 // Setup / Teardown //
 //////////////////////
 
-Setup(() =>
+Setup(context =>
 {
     // Executed BEFORE the first task.
     Information("Running tasks...");
 });
 
-Teardown(() =>
+Teardown(context =>
 {
     // Executed AFTER the last task.
     Information("Finished running tasks.");
