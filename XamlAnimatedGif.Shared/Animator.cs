@@ -43,7 +43,7 @@ namespace XamlAnimatedGif
         private readonly byte[] _previousBackBuffer;
         private readonly byte[] _indexStreamBuffer;
         private readonly TimingManager _timingManager;
-        
+
         #region Constructor and factory methods
 
         internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior)
@@ -176,18 +176,18 @@ namespace XamlAnimatedGif
             CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public event EventHandler AnimationCompleted;
+        public event EventHandler<AnimationCompletedEventArgs> AnimationCompleted;
 
         protected virtual void OnAnimationCompleted()
         {
-            AnimationCompleted?.Invoke(this, EventArgs.Empty);
+            AnimationCompleted?.Invoke(this, new AnimationCompletedEventArgs(AnimationSource));
         }
 
         public event EventHandler<AnimationErrorEventArgs> Error;
 
         protected virtual void OnError(Exception ex, AnimationErrorKind kind)
         {
-            Error?.Invoke(this, new AnimationErrorEventArgs(ErrorSource, ex, kind));
+            Error?.Invoke(this, new AnimationErrorEventArgs(AnimationSource, ex, kind));
         }
 
         public int CurrentFrameIndex
@@ -627,7 +627,7 @@ namespace XamlAnimatedGif
             }
         }
 
-        protected abstract object ErrorSource { get; }
+        protected abstract object AnimationSource { get; }
 
         internal void OnRepeatBehaviorChanged()
         {
