@@ -343,7 +343,7 @@ namespace XamlAnimatedGif
         private static readonly DependencyProperty SeqNumProperty =
             DependencyProperty.RegisterAttached("SeqNum", typeof(int), typeof(AnimationBehavior), new PropertyMetadata(0));
 
-#endregion
+        #endregion
 
         private static void SourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
