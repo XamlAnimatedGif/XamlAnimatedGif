@@ -15,7 +15,7 @@ namespace XamlAnimatedGif
             : base(AnimationBehavior.AnimationCompletedEvent, source)
         {
 #elif WINRT || SILVERLIGHT
-    public class AnimationCompletedEventArgs : EventArgs
+    public class AnimationCompletedEventArgs : System.EventArgs
     {
         public AnimationCompletedEventArgs(object source)
         {
