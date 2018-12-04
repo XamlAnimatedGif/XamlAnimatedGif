@@ -9,7 +9,7 @@ namespace XamlAnimatedGif.Properties
 {
     internal static class VersionInfo
     {
-        public const string Version = "1.1.10.0";
+        public const string Version = "1.2.0.0";
         public const string PreRelease = "";
     }
 }
