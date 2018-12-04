@@ -34,9 +34,9 @@
                     <ColumnDefinition />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                
+
                 <Label Content="Image" />
-                
+
                 <ComboBox Grid.Row="0" Grid.Column="1" Margin="5"
                           ItemsSource="{Binding Images}"
                           SelectedItem="{Binding SelectedImage}"
@@ -100,7 +100,8 @@
                        gif:AnimationBehavior.AutoStart="{Binding AutoStart}"
                        gif:AnimationBehavior.Loaded="AnimationBehavior_OnLoaded"
                        gif:AnimationBehavior.Error="AnimationBehavior_OnError"
-                       gif:AnimationBehavior.DownloadProgress="AnimationBehavior_OnDownloadProgress"/>
+                       gif:AnimationBehavior.DownloadProgress="AnimationBehavior_OnDownloadProgress"
+                       gif:AnimationBehavior.AnimationCompleted="AnimationBehavior_OnAnimationCompleted"/>
                 <ProgressBar VerticalAlignment="Center" Height="30" Margin="20"
                              Visibility="{Binding IsDownloading, Converter={StaticResource boolToVis}}"
                              Minimum="0" Maximum="100" Value="{Binding DownloadProgress}"
@@ -121,6 +122,6 @@
                 </Border>
             </Grid>
         </GroupBox>
-        
+
     </DockPanel>
 </Window>

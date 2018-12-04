@@ -76,7 +76,6 @@ namespace TestApp.Wpf
             if (_animator != null)
             {
                 _animator.CurrentFrameChanged -= CurrentFrameChanged;
-                _animator.AnimationCompleted -= AnimationCompleted;
             }
 
             _animator = AnimationBehavior.GetAnimator(img);
@@ -84,7 +83,6 @@ namespace TestApp.Wpf
             if (_animator != null)
             {
                 _animator.CurrentFrameChanged += CurrentFrameChanged;
-                _animator.AnimationCompleted += AnimationCompleted;
                 sldPosition.Value = 0;
                 sldPosition.Maximum = _animator.FrameCount - 1;
                 SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
@@ -99,7 +97,7 @@ namespace TestApp.Wpf
             }
         }
 
-        private void AnimationCompleted(object sender, EventArgs e)
+        private void AnimationBehavior_OnAnimationCompleted(object sender, AnimationCompletedEventArgs e)
         {
             Completed = true;
             if (_animator != null)

@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AnimationBehavior.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AnimationErrorEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AnimationCompletedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Animator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrushAnimator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Decoding\GifApplicationExtension.cs" />

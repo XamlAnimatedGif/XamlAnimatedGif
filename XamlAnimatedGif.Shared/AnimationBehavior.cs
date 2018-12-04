@@ -290,6 +290,42 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region AnimationCompleted
+
+#if WPF
+        public static readonly RoutedEvent AnimationCompletedEvent =
+            EventManager.RegisterRoutedEvent(
+                "AnimationCompleted",
+                RoutingStrategy.Bubble,
+                typeof(AnimationCompletedEventHandler),
+                typeof(AnimationBehavior));
+
+        public static void AddAnimationCompletedHandler(DependencyObject d, AnimationCompletedEventHandler handler)
+        {
+            (d as UIElement)?.AddHandler(AnimationCompletedEvent, handler);
+        }
+
+        public static void RemoveAnimationCompletedHandler(DependencyObject d, AnimationCompletedEventHandler handler)
+        {
+            (d as UIElement)?.RemoveHandler(AnimationCompletedEvent, handler);
+        }
+#elif WINRT || SILVERLIGHT
+        // WinRT doesn't support custom attached events, use a normal CLR event instead
+        public static event EventHandler<AnimationCompletedEventArgs> AnimationCompleted;
+#endif
+
+        private static void AnimatorAnimationCompleted(object sender, AnimationCompletedEventArgs e)
+        {
+#if WPF
+            var element = e.Source as Image;
+            element?.RaiseEvent(e);
+#elif WINRT || SILVERLIGHT
+            AnimationCompleted?.Invoke(e.Source, e);
+#endif
+        }
+
+        #endregion
+
         #endregion
 
         #region Private attached properties
@@ -375,7 +411,7 @@ namespace XamlAnimatedGif
 
             image.Source = null;
             ClearAnimatorCore(image);
-            
+
             try
             {
                 var stream = GetSourceStream(image);
@@ -508,6 +544,7 @@ namespace XamlAnimatedGif
         {
             SetAnimator(image, animator);
             animator.Error += AnimatorError;
+            animator.AnimationCompleted += AnimatorAnimationCompleted;
             image.Source = animator.Bitmap;
             if (GetAutoStart(image))
                 animator.Play();
@@ -521,6 +558,7 @@ namespace XamlAnimatedGif
             if (animator == null)
                 return;
 
+            animator.AnimationCompleted -= AnimatorAnimationCompleted;
             animator.Error -= AnimatorError;
             animator.Dispose();
             SetAnimator(image, null);

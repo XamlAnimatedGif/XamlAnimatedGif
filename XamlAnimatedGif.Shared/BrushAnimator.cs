@@ -22,7 +22,7 @@ namespace XamlAnimatedGif
 
         protected override RepeatBehavior GetSpecifiedRepeatBehavior() => RepeatBehavior;
 
-        protected override object ErrorSource => Brush;
+        protected override object AnimationSource => Brush;
 
         public ImageBrush Brush { get; }
 

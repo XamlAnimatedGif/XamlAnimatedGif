@@ -24,7 +24,7 @@ namespace XamlAnimatedGif
 
         protected override RepeatBehavior GetSpecifiedRepeatBehavior() => AnimationBehavior.GetRepeatBehavior(_image);
 
-        protected override object ErrorSource => _image;
+        protected override object AnimationSource => _image;
 
         public static Task<ImageAnimator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior, IProgress<int> progress, Image image)
         {
