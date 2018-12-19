@@ -12,22 +12,81 @@ using System.Threading;
 using Avalonia.VisualTree;
 using Avalonia.Media;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using AvaloniaGif.Decoding;
+using System.Diagnostics;
+using Avalonia.Visuals.Media.Imaging;
 
 namespace AvaloniaGif
 {
-    public class GifImage : Image, IRenderTimeCriticalVisual
+    public class GifImage : Control, IRenderTimeCriticalVisual
     {
-        GifImage()
+
+        private bool _streamCanDispose;
+        private GifDataStream _gifDataStream;
+        private GifRenderer _gifRenderer;
+        private Rect viewPort;
+        private Size sourceSize;
+        private Vector scale;
+        private Size scaledSize;
+        private Rect destRect;
+        private Rect sourceRect;
+        private BitmapInterpolationMode interpolationMode;
+        private static readonly Stopwatch _st = Stopwatch.StartNew();
+
+        bool _isRunning = false;
+        object _playbackLock = new object();
+        TimeSpan prevTime;
+        bool showFirstFrame = false;
+        int CurrentFrame = 0, FrameCount = 0;
+        CancellationTokenSource cts = new CancellationTokenSource();
+        static GifImage()
         {
-            // SourceUriProperty.Changed.Subscribe(SourceChanged);
-            // SourceStreamProperty.Changed.Subscribe(SourceChanged);
-            // IterationCountProperty.Changed.Subscribe(IterationCountChanged);
-            // AutoStartProperty.Changed.Subscribe(AutoStartChanged);
-            SourceProperty.Changed.Subscribe(SourceChanged);
+            AffectsRender<GifImage>(SourceProperty, StretchProperty);
+            AffectsMeasure<GifImage>(SourceProperty, StretchProperty);
+        }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            var source = _gifRenderer?._bitmap;
+
+            if (source != null)
+            {
+                Size sourceSize = new Size(source.PixelSize.Width, source.PixelSize.Height);
+                if (double.IsInfinity(availableSize.Width) || double.IsInfinity(availableSize.Height))
+                {
+                    return sourceSize;
+                }
+                else
+                {
+                    return Stretch.CalculateSize(availableSize, sourceSize);
+                }
+            }
+            else
+            {
+                return new Size();
+            }
+        }
+
+        public GifImage()
+        {
+            this.DetachedFromVisualTree += VisualDetached;
+            this.GetPropertyChangedObservable(SourceProperty).Subscribe(SourceChanged);
+            this.GetPropertyChangedObservable(SourceProperty).Subscribe(SetRenderBounds);
+            this.GetPropertyChangedObservable(BoundsProperty).Subscribe(SetRenderBounds);
+            this.GetPropertyChangedObservable(StretchProperty).Subscribe(SetRenderBounds);
+            this.GetPropertyChangedObservable(RenderOptions.BitmapInterpolationModeProperty).Subscribe(SetRenderBounds);
+
+        }
+
+        private void VisualDetached(object sender, VisualTreeAttachmentEventArgs e)
+        {
+
         }
 
         public bool HasNewFrame { get; set; }
-        private static readonly byte[] GIFMagicNumber = new byte[] { 47, 49, 46, 38 };
+        private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
         private void SourceChanged(AvaloniaPropertyChangedEventArgs e)
         {
             if (!(e.Sender is GifImage image))
@@ -50,7 +109,15 @@ namespace AvaloniaGif
             if (sourceUri != null)
             {
                 _streamCanDispose = true;
-                stream = await new UriLoader().GetStreamFromUriAsync(sourceUri, this.DownloadProgress);
+                
+                lock (_playbackLock)
+                {
+                    if (cts != null) cts?.Cancel();
+                    _isRunning = false;
+                    cts = new CancellationTokenSource();
+                }
+
+                stream = await new UriLoader().GetStreamFromUriAsync(sourceUri, this.DownloadProgress, cts.Token);
             }
             else if (sourceStr != null)
             {
@@ -64,38 +131,103 @@ namespace AvaloniaGif
             var streamMagicNum = new byte[4];
             await stream.ReadAsync(streamMagicNum, 0, streamMagicNum.Length);
             stream.Position = 0;
-            
-            var isGIFstream = Enumerable.SequenceEqual(streamMagicNum, GIFMagicNumber);
-            
-            if(!isGIFstream)
-                base.SetValue(Image.SourceProperty, sourceUri);
 
+            var isGIFstream = Enumerable.SequenceEqual(streamMagicNum, GIFMagicNumber);
+
+            if (isGIFstream)
+            {
+
+
+
+                await Initialize(stream);
+            }
+
+            return;
+
+        }
+
+        private async Task Initialize(Stream stream)
+        {
+
+
+            _gifRenderer?.Dispose();
+            _gifDataStream = await GifDataStream.ReadAsync(stream);
+            _gifRenderer = new GifRenderer(stream, _gifDataStream);
+
+            FrameCount = _gifDataStream.Frames.Count;
+            CurrentFrame = 0;
+
+            lock (_playbackLock)
+                _isRunning = true;
+            showFirstFrame = true;
+            //base.Source = _gifRenderer.GifBitmap;
         }
 
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
+            lock (_playbackLock)
+                if (_isRunning)
+                {
+                    try
+                    {
+                        var t1 = _st.Elapsed;
+                        var delta = t1 - prevTime;
+                        if (showFirstFrame)
+                        {
+                            _gifRenderer.RenderFrameAsync(0, cts.Token).Wait();
+                            showFirstFrame = false;
+                        }
+                        if (delta >= _gifRenderer.GifFrameTimes[CurrentFrame])
+                        {
+                            prevTime = t1;
+                            _gifRenderer.RenderFrameAsync(CurrentFrame, cts.Token).Wait();
+                            CurrentFrame = (CurrentFrame + 1) % FrameCount;
+                            HasNewFrame = true;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        HasNewFrame = false;
+                    }
 
+                    context.DrawImage(_gifRenderer?._bitmap, 1, sourceRect, destRect, interpolationMode);
+                }
         }
 
-        public static readonly DirectProperty<GifImage, Progress<int>> DownloadProgressProperty =
-            AvaloniaProperty.RegisterDirect<GifImage, Progress<int>>(
+        /// <summary>
+        /// Defines the <see cref="Stretch"/> property.
+        /// </summary>
+        public static readonly StyledProperty<Stretch> StretchProperty =
+            AvaloniaProperty.Register<Image, Stretch>(nameof(Stretch), Stretch.Uniform);
+
+
+        /// <summary>
+        /// Gets or sets a value controlling how the image will be stretched.
+        /// </summary>
+        public Stretch Stretch
+        {
+            get { return GetValue(StretchProperty); }
+            set { SetValue(StretchProperty, value); }
+        }
+
+        public static readonly DirectProperty<GifImage, Progress<double>> DownloadProgressProperty =
+            AvaloniaProperty.RegisterDirect<GifImage, Progress<double>>(
                 nameof(_DownloadProgress),
                 o => o._DownloadProgress,
                 (o, v) => o._DownloadProgress = v);
 
-        private Progress<int> _DownloadProgress = new Progress<int>();
-        private bool _streamCanDispose;
+        private Progress<double> _DownloadProgress = new Progress<double>();
 
-        public Progress<int> DownloadProgress
+        public Progress<double> DownloadProgress
         {
             get { return _DownloadProgress; }
             set { SetAndRaise(DownloadProgressProperty, ref _DownloadProgress, value); }
         }
 
-        public static new readonly StyledProperty<Uri> SourceProperty =
+        public static readonly StyledProperty<Uri> SourceProperty =
             AvaloniaProperty.Register<GifImage, Uri>(nameof(Source));
 
-        public new Uri Source
+        public Uri Source
         {
             get { return GetValue(SourceProperty); }
             set { SetValue(SourceProperty, value); }
@@ -119,112 +251,22 @@ namespace AvaloniaGif
             set { SetValue(IterationCountProperty, value); }
         }
 
-
-
-
-        // public static readonly AttachedProperty<Uri> SourceUriProperty =
-        //             AvaloniaProperty.RegisterAttached<GifImage, Image, Uri>("SourceUri");
-
-        // public static Uri GetSourceUri(Image target)
-        // {
-        //     return target.GetValue(SourceUriProperty);
-        // }
-
-        // public static void SetSourceUri(Image target, Uri value)
-        // {
-        //     target.SetValue(SourceUriProperty, value);
-        // }
-
-        // public static readonly AttachedProperty<Stream> SourceStreamProperty =
-        //             AvaloniaProperty.RegisterAttached<GifImage, Image, Stream>("SourceStream");
-
-        // public static Stream GetSourceStream(Image target)
-        // {
-        //     return target.GetValue(SourceStreamProperty);
-        // }
-
-        // public static void SetSourceStream(Image target, Stream value)
-        // {
-        //     target.SetValue(SourceStreamProperty, value);
-        // }
-
-        // public static readonly AttachedProperty<IterationCount> IterationCountProperty =
-        //             AvaloniaProperty.RegisterAttached<GifImage, Image, IterationCount>("IterationCount", IterationCount.Infinite);
-
-        // public static IterationCount GetIterationCount(Image target)
-        // {
-        //     return target.GetValue(IterationCountProperty);
-        // }
-
-        // public static void SetIterationCount(Image target, IterationCount value)
-        // {
-        //     target.SetValue(IterationCountProperty, value);
-        // }
-
-        // public static readonly AttachedProperty<bool> AutoStartProperty =
-        //             AvaloniaProperty.RegisterAttached<GifImage, Image, bool>("AutoStart", true);
-
-        // public static bool GetAutoStart(Image target)
-        // {
-        //     return target.GetValue(AutoStartProperty);
-        // }
-
-        // public static void SetAutoStart(Image target, bool value)
-        // {
-        //     target.SetValue(AutoStartProperty, value);
-        // }
-
-        // public static readonly AttachedProperty<GifInstance> InstanceProperty =
-        //             AvaloniaProperty.RegisterAttached<GifImage, Image, GifInstance>("Instance");
-
-        // public static GifInstance GetInstance(Image target)
-        // {
-        //     return target.GetValue(InstanceProperty);
-        // }
-
-        // public static void SetInstance(Image target, GifInstance value)
-        // {
-        //     target.SetValue(InstanceProperty, value);
-        // }
-        // private static void AutoStartChanged(AvaloniaPropertyChangedEventArgs e)
-        // {
-        //     var image = e.Sender as Image;
-
-        //     if (image == null)
-        //         return;
-
-
-        //     GetInstance(image)?.AutoStartChanged(e);
-        // }
-
-        // private static void IterationCountChanged(AvaloniaPropertyChangedEventArgs e)
-        // {
-        //     var image = e.Sender as Image;
-
-        //     if (image == null)
-        //         return;
-
-        //     GetInstance(image)?.IterationCountChanged(e);
-        // }
-
-        // private static void SourceChanged(AvaloniaPropertyChangedEventArgs e)
-        // {
-        //     var image = e.Sender as Image;
-
-        //     if (image == null)
-        //         return;
-
-        //     var instance = GetInstance(image);
-
-        //     if (instance != null)
-        //     {
-        //         instance?.Dispose();
-        //     }
-
-        //     instance = new GifInstance();
-        //     instance.Image = image;
-        //     instance.SetSource(e.NewValue);
-        //     SetInstance(image, instance);
-        // }
+        public void SetRenderBounds(AvaloniaPropertyChangedEventArgs e)
+        {
+            if (_gifRenderer != null)
+            {
+                var source = _gifRenderer._bitmap;
+                viewPort = new Rect(Bounds.Size);
+                sourceSize = new Size(source.PixelSize.Width, source.PixelSize.Height);
+                scale = Stretch.CalculateScaling(Bounds.Size, sourceSize);
+                scaledSize = sourceSize * scale;
+                destRect = viewPort
+                    .CenterRect(new Rect(scaledSize))
+                    .Intersect(viewPort);
+                sourceRect = new Rect(sourceSize)
+                    .CenterRect(new Rect(destRect.Size / scale));
+                interpolationMode = RenderOptions.GetBitmapInterpolationMode(this);
+            }
+        }
     }
 }

@@ -18,9 +18,9 @@ namespace AvaloniaGif.Demo
             {
                 new Uri("resm:AvaloniaGif.Demo.Images.earth.gif"),
                 new Uri("resm:AvaloniaGif.Demo.Images.bomb.gif"),
+                new Uri("resm:AvaloniaGif.Demo.Images.corrupt-frame-size.gif"),
                 new Uri("resm:AvaloniaGif.Demo.Images.monster.gif"),
                 new Uri("resm:AvaloniaGif.Demo.Images.newton-cradle.gif"),
-                new Uri("http://sprites.pokecheck.org/i/491.gif")
             };
         }
 

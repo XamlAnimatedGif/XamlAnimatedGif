@@ -25,7 +25,7 @@ namespace AvaloniaGif
         private readonly bool _isSourceStreamOwner;
         private readonly GifDataStream _metadata;
         private readonly Dictionary<int, GifPalette> _palettes;
-        private readonly WriteableBitmap _bitmap;
+        public readonly WriteableBitmap _bitmap;
         private readonly int _stride;
         private readonly byte[] _previousBackBuffer;
         private readonly byte[] _indexStreamBuffer;

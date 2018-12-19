@@ -8,7 +8,23 @@
     </Window.DataContext>
     <DockPanel LastChildFill="True">
         <ListBox DockPanel.Dock="Left" Width="300" SelectedItem="{Binding SelectedGif}" Items="{Binding AvailableGifs}"/>
-        <gif:GifImage Source="{Binding SelectedGif}"/>
+        <gif:GifImage Source="{Binding SelectedGif}" Stretch="None"/>
     </DockPanel>
+
+    <!-- <WrapPanel> -->
+        <!-- <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.earth.gif"/>
+        <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.bomb.gif"/>
+        <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.monster.gif"/>
+        <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.newton-cradle.gif"/>
+        <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.nonanimated.gif"/>
+        <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.radar.gif"/>
+        <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.rewind.gif"/>
+        <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.siteoforigin.gif"/>
+        <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.working.gif"/> --> 
+
+
+        <!-- <gif:GifImage Source="resm:AvaloniaGif.Demo.Images.newton-cradle.gif"/>  -->
+
+    <!-- </WrapPanel> -->
 
 </Window>

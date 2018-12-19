@@ -11,33 +11,34 @@ using System.Windows;
 using TaskEx = System.Threading.Tasks.Task;
 using Avalonia;
 using Avalonia.Platform;
+using System.Threading;
 
 namespace AvaloniaGif
 {
 
     partial class UriLoader
     {
-        public Task<Stream> GetStreamFromUriAsync(Uri uri, IProgress<int> progress)
+        public Task<Stream> GetStreamFromUriAsync(Uri uri, IProgress<double> progress, CancellationToken token)
         {
             if (uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https"))
-                return GetNetworkStreamAsync(uri, progress);
+                return GetNetworkStreamAsync(uri, progress, token);
 
             return GetStreamFromUriCoreAsync(uri);
         }
 
-        private static async Task<Stream> GetNetworkStreamAsync(Uri uri, IProgress<int> progress)
+        private static async Task<Stream> GetNetworkStreamAsync(Uri uri, IProgress<double> progress, CancellationToken token)
         {
             string cacheFileName = GetCacheFileName(uri);
             var cacheStream = await OpenTempFileStreamAsync(cacheFileName);
             if (cacheStream == null)
             {
-                await DownloadToCacheFileAsync(uri, cacheFileName, progress);
+                await DownloadToCacheFileAsync(uri, cacheFileName, progress, token);
             }
             progress.Report(100);
             return await OpenTempFileStreamAsync(cacheFileName);
         }
 
-        private static async Task DownloadToCacheFileAsync(Uri uri, string fileName, IProgress<int> progress)
+        private static async Task DownloadToCacheFileAsync(Uri uri, string fileName, IProgress<double> progress, CancellationToken token)
         {
             try
             {
@@ -57,12 +58,12 @@ namespace AvaloniaGif
                                 new Progress<long>(bytesCopied =>
                                 {
                                     if (length > 0)
-                                        progress.Report((int)(100 * bytesCopied / length));
+                                        progress.Report(bytesCopied / length);
                                     else
                                         progress.Report(-1);
                                 });
                         }
-                        await responseStream.CopyToAsync(fileStream, absoluteProgress);
+                        await responseStream.CopyToAsync(fileStream, absoluteProgress, cancellationToken:token);
                     }
                 }
             }

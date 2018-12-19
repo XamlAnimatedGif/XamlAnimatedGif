@@ -41,34 +41,34 @@ namespace AvaloniaGif
 
         public async void SetSource(object newValue)
         {
-            var sourceUri = newValue as Uri;
-            var sourceStr = newValue as Stream;
+            // var sourceUri = newValue as Uri;
+            // var sourceStr = newValue as Stream;
 
-            Stream stream;
+            // Stream stream;
 
-            if (sourceUri != null)
-            {
-                streamCanDispose = true;
-                this.Progress = new Progress<int>();
-                stream = await new UriLoader().GetStreamFromUriAsync(sourceUri, Progress);
-            }
-            else if (sourceStr != null)
-            {
-                stream = sourceStr;
-            }
-            else
-            {
-                throw new InvalidDataException("Missing valid URI or Stream.");
-            }
+            // if (sourceUri != null)
+            // {
+            //     streamCanDispose = true;
+            //     this.Progress = new Progress<int>();
+            //     // stream = await new UriLoader().GetStreamFromUriAsync(sourceUri, Progress);
+            // }
+            // else if (sourceStr != null)
+            // {
+            //     stream = sourceStr;
+            // }
+            // else
+            // {
+            //     throw new InvalidDataException("Missing valid URI or Stream.");
+            // }
 
-            Stream = stream;
+            // Stream = stream;
 
-            Image.DetachedFromVisualTree += delegate
-            {
-                Dispose();
-            };
+            // Image.DetachedFromVisualTree += delegate
+            // {
+            //     Dispose();
+            // };
 
-            Run();
+            // Run();
         }
 
         private async void Run()
