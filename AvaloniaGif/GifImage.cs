@@ -169,7 +169,7 @@ namespace AvaloniaGif
                             _gifRenderer.RenderFrameAsync(0, cts.Token).Wait();
                             showFirstFrame = false;
                         }
-                        if (delta >= _gifRenderer.GifFrameTimes[CurrentFrame])
+                        if (delta > _gifRenderer.GifFrameTimes[CurrentFrame])
                         {
                             prevTime = t1;
                             _gifRenderer.RenderFrameAsync(CurrentFrame, cts.Token).Wait();
@@ -181,6 +181,7 @@ namespace AvaloniaGif
                     {
                         _isRunning = false;
                         CurrentFrame = 0;
+                        cts?.Cancel();
                         _gifRenderer?.Dispose();
                         HasNewFrame = false;
                     }
