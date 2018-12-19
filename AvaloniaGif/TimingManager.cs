@@ -15,12 +15,12 @@
 //         private bool _isComplete;
 //         private TimeSpan _elapsed;
 
-//         public TimingManager(RepeatCount RepeatCount)
+//         public TimingManager(IterationCount IterationCount)
 //         {
-//             RepeatCount = RepeatCount;
+//             IterationCount = IterationCount;
 //         }
 
-//         public RepeatCount RepeatCount { get; set; }
+//         public IterationCount IterationCount { get; set; }
 
 //         public void Add(TimeSpan timeSpan)
 //         {
@@ -44,9 +44,9 @@
 //             if (_current >= _timeSpans.Count)
 //             {
 //                 _count++;
-//                 if (RepeatCount.HasCount)
+//                 if (IterationCount.HasCount)
 //                 {
-//                     if (_count < RepeatCount.Count)
+//                     if (_count < IterationCount.Count)
 //                     {
 //                         _current = 0;
 //                         return true;

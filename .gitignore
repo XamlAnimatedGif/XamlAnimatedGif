@@ -7,6 +7,9 @@
 *.sln.docstates
 .vscode/
 
+# Rider
+.idea/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

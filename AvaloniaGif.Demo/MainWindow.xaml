@@ -1,6 +1,7 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:gif="clr-namespace:AvaloniaGif;assembly=AvaloniaGif"
+        xmlns:local="clr-namespace:AvaloniaGif.Demo"
         Title="GIFs on Avalonia!" Height="480" Width="680" Background="White">
     <Window.DataContext>
         <local:MainWindowViewModel/>

@@ -12,13 +12,13 @@ using System.Threading;
 
 namespace AvaloniaGif
 {
-    public partial class GifImage
+    public partial class GifImage 
     {
         static GifImage()
         {
             SourceUriProperty.Changed.Subscribe(SourceChanged);
             SourceStreamProperty.Changed.Subscribe(SourceChanged);
-            RepeatCountProperty.Changed.Subscribe(RepeatCountChanged);
+            IterationCountProperty.Changed.Subscribe(IterationCountChanged);
             AutoStartProperty.Changed.Subscribe(AutoStartChanged);
         }
 
@@ -48,17 +48,17 @@ namespace AvaloniaGif
             target.SetValue(SourceStreamProperty, value);
         }
 
-        public static readonly AttachedProperty<RepeatCount> RepeatCountProperty =
-                    AvaloniaProperty.RegisterAttached<GifImage, Image, RepeatCount>("RepeatCount", RepeatCount.Loop);
+        public static readonly AttachedProperty<IterationCount> IterationCountProperty =
+                    AvaloniaProperty.RegisterAttached<GifImage, Image, IterationCount>("IterationCount", IterationCount.Infinite);
 
-        public static RepeatCount GetRepeatCount(Image target)
+        public static IterationCount GetIterationCount(Image target)
         {
-            return target.GetValue(RepeatCountProperty);
+            return target.GetValue(IterationCountProperty);
         }
 
-        public static void SetRepeatCount(Image target, RepeatCount value)
+        public static void SetIterationCount(Image target, IterationCount value)
         {
-            target.SetValue(RepeatCountProperty, value);
+            target.SetValue(IterationCountProperty, value);
         }
 
         public static readonly AttachedProperty<bool> AutoStartProperty =
@@ -97,14 +97,14 @@ namespace AvaloniaGif
             GetInstance(image)?.AutoStartChanged(e);
         }
 
-        private static void RepeatCountChanged(AvaloniaPropertyChangedEventArgs e)
+        private static void IterationCountChanged(AvaloniaPropertyChangedEventArgs e)
         {
             var image = e.Sender as Image;
 
             if (image == null)
                 return;
 
-            GetInstance(image)?.RepeatCountChanged(e);
+            GetInstance(image)?.IterationCountChanged(e);
         }
 
         private static void SourceChanged(AvaloniaPropertyChangedEventArgs e)

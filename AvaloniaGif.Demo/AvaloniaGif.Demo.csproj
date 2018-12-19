@@ -15,9 +15,9 @@
     <EmbeddedResource Include="Assets\*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="*" />
-    <PackageReference Include="Avalonia.Desktop" Version="*" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="*" />
+    <PackageReference Include="Avalonia" Version="0.7.1-build1021-beta" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.7.1-build1021-beta" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.7.1-build1021-beta" />
     <ProjectReference Include="..\AvaloniaGif\AvaloniaGif.csproj"/>
   </ItemGroup>
 </Project>

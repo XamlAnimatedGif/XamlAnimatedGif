@@ -52,11 +52,11 @@ namespace AvaloniaGif
                 GifFrameTimes.Add(GetFrameDelay(frame));
 
         }
-        private RepeatCount GetActualRepeatCount(GifDataStream metadata, RepeatCount RepeatCount)
+        private IterationCount GetActualIterationCount(GifDataStream metadata, IterationCount IterationCount)
         {
-            return RepeatCount == default(RepeatCount)
-                    ? GetRepeatCountFromGif(metadata)
-                    : RepeatCount;
+            return IterationCount == default(IterationCount)
+                    ? GetIterationCountFromGif(metadata)
+                    : IterationCount;
         }
 
         private WriteableBitmap CreateBitmap(GifDataStream metadata)
@@ -312,12 +312,12 @@ namespace AvaloniaGif
             return TimeSpan.FromMilliseconds(100);
         }
 
-        private RepeatCount GetRepeatCountFromGif(GifDataStream metadata)
+        private IterationCount GetIterationCountFromGif(GifDataStream metadata)
         {
-            if (metadata.RepeatCount == 0)
-                return RepeatCount.Loop;
+            if (metadata.IterationCount == 0)
+                return IterationCount.Infinite;
 
-            return new RepeatCount(metadata.RepeatCount);
+            return new IterationCount(metadata.IterationCount);
         }
 
         private Int32Rect GetFixedUpFrameRect(GifImageDescriptor desc)

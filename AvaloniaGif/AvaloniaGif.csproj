@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<LangVersion>latest</LangVersion> 
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Update="**\*.xaml.cs">
@@ -13,6 +13,6 @@
 		<EmbeddedResource Include="Assets\*" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="*" />
+		<PackageReference Include="Avalonia" Version="0.7.1-build1021-beta" /> 
 	</ItemGroup>
 </Project>

@@ -64,7 +64,7 @@ namespace AvaloniaGif.Decoding
                 && GetString(ext.AuthenticationCode) == "2.0";
         }
 
-        public static ushort GetRepeatCount(GifApplicationExtension ext)
+        public static ushort GetIterationCount(GifApplicationExtension ext)
         {
             if (ext.Data.Length >= 3)
             {

@@ -11,7 +11,7 @@ namespace AvaloniaGif.Decoding
         public GifColor[] GlobalColorTable { get; set; }
         public IList<GifFrame> Frames { get; set; }
         public IList<GifExtension> Extensions { get; set; }
-        public ushort RepeatCount { get; set; }
+        public ushort IterationCount { get; set; }
 
         private GifDataStream()
         {
@@ -39,8 +39,8 @@ namespace AvaloniaGif.Decoding
                                 .OfType<GifApplicationExtension>()
                                 .FirstOrDefault(GifHelpers.IsNetscapeExtension);
 
-            RepeatCount = netscapeExtension != null
-                ? GifHelpers.GetRepeatCount(netscapeExtension)
+            IterationCount = netscapeExtension != null
+                ? GifHelpers.GetIterationCount(netscapeExtension)
                 : (ushort)1;
         }
 

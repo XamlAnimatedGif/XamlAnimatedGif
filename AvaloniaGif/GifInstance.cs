@@ -17,7 +17,7 @@ namespace AvaloniaGif
 
         public int FrameCount { get; private set; }
         public Stream Stream { get; private set; }
-        public RepeatCount RepeatCount { get; private set; }
+        public IterationCount IterationCount { get; private set; }
         public bool AutoStart { get; private set; } = true;
         public Progress<int> Progress { get; private set; }
         internal GifDataStream GifDataStream { get; private set; }
@@ -108,10 +108,10 @@ namespace AvaloniaGif
             }
         }
 
-        public void RepeatCountChanged(AvaloniaPropertyChangedEventArgs e)
+        public void IterationCountChanged(AvaloniaPropertyChangedEventArgs e)
         {
-            var newVal = (RepeatCount)e.NewValue;
-            this.RepeatCount = newVal;
+            var newVal = (IterationCount)e.NewValue;
+            this.IterationCount = newVal;
         }
 
         public void AutoStartChanged(AvaloniaPropertyChangedEventArgs e)
