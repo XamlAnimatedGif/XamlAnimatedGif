@@ -24,7 +24,6 @@ namespace AvaloniaGif
     {
 
         private bool _streamCanDispose;
-        private GifDataStream _gifDataStream;
         private GifRenderer _gifRenderer;
         private Rect viewPort;
         private Size sourceSize;
@@ -41,6 +40,9 @@ namespace AvaloniaGif
         bool showFirstFrame = false;
         int CurrentFrame = 0, FrameCount = 0;
         CancellationTokenSource cts = new CancellationTokenSource();
+        public bool HasNewFrame { get; set; }
+        private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
+
         static GifImage()
         {
             AffectsRender<GifImage>(SourceProperty, StretchProperty);
@@ -85,8 +87,6 @@ namespace AvaloniaGif
 
         }
 
-        public bool HasNewFrame { get; set; }
-        private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
         private void SourceChanged(AvaloniaPropertyChangedEventArgs e)
         {
             if (!(e.Sender is GifImage image))
@@ -109,7 +109,7 @@ namespace AvaloniaGif
             if (sourceUri != null)
             {
                 _streamCanDispose = true;
-                
+
                 lock (_playbackLock)
                 {
                     if (cts != null) cts?.Cancel();
@@ -128,6 +128,8 @@ namespace AvaloniaGif
                 throw new InvalidDataException("Missing valid URI or Stream.");
             }
 
+            if (!stream.CanSeek) throw new InvalidDataException("Stream must be seekable.");
+
             var streamMagicNum = new byte[4];
             await stream.ReadAsync(streamMagicNum, 0, streamMagicNum.Length);
             stream.Position = 0;
@@ -135,32 +137,22 @@ namespace AvaloniaGif
             var isGIFstream = Enumerable.SequenceEqual(streamMagicNum, GIFMagicNumber);
 
             if (isGIFstream)
-            {
-
-
-
                 await Initialize(stream);
-            }
-
-            return;
-
+            else
+                throw new InvalidDataException("File or stream is not a GIF file.");
         }
 
         private async Task Initialize(Stream stream)
         {
-
-
             _gifRenderer?.Dispose();
-            _gifDataStream = await GifDataStream.ReadAsync(stream);
-            _gifRenderer = new GifRenderer(stream, _gifDataStream);
+            _gifRenderer = new GifRenderer(stream);
 
-            FrameCount = _gifDataStream.Frames.Count;
+            FrameCount = _gifRenderer.FrameCount;
             CurrentFrame = 0;
 
             lock (_playbackLock)
                 _isRunning = true;
             showFirstFrame = true;
-            //base.Source = _gifRenderer.GifBitmap;
         }
 
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)

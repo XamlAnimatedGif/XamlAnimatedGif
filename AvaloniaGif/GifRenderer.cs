@@ -36,19 +36,19 @@ namespace AvaloniaGif
         private int _previousFrameIndex;
         private GifFrame _previousFrame;
 
-        internal GifRenderer(Stream stream, GifDataStream metadata)
+        internal GifRenderer(Stream stream)
         {
-            _metadata = metadata;
+            _metadata = GifDataStream.ReadAsync(stream).Result;
             _sourceStream = stream;
-            _palettes = CreatePalettes(metadata);
-            _bitmap = CreateBitmap(metadata);
+            _palettes = CreatePalettes(_metadata);
+            _bitmap = CreateBitmap(_metadata);
 
-            var desc = metadata.Header.LogicalScreenDescriptor;
+            var desc = _metadata.Header.LogicalScreenDescriptor;
             _stride = 4 * ((desc.Width * 32 + 31) / 32);
             _previousBackBuffer = new byte[desc.Height * _stride];
-            _indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
+            _indexStreamBuffer = CreateIndexStreamBuffer(_metadata, _sourceStream);
 
-            foreach (var frame in metadata.Frames)
+            foreach (var frame in _metadata.Frames)
                 GifFrameTimes.Add(GetFrameDelay(frame));
 
         }
