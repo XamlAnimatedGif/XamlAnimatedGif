@@ -179,6 +179,9 @@ namespace AvaloniaGif
                     }
                     catch (Exception e)
                     {
+                        _isRunning = false;
+                        CurrentFrame = 0;
+                        _gifRenderer?.Dispose();
                         HasNewFrame = false;
                     }
 
