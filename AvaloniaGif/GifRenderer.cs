@@ -30,7 +30,6 @@ namespace AvaloniaGif
         private readonly byte[] _previousBackBuffer;
         private readonly byte[] _indexStreamBuffer;
         public int FrameCount => _metadata.Frames.Count;
-        public Bitmap GifBitmap => _bitmap;
         public readonly List<TimeSpan> GifFrameTimes = new List<TimeSpan>();
         public Vector DPI { get; set; } = new Vector(96, 96);
         private int _previousFrameIndex;
@@ -293,23 +292,7 @@ namespace AvaloniaGif
 
         private TimeSpan GetFrameDelay(GifFrame frame)
         {
-            var gce = frame.GraphicControl;
-            if (gce != null)
-            {
-                if (gce.Delay != 0)
-                {
-                    var delay = TimeSpan.FromMilliseconds(gce.Delay);
-
-                    // HACK: Basically this prevents frames with delay under 30ms
-                    // to display twice.
-
-                    if (delay < TimeSpan.FromMilliseconds(31))
-                        return TimeSpan.FromMilliseconds(15);
-                    else
-                        return delay;
-                }
-            }
-            return TimeSpan.FromMilliseconds(100);
+            return TimeSpan.FromMilliseconds(frame.GraphicControl?.Delay ?? 100);
         }
 
         private IterationCount GetIterationCountFromGif(GifDataStream metadata)

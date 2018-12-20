@@ -17,6 +17,9 @@ using System.Threading.Tasks;
 using AvaloniaGif.Decoding;
 using System.Diagnostics;
 using Avalonia.Visuals.Media.Imaging;
+using System.Collections.Generic;
+using Avalonia.Platform;
+using System.Runtime.InteropServices;
 
 namespace AvaloniaGif
 {
@@ -153,41 +156,65 @@ namespace AvaloniaGif
             lock (_playbackLock)
                 _isRunning = true;
             showFirstFrame = true;
+            HasNewFrame = true;
+
+            foreach (var oldFrames in frameCache)
+                oldFrames.Value?.Dispose();
+
+            frameCache.Clear();
+            var k = Stopwatch.StartNew();
+
+            // for (int i = FrameCount - 1; i >= 0; i--)
+            // {
+            //     k.Reset();
+            //     k.Start();
+            //     await _gifRenderer.RenderFrameAsync(i, cts.Token);
+            //     var elapsed = k.Elapsed;
+
+            // }
+
+
         }
+
+        Dictionary<int, WriteableBitmap> frameCache = new Dictionary<int, WriteableBitmap>();
 
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
-            lock (_playbackLock)
-                if (_isRunning)
-                {
-                    try
-                    {
-                        var t1 = _st.Elapsed;
-                        var delta = t1 - prevTime;
-                        if (showFirstFrame)
-                        {
-                            _gifRenderer.RenderFrameAsync(0, cts.Token).Wait();
-                            showFirstFrame = false;
-                        }
-                        if (delta > _gifRenderer.GifFrameTimes[CurrentFrame])
-                        {
-                            prevTime = t1;
-                            _gifRenderer.RenderFrameAsync(CurrentFrame, cts.Token).Wait();
-                            CurrentFrame = (CurrentFrame + 1) % FrameCount;
-                            HasNewFrame = true;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        _isRunning = false;
-                        CurrentFrame = 0;
-                        cts?.Cancel();
-                        _gifRenderer?.Dispose();
-                        HasNewFrame = false;
-                    }
 
-                    context.DrawImage(_gifRenderer?._bitmap, 1, sourceRect, destRect, interpolationMode);
-                }
+            if (_isRunning)
+            {
+
+                // try
+                // {
+                    var t1 = _st.Elapsed;
+                    var delta = t1 - prevTime;
+                    if (showFirstFrame)
+                    {
+                        _gifRenderer.RenderFrameAsync(0, cts.Token);
+
+                        showFirstFrame = false;
+                    }
+                    if (delta >= _gifRenderer.GifFrameTimes[CurrentFrame])
+                    {
+                        prevTime = t1;
+                        _gifRenderer.RenderFrameAsync(CurrentFrame, cts.Token);
+
+                        CurrentFrame = (CurrentFrame + 1) % FrameCount;
+                    }
+                // }
+                // catch (Exception e)
+                // {
+                //     _isRunning = false;
+                //     CurrentFrame = 0;
+                //     cts?.Cancel();
+                //     _gifRenderer?.Dispose();
+                //     HasNewFrame = false;
+                // }
+                context.DrawImage(_gifRenderer._bitmap, 1, sourceRect, destRect, interpolationMode);
+
+            }
+
+
         }
 
         /// <summary>
