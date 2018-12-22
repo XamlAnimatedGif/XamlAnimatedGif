@@ -20,6 +20,7 @@ using Avalonia.Visuals.Media.Imaging;
 using System.Collections.Generic;
 using Avalonia.Platform;
 using System.Runtime.InteropServices;
+using AvaloniaGif.Threading;
 
 namespace AvaloniaGif
 {
@@ -35,7 +36,6 @@ namespace AvaloniaGif
         private Rect destRect;
         private Rect sourceRect;
         private BitmapInterpolationMode interpolationMode;
-        private static readonly Stopwatch _st = Stopwatch.StartNew();
 
         bool _isRunning = false;
         object _playbackLock = new object();
@@ -44,6 +44,8 @@ namespace AvaloniaGif
         int CurrentFrame = 0, FrameCount = 0;
         CancellationTokenSource cts = new CancellationTokenSource();
         public bool HasNewFrame { get; set; }
+
+        private GIFBackgroundRenderer _bgRenderer;
         private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
 
         static GifImage()
@@ -147,7 +149,8 @@ namespace AvaloniaGif
 
         private async Task Initialize(Stream stream)
         {
-            _gifRenderer?.Dispose();
+
+            _bgRenderer?.SendMessage(GIFBackgroundRendererMessage.HALT_AND_DISPOSE);
             _gifRenderer = new GifRenderer(stream);
 
             FrameCount = _gifRenderer.FrameCount;
@@ -158,11 +161,13 @@ namespace AvaloniaGif
             showFirstFrame = true;
             HasNewFrame = true;
 
-            foreach (var oldFrames in frameCache)
-                oldFrames.Value?.Dispose();
+            this._bgRenderer = new GIFBackgroundRenderer(_gifRenderer, cts.Token);
+            _bgRenderer.Start();
+            // foreach (var oldFrames in frameCache)
+            //     oldFrames.Value?.Dispose();
 
-            frameCache.Clear();
-            var k = Stopwatch.StartNew();
+            // frameCache.Clear();
+            // var k = Stopwatch.StartNew();
 
             // for (int i = FrameCount - 1; i >= 0; i--)
             // {
@@ -175,8 +180,60 @@ namespace AvaloniaGif
 
 
         }
+        enum GIFBackgroundRendererMessage
+        {
+            SHOW_FIRST_FRAME,
+            DRAW_NEXT,
+            HALT_AND_DISPOSE,
+            BG_TASK_IDLE,
+            BG_TASK_BUSY_DECODING,
 
-        Dictionary<int, WriteableBitmap> frameCache = new Dictionary<int, WriteableBitmap>();
+        }
+
+        class GIFBackgroundRenderer : BackgroundHandler<GIFBackgroundRendererMessage>
+        {
+            private readonly GifRenderer _gifRenderer;
+            private readonly CancellationToken cts;
+
+            private int CurrentFrame, FrameCount;
+
+            public GIFBackgroundRenderer(GifRenderer gifRenderer, CancellationToken cts) : base()
+            {
+                AddHandlers((GIFBackgroundRendererMessage.SHOW_FIRST_FRAME, ShowFirstFrame),
+                            (GIFBackgroundRendererMessage.DRAW_NEXT, DrawNext),
+                            (GIFBackgroundRendererMessage.HALT_AND_DISPOSE, HaltAndDispose));
+
+                this._gifRenderer = gifRenderer;
+                this.cts = cts;
+                CurrentFrame = 0;
+                FrameCount = _gifRenderer.FrameCount;
+                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
+
+            }
+
+            void ShowFirstFrame()
+            {
+                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_BUSY_DECODING);
+                _gifRenderer.RenderFrameAsync(0, cts).Wait();
+                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
+            }
+
+            void DrawNext()
+            {
+                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_BUSY_DECODING);
+                _gifRenderer.RenderFrameAsync(CurrentFrame, cts).Wait();
+                CurrentFrame = (CurrentFrame + 1) % FrameCount;
+                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
+            }
+
+            void HaltAndDispose()
+            {
+                _gifRenderer.Dispose();
+                this.Stop();
+            }
+        }
+
+
 
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
@@ -184,37 +241,25 @@ namespace AvaloniaGif
             if (_isRunning)
             {
 
-                // try
-                // {
-                    var t1 = _st.Elapsed;
-                    var delta = t1 - prevTime;
-                    if (showFirstFrame)
-                    {
-                        _gifRenderer.RenderFrameAsync(0, cts.Token);
+                var t1 = DateTime.Now.TimeOfDay;
+                var delta = t1 - prevTime;
+                if (showFirstFrame)
+                {
+                    if (_bgRenderer.GetTaskStatus() == GIFBackgroundRendererMessage.BG_TASK_IDLE)
+                        _bgRenderer.SendMessage(GIFBackgroundRendererMessage.SHOW_FIRST_FRAME);
 
-                        showFirstFrame = false;
-                    }
-                    if (delta >= _gifRenderer.GifFrameTimes[CurrentFrame])
-                    {
-                        prevTime = t1;
-                        _gifRenderer.RenderFrameAsync(CurrentFrame, cts.Token);
+                    showFirstFrame = false;
+                } 
+                else if (delta >= _gifRenderer.GifFrameTimes[CurrentFrame])
+                {
+                    if (_bgRenderer.GetTaskStatus() == GIFBackgroundRendererMessage.BG_TASK_IDLE)
+                        _bgRenderer.SendMessage(GIFBackgroundRendererMessage.DRAW_NEXT);
 
-                        CurrentFrame = (CurrentFrame + 1) % FrameCount;
-                    }
-                // }
-                // catch (Exception e)
-                // {
-                //     _isRunning = false;
-                //     CurrentFrame = 0;
-                //     cts?.Cancel();
-                //     _gifRenderer?.Dispose();
-                //     HasNewFrame = false;
-                // }
+                    prevTime = t1;
+                }
+
                 context.DrawImage(_gifRenderer._bitmap, 1, sourceRect, destRect, interpolationMode);
-
             }
-
-
         }
 
         /// <summary>
