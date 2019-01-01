@@ -13,6 +13,6 @@
 		<EmbeddedResource Include="Assets\*" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="0.7.1-build1021-beta" /> 
+		<PackageReference Include="Avalonia" Version="0.7.1-build1021-beta" />
 	</ItemGroup>
 </Project>

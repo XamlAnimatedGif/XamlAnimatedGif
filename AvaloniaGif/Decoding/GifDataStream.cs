@@ -1,7 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks; 
+using System.Threading.Tasks;
 
 namespace AvaloniaGif.Decoding
 {
@@ -9,7 +10,7 @@ namespace AvaloniaGif.Decoding
     {
         public GifHeader Header { get; private set; }
         public GifColor[] GlobalColorTable { get; set; }
-        public IList<GifFrame> Frames { get; set; }
+        public Memory<GifFrame> Frames { get; set; }
         public IList<GifExtension> Extensions { get; set; }
         public ushort IterationCount { get; set; }
 
@@ -92,7 +93,7 @@ namespace AvaloniaGif.Decoding
                 }
             }
 
-            this.Frames = frames.AsReadOnly();
+            this.Frames = frames.ToArray().AsMemory();
             this.Extensions = specialExtensions.AsReadOnly();
         }
     }

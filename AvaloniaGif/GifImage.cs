@@ -13,7 +13,6 @@ using Avalonia.VisualTree;
 using Avalonia.Media;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using AvaloniaGif.Decoding;
 using System.Diagnostics;
 using Avalonia.Visuals.Media.Imaging;
@@ -24,7 +23,7 @@ using AvaloniaGif.Threading;
 
 namespace AvaloniaGif
 {
-    public class GifImage : Control, IRenderTimeCriticalVisual
+    public partial class GifImage : Control, IRenderTimeCriticalVisual
     {
 
         private bool _streamCanDispose;
@@ -36,16 +35,14 @@ namespace AvaloniaGif
         private Rect destRect;
         private Rect sourceRect;
         private BitmapInterpolationMode interpolationMode;
+        private WriteableBitmap _bitmap;
 
-        bool _isRunning = false;
-        object _playbackLock = new object();
-        TimeSpan prevTime;
-        bool showFirstFrame = false;
-        int CurrentFrame = 0, FrameCount = 0;
         CancellationTokenSource cts = new CancellationTokenSource();
-        public bool HasNewFrame { get; set; }
 
-        private TimingManager _bgRenderer;
+        public bool HasNewFrame => true;
+
+        private GifBackgroundWorker _bgWorker;
+
         private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
 
         static GifImage()
@@ -56,11 +53,9 @@ namespace AvaloniaGif
 
         protected override Size MeasureOverride(Size availableSize)
         {
-            var source = _gifRenderer?._bitmap;
-
-            if (source != null)
+            if (_bitmap != null)
             {
-                Size sourceSize = new Size(source.PixelSize.Width, source.PixelSize.Height);
+                Size sourceSize = new Size(_bitmap.PixelSize.Width, _bitmap.PixelSize.Height);
                 if (double.IsInfinity(availableSize.Width) || double.IsInfinity(availableSize.Height))
                 {
                     return sourceSize;
@@ -89,7 +84,6 @@ namespace AvaloniaGif
 
         private void VisualDetached(object sender, VisualTreeAttachmentEventArgs e)
         {
-
         }
 
         private void SourceChanged(AvaloniaPropertyChangedEventArgs e)
@@ -106,6 +100,8 @@ namespace AvaloniaGif
 
         public async void SetSource(object newValue)
         {
+            setSourceMutex.WaitOne();
+
             var sourceUri = newValue as Uri;
             var sourceStr = newValue as Stream;
 
@@ -114,15 +110,9 @@ namespace AvaloniaGif
             if (sourceUri != null)
             {
                 _streamCanDispose = true;
-
-                lock (_playbackLock)
-                {
-                    if (cts != null) cts?.Cancel();
-                    _isRunning = false;
-                    cts = new CancellationTokenSource();
-                }
-
+                _bgWorker?.SendCommand(GifBackgroundWorker.Command.Stop);
                 stream = await new UriLoader().GetStreamFromUriAsync(sourceUri, this.DownloadProgress, cts.Token);
+
             }
             else if (sourceStr != null)
             {
@@ -142,266 +132,38 @@ namespace AvaloniaGif
             var isGIFstream = Enumerable.SequenceEqual(streamMagicNum, GIFMagicNumber);
 
             if (isGIFstream)
-                await Initialize(stream);
+                Initialize(stream);
             else
                 throw new InvalidDataException("File or stream is not a GIF file.");
+
+            setSourceMutex.ReleaseMutex();
         }
 
-        private async Task Initialize(Stream stream)
+        Mutex setSourceMutex = new Mutex();
+
+        private void Initialize(Stream stream)
         {
 
-            // _bgRenderer?.SendMessage(GIFBackgroundRendererMessage.HALT_AND_DISPOSE);
             _gifRenderer = new GifRenderer(stream);
-
-            FrameCount = _gifRenderer.FrameCount;
-            CurrentFrame = 0;
-
-            lock (_playbackLock)
-                _isRunning = true;
-            showFirstFrame = true;
-            HasNewFrame = true;
-
-            if (_bgRenderer != null) _bgRenderer.IsComplete = true;
-            this._bgRenderer = new TimingManager(this.IterationCount);
-            foreach (var t in _gifRenderer.GifFrameTimes)
-                _bgRenderer.Add(t);
-            
-             RunAsync(cts.Token);
-            // foreach (var oldFrames in frameCache)
-            //     oldFrames.Value?.Dispose();
-
-            // frameCache.Clear();
-            // var k = Stopwatch.StartNew();
-
-            // for (int i = FrameCount - 1; i >= 0; i--)
-            // {
-            //     k.Reset();
-            //     k.Start();
-            //     await _gifRenderer.RenderFrameAsync(i, cts.Token);
-            //     var elapsed = k.Elapsed;
-
-            // }
-
-
+            _bgWorker = new GifBackgroundWorker(_gifRenderer, _gifRenderer.GifFrameTimes, cts.Token);
+            _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
+            _bitmap = _gifRenderer.CreateBitmapForRender();
         }
-        enum GIFBackgroundRendererMessage
-        {
-            SHOW_FIRST_FRAME,
-            DRAW_NEXT,
-            HALT_AND_DISPOSE,
-            BG_TASK_IDLE,
-            BG_TASK_BUSY_DECODING,
-
-        }
-
-        class TimingManager
-        {
-            private readonly List<TimeSpan> _timeSpans = new List<TimeSpan>();
-            private int _current;
-            private int _count;
-            private bool _isComplete;
-            private TimeSpan _elapsed;
-
-            public TimingManager(IterationCount iterationCount)
-            {
-                IterationCount = iterationCount;
-            }
-
-            public IterationCount IterationCount { get; set; }
-
-            public void Add(TimeSpan timeSpan)
-            {
-                _timeSpans.Add(timeSpan);
-            }
-
-            public async Task<bool> NextAsync(CancellationToken cancellationToken)
-            {
-                if (IsComplete)
-                    return false;
-
-                await IsPausedAsync(cancellationToken);
-
-                var repeatBehavior = IterationCount;
-
-                var ts = _timeSpans[_current];
-                await Task.Delay(ts, cancellationToken);
-                _current++;
-                _elapsed += ts;
-
-                // if (!repeatBehavior.IsInfinite)
-                // {
-                //     // if (_elapsed >= repeatBehavior.Value)
-                //     // {
-                //     //     IsComplete = true;
-                //     return false;
-                //     // }
-                // }
-
-                if (_current >= _timeSpans.Count)
-                {
-                    _count++;
-                    if (repeatBehavior.IsInfinite)
-                    {
-                        if ((ulong)_count < repeatBehavior.Value)
-                        {
-                            _current = 0;
-                            return true;
-                        }
-                        IsComplete = true;
-                        return false;
-                    }
-                    else
-                    {
-                        _current = 0;
-                        return true;
-                    }
-                }
-                return true;
-            }
-
-            public void Reset()
-            {
-                _current = 0;
-                _count = 0;
-                _elapsed = TimeSpan.Zero;
-                IsComplete = false;
-            }
-
-            public event EventHandler Completed;
-
-            protected virtual void OnCompleted()
-            {
-                Completed?.Invoke(this, EventArgs.Empty);
-            }
-
-            public bool IsComplete
-            {
-                get { return _isComplete; }
-                set
-                {
-                    _isComplete = value;
-                    if (value)
-                        OnCompleted();
-                }
-            }
-
-            private readonly Task _completedTask = Task.FromResult(0);
-            private TaskCompletionSource<int> _pauseCompletionSource;
-            public void Pause()
-            {
-                IsPaused = true;
-                _pauseCompletionSource = new TaskCompletionSource<int>();
-            }
-
-            public void Resume()
-            {
-                var tcs = _pauseCompletionSource;
-                tcs?.TrySetResult(0);
-                _pauseCompletionSource = null;
-                IsPaused = false;
-            }
-
-            public bool IsPaused { get; private set; }
-
-            private Task IsPausedAsync(CancellationToken cancellationToken)
-            {
-                var tcs = _pauseCompletionSource;
-                if (tcs != null)
-                {
-                    if (cancellationToken.CanBeCanceled)
-                        cancellationToken.Register(() => tcs.TrySetCanceled());
-                    return tcs.Task;
-                }
-                return _completedTask;
-            }
-        }
-
-        
-
-        private async Task RunAsync(CancellationToken cancellationToken)
-        {
-            while (true)
-            {
-                var timing = _bgRenderer.NextAsync(cancellationToken);
-                var rendering = _gifRenderer.RenderFrameAsync(CurrentFrame, cancellationToken);
-                await Task.WhenAll(timing, rendering);
-                if (!timing.Result)
-                    break;
-                CurrentFrame = (CurrentFrame + 1) % FrameCount;
-            }
-        }
-
-
-        // class GIFBackgroundRenderer : BackgroundHandler<GIFBackgroundRendererMessage>
-        // {
-        //     private readonly GifRenderer _gifRenderer;
-        //     private readonly CancellationToken cts;
-
-        //     private int CurrentFrame, FrameCount;
-
-        //     public GIFBackgroundRenderer(GifRenderer gifRenderer, CancellationToken cts) : base()
-        //     {
-        //         AddHandlers((GIFBackgroundRendererMessage.SHOW_FIRST_FRAME, ShowFirstFrame),
-        //                     (GIFBackgroundRendererMessage.DRAW_NEXT, DrawNext),
-        //                     (GIFBackgroundRendererMessage.HALT_AND_DISPOSE, HaltAndDispose));
-
-        //         this._gifRenderer = gifRenderer;
-        //         this.cts = cts;
-        //         CurrentFrame = 0;
-        //         FrameCount = _gifRenderer.FrameCount;
-        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
-
-        //     }
-
-        //     void ShowFirstFrame()
-        //     {
-        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_BUSY_DECODING);
-        //         _gifRenderer.RenderFrameAsync(0, cts).Wait();
-        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
-        //     }
-
-        //     void DrawNext()
-        //     {
-        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_BUSY_DECODING);
-        //         _gifRenderer.RenderFrameAsync(CurrentFrame, cts).Wait();
-        //         CurrentFrame = (CurrentFrame + 1) % FrameCount;
-        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
-        //     }
-
-        //     void HaltAndDispose()
-        //     {
-        //         _gifRenderer.Dispose();
-        //         this.Stop();
-        //     }
-        // }
 
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
+            setSourceMutex.WaitOne();
 
-            if (_isRunning && _bgRenderer != null)
+            if (_bgWorker?.GetState() == GifBackgroundWorker.State.Running & _bitmap != null)
             {
-
-                // var t1 = DateTime.Now.TimeOfDay;
-                // var delta = t1 - prevTime;
-                // if (showFirstFrame)
-                // {
-                //     // if (_bgRenderer.GetTaskStatus() == GIFBackgroundRendererMessage.BG_TASK_IDLE)
-                //     //     _bgRenderer.SendMessage(GIFBackgroundRendererMessage.SHOW_FIRST_FRAME);
-                //     _gifRenderer.Ren
-                //     showFirstFrame = false;
-                // }
-                // else if (delta >= _gifRenderer.GifFrameTimes[CurrentFrame])
-                // {
-                //     // if (_bgRenderer.GetTaskStatus() == GIFBackgroundRendererMessage.BG_TASK_IDLE)
-                //     //     _bgRenderer.SendMessage(GIFBackgroundRendererMessage.DRAW_NEXT);
-
-                //     prevTime = t1;
-                // }
-
-                _gifRenderer.TransferBackBufferToBitmap();
-
-                context.DrawImage(_gifRenderer._bitmap, 1, sourceRect, destRect, interpolationMode);
+                using(var lockbitmap = _bitmap.Lock())
+                _gifRenderer.TransferScratchToBitmap(lockbitmap);
             }
+
+            if (_bitmap != null)
+                context.DrawImage(_bitmap, 1, sourceRect, destRect, interpolationMode);
+            setSourceMutex.ReleaseMutex();
+
         }
 
         /// <summary>
@@ -463,9 +225,10 @@ namespace AvaloniaGif
 
         public void SetRenderBounds(AvaloniaPropertyChangedEventArgs e)
         {
-            if (_gifRenderer != null)
+            var source = _bitmap;
+
+            if (_gifRenderer != null & _bitmap != null)
             {
-                var source = _gifRenderer._bitmap;
                 viewPort = new Rect(Bounds.Size);
                 sourceSize = new Size(source.PixelSize.Width, source.PixelSize.Height);
                 scale = Stretch.CalculateScaling(Bounds.Size, sourceSize);

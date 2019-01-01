@@ -93,7 +93,7 @@ namespace AvaloniaGif
                 return TaskEx.FromResult<Stream>(File.OpenRead(uri.LocalPath));
             }
 
-            throw new NotSupportedException("Only pack:, file:, http: and https: URIs are supported");
+            throw new NotSupportedException("Only resm:, file:, http: and https: URIs are supported");
         }
 
         private static Task<Stream> OpenTempFileStreamAsync(string fileName)

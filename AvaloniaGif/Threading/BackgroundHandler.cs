@@ -34,7 +34,10 @@ namespace AvaloniaGif.Threading
                     if (_messageHandlers.TryGetValue(message, out var action))
                         action();
 
-                Thread.Sleep(2);
+                
+
+
+                Thread.Sleep(1);
             }
         }
 
@@ -71,8 +74,7 @@ namespace AvaloniaGif.Threading
 
         public void SendMessage(TMessage message)
         {
-            if (_messageQueue.Count < 200)
-                _messageQueue.Enqueue(message);
+            _messageQueue.Enqueue(message);
         }
     }
 }
