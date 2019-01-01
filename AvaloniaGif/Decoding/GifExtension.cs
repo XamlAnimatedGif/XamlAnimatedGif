@@ -8,7 +8,7 @@ namespace AvaloniaGif.Decoding
     {
         internal const int ExtensionIntroducer = 0x21;
 
-        internal new static async Task<GifExtension> ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        internal new static GifExtension ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             // Note: at this point, the Extension Introducer (0x21) has already been read
 
@@ -18,13 +18,13 @@ namespace AvaloniaGif.Decoding
             switch (label)
             {
                 case GifGraphicControlExtension.ExtensionLabel:
-                    return await GifGraphicControlExtension.ReadAsync(stream).ConfigureAwait(false);
+                    return GifGraphicControlExtension.ReadAsync(stream);
                 case GifCommentExtension.ExtensionLabel:
-                    return await GifCommentExtension.ReadAsync(stream).ConfigureAwait(false);
+                    return GifCommentExtension.ReadAsync(stream);
                 case GifPlainTextExtension.ExtensionLabel:
-                    return await GifPlainTextExtension.ReadAsync(stream, controlExtensions).ConfigureAwait(false);
+                    return GifPlainTextExtension.ReadAsync(stream, controlExtensions);
                 case GifApplicationExtension.ExtensionLabel:
-                    return await GifApplicationExtension.ReadAsync(stream).ConfigureAwait(false);
+                    return GifApplicationExtension.Read(stream);
                 default:
                     throw GifHelpers.UnknownExtensionTypeException(label);
             }

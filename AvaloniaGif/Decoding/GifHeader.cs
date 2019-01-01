@@ -18,22 +18,22 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.Other; }
         }
 
-        internal static async Task<GifHeader> ReadAsync(Stream stream)
+        internal static GifHeader ReadAsync(Stream stream)
         {
             var header = new GifHeader();
-            await header.ReadInternalAsync(stream).ConfigureAwait(false);
+            header.ReadInternalAsync(stream);
             return header;
         }
 
-        private async Task ReadInternalAsync(Stream stream)
+        private void ReadInternalAsync(Stream stream)
         {
-            Signature = await GifHelpers.ReadStringAsync(stream, 3).ConfigureAwait(false);
+            Signature = GifHelpers.ReadString(stream, 3);
             if (Signature != "GIF")
                 throw GifHelpers.InvalidSignatureException(Signature);
-            Version = await GifHelpers.ReadStringAsync(stream, 3).ConfigureAwait(false);
+            Version = GifHelpers.ReadString(stream, 3);
             if (Version != "87a" && Version != "89a")
                 throw GifHelpers.UnsupportedVersionException(Version);
-            LogicalScreenDescriptor = await GifLogicalScreenDescriptor.ReadAsync(stream).ConfigureAwait(false);
+            LogicalScreenDescriptor = GifLogicalScreenDescriptor.ReadAsync(stream);
         }
     }
 }

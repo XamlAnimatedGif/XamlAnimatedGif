@@ -20,17 +20,17 @@ namespace AvaloniaGif.Decoding
         {
         }
 
-        internal static async Task<GifImageDescriptor> ReadAsync(Stream stream)
+        internal static GifImageDescriptor ReadAsync(Stream stream)
         {
             var descriptor = new GifImageDescriptor();
-            await descriptor.ReadInternalAsync(stream).ConfigureAwait(false);
+            descriptor.ReadInternalAsync(stream);
             return descriptor;
         }
 
-        private async Task ReadInternalAsync(Stream stream)
+        private void ReadInternalAsync(Stream stream)
         {
             byte[] bytes = new byte[9];
-            await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+            stream.ReadAll(bytes, 0, bytes.Length);
             Left = BitConverter.ToUInt16(bytes, 0);
             Top = BitConverter.ToUInt16(bytes, 2);
             Width = BitConverter.ToUInt16(bytes, 4);

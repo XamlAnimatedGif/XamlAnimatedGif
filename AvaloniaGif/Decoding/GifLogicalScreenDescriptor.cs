@@ -16,17 +16,17 @@ namespace AvaloniaGif.Decoding
         public int BackgroundColorIndex { get; private set; }
         public double PixelAspectRatio { get; private set; }
 
-        internal static async Task<GifLogicalScreenDescriptor> ReadAsync(Stream stream)
+        internal static GifLogicalScreenDescriptor ReadAsync(Stream stream)
         {
             var descriptor = new GifLogicalScreenDescriptor();
-            await descriptor.ReadInternalAsync(stream).ConfigureAwait(false);
+            descriptor.ReadInternalAsync(stream);
             return descriptor;
         }
 
-        private async Task ReadInternalAsync(Stream stream)
+        private void ReadInternalAsync(Stream stream)
         {
             byte[] bytes = new byte[7];
-            await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+            stream.ReadAll(bytes, 0, bytes.Length);
 
             Width = BitConverter.ToUInt16(bytes, 0);
             Height = BitConverter.ToUInt16(bytes, 2);

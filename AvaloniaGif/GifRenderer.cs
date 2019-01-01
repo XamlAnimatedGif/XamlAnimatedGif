@@ -25,7 +25,7 @@ namespace AvaloniaGif
         private readonly bool _isSourceStreamOwner;
         private readonly GifDataStream _metadata;
         private readonly Dictionary<int, GifPalette> _palettes;
-        public readonly WriteableBitmap _bitmap;
+        public WriteableBitmap _bitmap;
         private readonly int _stride;
         private readonly byte[] _previousBackBuffer;
         private readonly byte[] _indexStreamBuffer;
@@ -34,13 +34,15 @@ namespace AvaloniaGif
         public Vector DPI { get; set; } = new Vector(96, 96);
         private int _previousFrameIndex;
         private GifFrame _previousFrame;
+        private byte[] _bitmapBackBuffer;
 
         internal GifRenderer(Stream stream)
         {
-            _metadata = GifDataStream.ReadAsync(stream).Result;
+            _metadata = GifDataStream.ReadAsync(stream);
             _sourceStream = stream;
             _palettes = CreatePalettes(_metadata);
-            _bitmap = CreateBitmap(_metadata);
+
+            SetupBitmap(_metadata);
 
             var desc = _metadata.Header.LogicalScreenDescriptor;
             _stride = 4 * ((desc.Width * 32 + 31) / 32);
@@ -58,11 +60,11 @@ namespace AvaloniaGif
                     : IterationCount;
         }
 
-        private WriteableBitmap CreateBitmap(GifDataStream metadata)
+        private void SetupBitmap(GifDataStream metadata)
         {
             var desc = metadata.Header.LogicalScreenDescriptor;
-            var bitmap = new WriteableBitmap(new PixelSize(desc.Width, desc.Height), DPI, PixelFormat.Bgra8888);
-            return bitmap;
+            this._bitmap = new WriteableBitmap(new PixelSize(desc.Width, desc.Height), DPI, PixelFormat.Bgra8888);
+            this._bitmapBackBuffer = new byte[desc.Height * desc.Width * 4];
         }
 
         private Dictionary<int, GifPalette> CreatePalettes(GifDataStream metadata)
@@ -107,7 +109,7 @@ namespace AvaloniaGif
             // Find the size of the largest frame pixel data
             // (ignoring the fact that we include the next frame's header)
 
-            long lastSize = stream.Length - metadata.Frames.Last().ImageData.CompressedDataStartOffset;
+            long lastSize = stream.Length - metadata.Frames[metadata.Frames.Count - 1].ImageData.CompressedDataStartOffset;
             long maxSize = lastSize;
             if (metadata.Frames.Count > 1)
             {
@@ -118,9 +120,11 @@ namespace AvaloniaGif
             // Need 4 extra bytes so that BitReader doesn't need to check the size for every read
             return new byte[maxSize + 4];
         }
-
+        volatile bool hasNewFrame = false;
         internal async Task RenderFrameAsync(int frameIndex, CancellationToken cancellationToken)
         {
+            bitmapMutex.WaitOne();
+
             if (frameIndex < 0)
                 return;
 
@@ -128,15 +132,13 @@ namespace AvaloniaGif
             var desc = frame.Descriptor;
             var rect = GetFixedUpFrameRect(desc);
 
-            using (var lockedBitmap = _bitmap.Lock())
-            using (var indexStream = await GetIndexStreamAsync(frame, cancellationToken))
+            using (var indexStream = GetIndexStreamAsync(frame, cancellationToken))
             {
-
                 if (frameIndex < _previousFrameIndex)
-                    ClearArea(new Int32Rect(0, 0, _metadata.Header.LogicalScreenDescriptor.Width,
-                     _metadata.Header.LogicalScreenDescriptor.Height), lockedBitmap);
+                    ClearAreaBackBuffer(new Int32Rect(0, 0, _metadata.Header.LogicalScreenDescriptor.Width,
+                     _metadata.Header.LogicalScreenDescriptor.Height));
                 else
-                    DisposePreviousFrame(frame, lockedBitmap);
+                    DisposePreviousFrame(frame);
 
                 int bufferLength = 4 * rect.Width;
                 byte[] indexBuffer = new byte[desc.Width];
@@ -157,7 +159,7 @@ namespace AvaloniaGif
 
                     if (transparencyIndex >= 0)
                     {
-                        CopyFromBitmap(lineBuffer, lockedBitmap, offset, bufferLength);
+                        CopyFromBitmapBackBuffer(lineBuffer, offset, bufferLength);
                     }
 
                     for (int x = 0; x < rect.Width; x++)
@@ -169,17 +171,22 @@ namespace AvaloniaGif
                             WriteColor(lineBuffer, palette[index], i);
                         }
                     }
-                    CopyToBitmap(lineBuffer, lockedBitmap, offset, bufferLength);
+                    CopyToBitmapBackBuffer(lineBuffer, offset, bufferLength);
 
                 }
                 _previousFrame = frame;
                 _previousFrameIndex = frameIndex;
             }
+
+            hasNewFrame = true;
+            bitmapMutex.ReleaseMutex();
         }
 
         private static IEnumerable<int> NormalRows(int height)
         {
             return Enumerable.Range(0, height);
+            // for (int i = 0; i <= height; i++)
+            //     yield return i;
         }
 
         private static IEnumerable<int> InterlacedRows(int height)
@@ -210,17 +217,34 @@ namespace AvaloniaGif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CopyToBitmap(byte[] buffer, ILockedFramebuffer bitmap, int offset, int length)
+        private void CopyToBitmapBackBuffer(byte[] buffer, int offset, int length)
         {
-            Marshal.Copy(buffer, 0, bitmap.Address + offset, length);
+            Buffer.BlockCopy(buffer, 0, _bitmapBackBuffer, offset, length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CopyFromBitmap(byte[] buffer, ILockedFramebuffer bitmap, int offset, int length)
+        private void CopyFromBitmapBackBuffer(byte[] buffer, int offset, int length)
         {
-            Marshal.Copy(bitmap.Address + offset, buffer, 0, length);
+            Buffer.BlockCopy(_bitmapBackBuffer, offset, buffer, 0, length);
         }
 
+        Mutex bitmapMutex = new Mutex();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void TransferBackBufferToBitmap()
+        {
+            bitmapMutex.WaitOne();
+            if (hasNewFrame)
+            {
+                using (var lockbitmap = _bitmap.Lock())
+                    Marshal.Copy(_bitmapBackBuffer, 0, lockbitmap.Address, _bitmapBackBuffer.Length);
+
+                hasNewFrame = false;
+            }
+            bitmapMutex.ReleaseMutex();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WriteColor(byte[] lineBuffer, Color color, int startIndex)
         {
             lineBuffer[startIndex] = color.B;
@@ -229,7 +253,8 @@ namespace AvaloniaGif
             lineBuffer[startIndex + 3] = color.A;
         }
 
-        private void DisposePreviousFrame(GifFrame currentFrame, ILockedFramebuffer bitmap)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void DisposePreviousFrame(GifFrame currentFrame)
         {
             var pgce = _previousFrame?.GraphicControl;
 
@@ -245,12 +270,12 @@ namespace AvaloniaGif
                         }
                     case GifFrameDisposalMethod.RestoreBackground:
                         {
-                            ClearArea(GetFixedUpFrameRect(_previousFrame.Descriptor), bitmap);
+                            ClearAreaBackBuffer(GetFixedUpFrameRect(_previousFrame.Descriptor));
                             break;
                         }
                     case GifFrameDisposalMethod.RestorePrevious:
                         {
-                            CopyToBitmap(_previousBackBuffer, bitmap, 0, _previousBackBuffer.Length);
+                            CopyToBitmapBackBuffer(_previousBackBuffer, 0, _previousBackBuffer.Length);
 
                             break;
                         }
@@ -260,31 +285,31 @@ namespace AvaloniaGif
             var gce = currentFrame.GraphicControl;
             if (gce != null && gce.DisposalMethod == GifFrameDisposalMethod.RestorePrevious)
             {
-                CopyFromBitmap(_previousBackBuffer, bitmap, 0, _previousBackBuffer.Length);
+                CopyFromBitmapBackBuffer(_previousBackBuffer, 0, _previousBackBuffer.Length);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ClearArea(Int32Rect rect, ILockedFramebuffer bitmap)
+        private void ClearAreaBackBuffer(Int32Rect rect)
         {
             int bufferLength = 4 * rect.Width;
             byte[] lineBuffer = new byte[bufferLength];
             for (int y = 0; y < rect.Height; y++)
             {
                 int offset = (rect.Y + y) * _stride + 4 * rect.X;
-                CopyToBitmap(lineBuffer, bitmap, offset, bufferLength);
+                CopyToBitmapBackBuffer(lineBuffer, offset, bufferLength);
             }
 
         }
 
-        private async Task<Stream> GetIndexStreamAsync(GifFrame frame, CancellationToken cancellationToken)
+        private Stream GetIndexStreamAsync(GifFrame frame, CancellationToken cancellationToken)
         {
             var data = frame.ImageData;
             cancellationToken.ThrowIfCancellationRequested();
             _sourceStream.Seek(data.CompressedDataStartOffset, SeekOrigin.Begin);
             using (var ms = new MemoryStream(_indexStreamBuffer))
             {
-                await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, ms, cancellationToken).ConfigureAwait(false);
+                GifHelpers.CopyDataBlocksToStream(_sourceStream, ms);
             }
             var lzwStream = new LzwDecompressStream(_indexStreamBuffer, data.LzwMinimumCodeSize);
             return lzwStream;
@@ -292,7 +317,13 @@ namespace AvaloniaGif
 
         private TimeSpan GetFrameDelay(GifFrame frame)
         {
-            return TimeSpan.FromMilliseconds(frame.GraphicControl?.Delay ?? 100);
+            var gce = frame.GraphicControl;
+            if (gce != null)
+            {
+                if (gce.Delay != 0)
+                    return TimeSpan.FromMilliseconds(gce.Delay);
+            }
+            return TimeSpan.FromMilliseconds(100);
         }
 
         private IterationCount GetIterationCountFromGif(GifDataStream metadata)

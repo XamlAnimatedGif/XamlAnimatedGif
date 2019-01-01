@@ -17,22 +17,22 @@ namespace AvaloniaGif.Decoding
         {
         }
 
-        internal static async Task<GifDataStream> ReadAsync(Stream stream)
+        internal static GifDataStream ReadAsync(Stream stream)
         {
             var file = new GifDataStream();
-            await file.ReadInternalAsync(stream).ConfigureAwait(false);
+            file.ReadInternalAsync(stream);
             return file;
         }
 
-        private async Task ReadInternalAsync(Stream stream)
+        private void ReadInternalAsync(Stream stream)
         {
-            Header = await GifHeader.ReadAsync(stream).ConfigureAwait(false);
+            Header = GifHeader.ReadAsync(stream);
 
             if (Header.LogicalScreenDescriptor.HasGlobalColorTable)
             {
-                GlobalColorTable = await GifHelpers.ReadColorTableAsync(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize).ConfigureAwait(false);
+                GlobalColorTable = GifHelpers.ReadColorTable(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize);
             }
-            await ReadFramesAsync(stream).ConfigureAwait(false);
+            ReadFramesAsync(stream);
 
             var netscapeExtension =
                             Extensions
@@ -44,7 +44,7 @@ namespace AvaloniaGif.Decoding
                 : (ushort)1;
         }
 
-        private async Task ReadFramesAsync(Stream stream)
+        private void ReadFramesAsync(Stream stream)
         {
             List<GifFrame> frames = new List<GifFrame>();
             List<GifExtension> controlExtensions = new List<GifExtension>();
@@ -53,7 +53,7 @@ namespace AvaloniaGif.Decoding
             {
                 try
                 {
-                    var block = await GifBlock.ReadAsync(stream, controlExtensions).ConfigureAwait(false);
+                    var block = GifBlock.ReadAsync(stream, controlExtensions);
 
                     if (block.Kind == GifBlockKind.GraphicRendering)
                         controlExtensions = new List<GifExtension>();

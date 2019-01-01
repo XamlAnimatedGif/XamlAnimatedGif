@@ -9,44 +9,44 @@ namespace AvaloniaGif.Decoding
 {
     internal static class GifHelpers
     {
-        public static async Task<string> ReadStringAsync(Stream stream, int length)
+        public static string ReadString(Stream stream, int length)
         {
             byte[] bytes = new byte[length];
-            await stream.ReadAllAsync(bytes, 0, length).ConfigureAwait(false);
+            stream.ReadAll(bytes, 0, length);
             return GetString(bytes);
         }
 
-        public static async Task ConsumeDataBlocksAsync(Stream sourceStream, CancellationToken cancellationToken = default(CancellationToken))
+        public static void ConsumeDataBlocks(Stream sourceStream, CancellationToken cancellationToken = default(CancellationToken))
         {
-            await CopyDataBlocksToStreamAsync(sourceStream, Stream.Null, cancellationToken);
+            CopyDataBlocksToStream(sourceStream, Stream.Null);
         }
 
-        public static async Task<byte[]> ReadDataBlocksAsync(Stream stream, CancellationToken cancellationToken = default(CancellationToken))
+        public static byte[] ReadDataBlocks(Stream stream, CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var ms = new MemoryStream())
             {
-                await CopyDataBlocksToStreamAsync(stream, ms, cancellationToken);
+                CopyDataBlocksToStream(stream, ms);
                 return ms.ToArray();
             }
         }
 
-        public static async Task CopyDataBlocksToStreamAsync(Stream sourceStream, Stream targetStream, CancellationToken cancellationToken = default(CancellationToken))
+        public static void CopyDataBlocksToStream(Stream sourceStream, Stream targetStream)
         {
             int len;
             // the length is on 1 byte, so each data sub-block can't be more than 255 bytes long
             byte[] buffer = new byte[255];
-            while ((len = await sourceStream.ReadByteAsync(cancellationToken)) > 0)
+            while ((len = sourceStream.ReadByte()) > 0)
             {
-                await sourceStream.ReadAllAsync(buffer, 0, len, cancellationToken).ConfigureAwait(false);
-                await targetStream.WriteAsync(buffer, 0, len, cancellationToken);
+                sourceStream.ReadAll(buffer, 0, len);
+                targetStream.Write(buffer, 0, len);
             }
         }
 
-        public static async Task<GifColor[]> ReadColorTableAsync(Stream stream, int size)
+        public static GifColor[] ReadColorTable(Stream stream, int size)
         {
             int length = 3 * size;
             byte[] bytes = new byte[length];
-            await stream.ReadAllAsync(bytes, 0, length).ConfigureAwait(false);
+            stream.ReadAll(bytes, 0, length);
             GifColor[] colorTable = new GifColor[size];
             for (int i = 0; i < size; i++)
             {

@@ -27,19 +27,19 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.Control; }
         }
 
-        internal static async Task<GifGraphicControlExtension> ReadAsync(Stream stream)
+        internal static GifGraphicControlExtension ReadAsync(Stream stream)
         {
             var ext = new GifGraphicControlExtension();
-            await ext.ReadInternalAsync(stream).ConfigureAwait(false);
+            ext.ReadInternalAsync(stream);
             return ext;
         }
 
-        private async Task ReadInternalAsync(Stream stream)
+        private void ReadInternalAsync(Stream stream)
         {
             // Note: at this point, the label (0xF9) has already been read
 
             byte[] bytes = new byte[6];
-            await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+            stream.ReadAll(bytes, 0, bytes.Length);
             BlockSize = bytes[0]; // should always be 4
             if (BlockSize != 4)
                 throw GifHelpers.InvalidBlockSizeException("Graphic Control Extension", 4, BlockSize);

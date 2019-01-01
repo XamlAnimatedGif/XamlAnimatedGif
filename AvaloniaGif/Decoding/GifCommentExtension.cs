@@ -18,18 +18,18 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.SpecialPurpose; }
         }
 
-        internal static async Task<GifCommentExtension> ReadAsync(Stream stream)
+        internal static GifCommentExtension ReadAsync(Stream stream)
         {
             var comment = new GifCommentExtension();
-            await comment.ReadInternalAsync(stream).ConfigureAwait(false);
+            comment.ReadInternalAsync(stream);
             return comment;
         }
 
-        private async Task ReadInternalAsync(Stream stream)
+        private void ReadInternalAsync(Stream stream)
         {
             // Note: at this point, the label (0xFE) has already been read
 
-            var bytes = await GifHelpers.ReadDataBlocksAsync(stream).ConfigureAwait(false);
+            var bytes = GifHelpers.ReadDataBlocks(stream);
             if (bytes != null)
                 Text = GifHelpers.GetString(bytes);
         }

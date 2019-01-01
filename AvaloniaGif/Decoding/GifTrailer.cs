@@ -16,9 +16,9 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.Other; }
         }
 
-        internal static Task<GifTrailer> ReadAsync()
+        internal static GifTrailer ReadAsync()
         {
-            return TaskEx.FromResult(new GifTrailer());
+            return new GifTrailer();
         }
     }
 }

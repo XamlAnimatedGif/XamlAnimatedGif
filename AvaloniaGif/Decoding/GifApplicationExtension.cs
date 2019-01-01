@@ -24,19 +24,19 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.SpecialPurpose; }
         }
 
-        internal static async Task<GifApplicationExtension> ReadAsync(Stream stream)
+        internal static GifApplicationExtension Read(Stream stream)
         {
             var ext = new GifApplicationExtension();
-            await ext.ReadInternalAsync(stream).ConfigureAwait(false);
+             ext.ReadInternalAsync(stream);
             return ext;
         }
 
-        private async Task ReadInternalAsync(Stream stream)
+        private void ReadInternalAsync(Stream stream)
         {
             // Note: at this point, the label (0xFF) has already been read
 
             byte[] bytes = new byte[12];
-            await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+            stream.ReadAll(bytes, 0, bytes.Length);
             BlockSize = bytes[0]; // should always be 11
             if (BlockSize != 11)
                 throw GifHelpers.InvalidBlockSizeException("Application Extension", 11, BlockSize);
@@ -45,7 +45,7 @@ namespace AvaloniaGif.Decoding
             byte[] authCode = new byte[3];
             Array.Copy(bytes, 9, authCode, 0, 3);
             AuthenticationCode = authCode;
-            Data = await GifHelpers.ReadDataBlocksAsync(stream).ConfigureAwait(false);
+            Data = GifHelpers.ReadDataBlocks(stream);
         }
     }
 }

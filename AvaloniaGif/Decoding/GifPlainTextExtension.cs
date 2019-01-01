@@ -34,19 +34,19 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.GraphicRendering; }
         }
 
-        internal new static async Task<GifPlainTextExtension> ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        internal new static GifPlainTextExtension ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             var plainText = new GifPlainTextExtension();
-            await plainText.ReadInternalAsync(stream, controlExtensions).ConfigureAwait(false);
+            plainText.ReadInternalAsync(stream, controlExtensions);
             return plainText;
         }
 
-        private async Task ReadInternalAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        private void ReadInternalAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             // Note: at this point, the label (0x01) has already been read
 
             byte[] bytes = new byte[13];
-            await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+            stream.ReadAll(bytes, 0, bytes.Length);
 
             BlockSize = bytes[0];
             if (BlockSize != 12)
@@ -61,7 +61,7 @@ namespace AvaloniaGif.Decoding
             ForegroundColorIndex = bytes[11];
             BackgroundColorIndex = bytes[12];
 
-            var dataBytes = await GifHelpers.ReadDataBlocksAsync(stream).ConfigureAwait(false);
+            var dataBytes = GifHelpers.ReadDataBlocks(stream);
             Text = GifHelpers.GetString(dataBytes);
             Extensions = controlExtensions.ToList().AsReadOnly();
         }

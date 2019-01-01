@@ -7,19 +7,19 @@ namespace AvaloniaGif.Decoding
 {
     internal abstract class GifBlock
     {
-        internal static async Task<GifBlock> ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        internal static GifBlock ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
-            int blockId = await stream.ReadByteAsync().ConfigureAwait(false);
+            int blockId = stream.ReadByte();
             if (blockId < 0)
                 throw new EndOfStreamException();
             switch (blockId)
             {
                 case GifExtension.ExtensionIntroducer:
-                    return await GifExtension.ReadAsync(stream, controlExtensions).ConfigureAwait(false);
+                    return  GifExtension.ReadAsync(stream, controlExtensions);
                 case GifFrame.ImageSeparator:
-                    return await GifFrame.ReadAsync(stream, controlExtensions).ConfigureAwait(false);
+                    return  GifFrame.ReadAsync(stream, controlExtensions);
                 case GifTrailer.TrailerByte:
-                    return await GifTrailer.ReadAsync().ConfigureAwait(false);
+                    return  GifTrailer.ReadAsync();
                 default:
                     throw GifHelpers.UnknownBlockTypeException(blockId);
             }

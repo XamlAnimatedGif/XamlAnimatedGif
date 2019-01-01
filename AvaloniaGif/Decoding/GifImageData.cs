@@ -12,18 +12,18 @@ namespace AvaloniaGif.Decoding
         {
         }
 
-        internal static async Task<GifImageData> ReadAsync(Stream stream)
+        internal static GifImageData ReadAsync(Stream stream)
         {
             var imgData = new GifImageData();
-            await imgData.ReadInternalAsync(stream).ConfigureAwait(false);
+            imgData.ReadInternalAsync(stream);
             return imgData;
         }
 
-        private async Task ReadInternalAsync(Stream stream)
+        private void ReadInternalAsync(Stream stream)
         {
             LzwMinimumCodeSize = (byte)stream.ReadByte();
             CompressedDataStartOffset = stream.Position;
-            await GifHelpers.ConsumeDataBlocksAsync(stream).ConfigureAwait(false);
+            GifHelpers.ConsumeDataBlocks(stream);
         }
     }
 }

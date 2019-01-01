@@ -45,7 +45,7 @@ namespace AvaloniaGif
         CancellationTokenSource cts = new CancellationTokenSource();
         public bool HasNewFrame { get; set; }
 
-        private GIFBackgroundRenderer _bgRenderer;
+        private TimingManager _bgRenderer;
         private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
 
         static GifImage()
@@ -150,7 +150,7 @@ namespace AvaloniaGif
         private async Task Initialize(Stream stream)
         {
 
-            _bgRenderer?.SendMessage(GIFBackgroundRendererMessage.HALT_AND_DISPOSE);
+            // _bgRenderer?.SendMessage(GIFBackgroundRendererMessage.HALT_AND_DISPOSE);
             _gifRenderer = new GifRenderer(stream);
 
             FrameCount = _gifRenderer.FrameCount;
@@ -161,8 +161,12 @@ namespace AvaloniaGif
             showFirstFrame = true;
             HasNewFrame = true;
 
-            this._bgRenderer = new GIFBackgroundRenderer(_gifRenderer, cts.Token);
-            _bgRenderer.Start();
+            if (_bgRenderer != null) _bgRenderer.IsComplete = true;
+            this._bgRenderer = new TimingManager(this.IterationCount);
+            foreach (var t in _gifRenderer.GifFrameTimes)
+                _bgRenderer.Add(t);
+            
+             RunAsync(cts.Token);
             // foreach (var oldFrames in frameCache)
             //     oldFrames.Value?.Dispose();
 
@@ -190,73 +194,211 @@ namespace AvaloniaGif
 
         }
 
-        class GIFBackgroundRenderer : BackgroundHandler<GIFBackgroundRendererMessage>
+        class TimingManager
         {
-            private readonly GifRenderer _gifRenderer;
-            private readonly CancellationToken cts;
+            private readonly List<TimeSpan> _timeSpans = new List<TimeSpan>();
+            private int _current;
+            private int _count;
+            private bool _isComplete;
+            private TimeSpan _elapsed;
 
-            private int CurrentFrame, FrameCount;
-
-            public GIFBackgroundRenderer(GifRenderer gifRenderer, CancellationToken cts) : base()
+            public TimingManager(IterationCount iterationCount)
             {
-                AddHandlers((GIFBackgroundRendererMessage.SHOW_FIRST_FRAME, ShowFirstFrame),
-                            (GIFBackgroundRendererMessage.DRAW_NEXT, DrawNext),
-                            (GIFBackgroundRendererMessage.HALT_AND_DISPOSE, HaltAndDispose));
-
-                this._gifRenderer = gifRenderer;
-                this.cts = cts;
-                CurrentFrame = 0;
-                FrameCount = _gifRenderer.FrameCount;
-                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
-
+                IterationCount = iterationCount;
             }
 
-            void ShowFirstFrame()
+            public IterationCount IterationCount { get; set; }
+
+            public void Add(TimeSpan timeSpan)
             {
-                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_BUSY_DECODING);
-                _gifRenderer.RenderFrameAsync(0, cts).Wait();
-                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
+                _timeSpans.Add(timeSpan);
             }
 
-            void DrawNext()
+            public async Task<bool> NextAsync(CancellationToken cancellationToken)
             {
-                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_BUSY_DECODING);
-                _gifRenderer.RenderFrameAsync(CurrentFrame, cts).Wait();
+                if (IsComplete)
+                    return false;
+
+                await IsPausedAsync(cancellationToken);
+
+                var repeatBehavior = IterationCount;
+
+                var ts = _timeSpans[_current];
+                await Task.Delay(ts, cancellationToken);
+                _current++;
+                _elapsed += ts;
+
+                // if (!repeatBehavior.IsInfinite)
+                // {
+                //     // if (_elapsed >= repeatBehavior.Value)
+                //     // {
+                //     //     IsComplete = true;
+                //     return false;
+                //     // }
+                // }
+
+                if (_current >= _timeSpans.Count)
+                {
+                    _count++;
+                    if (repeatBehavior.IsInfinite)
+                    {
+                        if ((ulong)_count < repeatBehavior.Value)
+                        {
+                            _current = 0;
+                            return true;
+                        }
+                        IsComplete = true;
+                        return false;
+                    }
+                    else
+                    {
+                        _current = 0;
+                        return true;
+                    }
+                }
+                return true;
+            }
+
+            public void Reset()
+            {
+                _current = 0;
+                _count = 0;
+                _elapsed = TimeSpan.Zero;
+                IsComplete = false;
+            }
+
+            public event EventHandler Completed;
+
+            protected virtual void OnCompleted()
+            {
+                Completed?.Invoke(this, EventArgs.Empty);
+            }
+
+            public bool IsComplete
+            {
+                get { return _isComplete; }
+                set
+                {
+                    _isComplete = value;
+                    if (value)
+                        OnCompleted();
+                }
+            }
+
+            private readonly Task _completedTask = Task.FromResult(0);
+            private TaskCompletionSource<int> _pauseCompletionSource;
+            public void Pause()
+            {
+                IsPaused = true;
+                _pauseCompletionSource = new TaskCompletionSource<int>();
+            }
+
+            public void Resume()
+            {
+                var tcs = _pauseCompletionSource;
+                tcs?.TrySetResult(0);
+                _pauseCompletionSource = null;
+                IsPaused = false;
+            }
+
+            public bool IsPaused { get; private set; }
+
+            private Task IsPausedAsync(CancellationToken cancellationToken)
+            {
+                var tcs = _pauseCompletionSource;
+                if (tcs != null)
+                {
+                    if (cancellationToken.CanBeCanceled)
+                        cancellationToken.Register(() => tcs.TrySetCanceled());
+                    return tcs.Task;
+                }
+                return _completedTask;
+            }
+        }
+
+        
+
+        private async Task RunAsync(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                var timing = _bgRenderer.NextAsync(cancellationToken);
+                var rendering = _gifRenderer.RenderFrameAsync(CurrentFrame, cancellationToken);
+                await Task.WhenAll(timing, rendering);
+                if (!timing.Result)
+                    break;
                 CurrentFrame = (CurrentFrame + 1) % FrameCount;
-                SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
-            }
-
-            void HaltAndDispose()
-            {
-                _gifRenderer.Dispose();
-                this.Stop();
             }
         }
 
 
+        // class GIFBackgroundRenderer : BackgroundHandler<GIFBackgroundRendererMessage>
+        // {
+        //     private readonly GifRenderer _gifRenderer;
+        //     private readonly CancellationToken cts;
+
+        //     private int CurrentFrame, FrameCount;
+
+        //     public GIFBackgroundRenderer(GifRenderer gifRenderer, CancellationToken cts) : base()
+        //     {
+        //         AddHandlers((GIFBackgroundRendererMessage.SHOW_FIRST_FRAME, ShowFirstFrame),
+        //                     (GIFBackgroundRendererMessage.DRAW_NEXT, DrawNext),
+        //                     (GIFBackgroundRendererMessage.HALT_AND_DISPOSE, HaltAndDispose));
+
+        //         this._gifRenderer = gifRenderer;
+        //         this.cts = cts;
+        //         CurrentFrame = 0;
+        //         FrameCount = _gifRenderer.FrameCount;
+        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
+
+        //     }
+
+        //     void ShowFirstFrame()
+        //     {
+        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_BUSY_DECODING);
+        //         _gifRenderer.RenderFrameAsync(0, cts).Wait();
+        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
+        //     }
+
+        //     void DrawNext()
+        //     {
+        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_BUSY_DECODING);
+        //         _gifRenderer.RenderFrameAsync(CurrentFrame, cts).Wait();
+        //         CurrentFrame = (CurrentFrame + 1) % FrameCount;
+        //         SetTaskStatus(GIFBackgroundRendererMessage.BG_TASK_IDLE);
+        //     }
+
+        //     void HaltAndDispose()
+        //     {
+        //         _gifRenderer.Dispose();
+        //         this.Stop();
+        //     }
+        // }
 
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
 
-            if (_isRunning)
+            if (_isRunning && _bgRenderer != null)
             {
 
-                var t1 = DateTime.Now.TimeOfDay;
-                var delta = t1 - prevTime;
-                if (showFirstFrame)
-                {
-                    if (_bgRenderer.GetTaskStatus() == GIFBackgroundRendererMessage.BG_TASK_IDLE)
-                        _bgRenderer.SendMessage(GIFBackgroundRendererMessage.SHOW_FIRST_FRAME);
+                // var t1 = DateTime.Now.TimeOfDay;
+                // var delta = t1 - prevTime;
+                // if (showFirstFrame)
+                // {
+                //     // if (_bgRenderer.GetTaskStatus() == GIFBackgroundRendererMessage.BG_TASK_IDLE)
+                //     //     _bgRenderer.SendMessage(GIFBackgroundRendererMessage.SHOW_FIRST_FRAME);
+                //     _gifRenderer.Ren
+                //     showFirstFrame = false;
+                // }
+                // else if (delta >= _gifRenderer.GifFrameTimes[CurrentFrame])
+                // {
+                //     // if (_bgRenderer.GetTaskStatus() == GIFBackgroundRendererMessage.BG_TASK_IDLE)
+                //     //     _bgRenderer.SendMessage(GIFBackgroundRendererMessage.DRAW_NEXT);
 
-                    showFirstFrame = false;
-                } 
-                else if (delta >= _gifRenderer.GifFrameTimes[CurrentFrame])
-                {
-                    if (_bgRenderer.GetTaskStatus() == GIFBackgroundRendererMessage.BG_TASK_IDLE)
-                        _bgRenderer.SendMessage(GIFBackgroundRendererMessage.DRAW_NEXT);
+                //     prevTime = t1;
+                // }
 
-                    prevTime = t1;
-                }
+                _gifRenderer.TransferBackBufferToBitmap();
 
                 context.DrawImage(_gifRenderer._bitmap, 1, sourceRect, destRect, interpolationMode);
             }
