@@ -43,6 +43,7 @@ namespace AvaloniaGif
         {
             _metadata = GifDataStream.Read(stream);
             _sourceStream = stream;
+            
             _palettes = CreatePalettes(_metadata);
 
             var desc = _metadata.Header.LogicalScreenDescriptor;

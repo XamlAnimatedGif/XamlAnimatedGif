@@ -51,7 +51,7 @@ namespace AvaloniaGif
             _frameCount = _gifRenderer.FrameCount;
 
             _bgThread = Task.Factory.StartNew(MainLoop, _token, TaskCreationOptions.LongRunning,
-                TaskScheduler.Default);
+                TaskScheduler.Current);
         }
 
         public void SendCommand(Command cmd)
@@ -132,7 +132,7 @@ namespace AvaloniaGif
             var targetDelay = _frameTimes.Span[_currentIndex];
             
             var t1 = _timer.Elapsed;
-            
+
             _gifRenderer.RenderFrame(_currentIndex);
 
             var t2 = _timer.Elapsed;

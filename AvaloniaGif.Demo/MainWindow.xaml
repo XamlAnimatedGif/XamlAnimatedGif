@@ -8,7 +8,7 @@
     </Window.DataContext>
     <DockPanel LastChildFill="True">
         <ListBox DockPanel.Dock="Left" Width="300" SelectedItem="{Binding SelectedGif}" Items="{Binding AvailableGifs}"/>
-        <gif:GifImage Source="{Binding SelectedGif}" Stretch="None"/>
+        <gif:GifImage Source="{Binding SelectedGif}" />
     </DockPanel>
 
     <!-- <WrapPanel> -->

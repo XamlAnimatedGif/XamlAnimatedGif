@@ -31,7 +31,7 @@ namespace AvaloniaGif
 
         private GifBackgroundWorker _bgWorker;
 
-        private static readonly byte[] GIFMagicNumber = new byte[] {0x47, 0x49, 0x46, 0x38};
+        private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
 
         static GifImage()
         {
@@ -132,8 +132,10 @@ namespace AvaloniaGif
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
             setSourceMutex.WaitOne();
+            
+            var bgwState = _bgWorker?.GetState();
 
-            if (_bgWorker?.GetState() == GifBackgroundWorker.State.Running & _bitmap != null)
+            if (bgwState == GifBackgroundWorker.State.Start | bgwState == GifBackgroundWorker.State.Running & _bitmap != null)
             {
                 using (var lockbitmap = _bitmap.Lock())
                     _gifRenderer.TransferScratchToBitmap(lockbitmap);
@@ -207,7 +209,7 @@ namespace AvaloniaGif
             var source = _bitmap;
 
             if (!(_gifRenderer != null & _bitmap != null)) return;
-            
+
             viewPort = new Rect(Bounds.Size);
             sourceSize = new Size(source.PixelSize.Width, source.PixelSize.Height);
             scale = Stretch.CalculateScaling(Bounds.Size, sourceSize);
