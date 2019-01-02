@@ -1,31 +1,19 @@
 ﻿using System;
 using System.IO;
-using AvaloniaGif.Extensions;
+using System.Linq;
+using System.Threading;
 using Avalonia;
-using Avalonia.Media.Imaging;
-
 using Avalonia.Animation;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Portable.Xaml.Markup;
-using System.Threading;
-using Avalonia.VisualTree;
 using Avalonia.Media;
-using System.Linq;
-using System.Text;
-using AvaloniaGif.Decoding;
-using System.Diagnostics;
+using Avalonia.Media.Imaging;
 using Avalonia.Visuals.Media.Imaging;
-using System.Collections.Generic;
-using Avalonia.Platform;
-using System.Runtime.InteropServices;
-using AvaloniaGif.Threading;
+using Avalonia.VisualTree;
 
 namespace AvaloniaGif
 {
-    public partial class GifImage : Control, IRenderTimeCriticalVisual
+    public class GifImage : Control, IRenderTimeCriticalVisual
     {
-
         private bool _streamCanDispose;
         private GifRenderer _gifRenderer;
         private Rect viewPort;
@@ -37,13 +25,13 @@ namespace AvaloniaGif
         private BitmapInterpolationMode interpolationMode;
         private WriteableBitmap _bitmap;
 
-        CancellationTokenSource cts = new CancellationTokenSource();
+        readonly CancellationTokenSource cts = new CancellationTokenSource();
 
         public bool HasNewFrame => true;
 
         private GifBackgroundWorker _bgWorker;
 
-        private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
+        private static readonly byte[] GIFMagicNumber = new byte[] {0x47, 0x49, 0x46, 0x38};
 
         static GifImage()
         {
@@ -73,17 +61,11 @@ namespace AvaloniaGif
 
         public GifImage()
         {
-            this.DetachedFromVisualTree += VisualDetached;
             this.GetPropertyChangedObservable(SourceProperty).Subscribe(SourceChanged);
             this.GetPropertyChangedObservable(SourceProperty).Subscribe(SetRenderBounds);
             this.GetPropertyChangedObservable(BoundsProperty).Subscribe(SetRenderBounds);
             this.GetPropertyChangedObservable(StretchProperty).Subscribe(SetRenderBounds);
             this.GetPropertyChangedObservable(RenderOptions.BitmapInterpolationModeProperty).Subscribe(SetRenderBounds);
-
-        }
-
-        private void VisualDetached(object sender, VisualTreeAttachmentEventArgs e)
-        {
         }
 
         private void SourceChanged(AvaloniaPropertyChangedEventArgs e)
@@ -95,10 +77,9 @@ namespace AvaloniaGif
                 return;
 
             SetSource(newSource);
-
         }
 
-        public async void SetSource(object newValue)
+        private async void SetSource(object newValue)
         {
             setSourceMutex.WaitOne();
 
@@ -112,7 +93,6 @@ namespace AvaloniaGif
                 _streamCanDispose = true;
                 _bgWorker?.SendCommand(GifBackgroundWorker.Command.Stop);
                 stream = await new UriLoader().GetStreamFromUriAsync(sourceUri, this.DownloadProgress, cts.Token);
-
             }
             else if (sourceStr != null)
             {
@@ -139,11 +119,10 @@ namespace AvaloniaGif
             setSourceMutex.ReleaseMutex();
         }
 
-        Mutex setSourceMutex = new Mutex();
+        readonly Mutex setSourceMutex = new Mutex();
 
         private void Initialize(Stream stream)
         {
-
             _gifRenderer = new GifRenderer(stream);
             _bgWorker = new GifBackgroundWorker(_gifRenderer, _gifRenderer.GifFrameTimes, cts.Token);
             _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
@@ -156,14 +135,14 @@ namespace AvaloniaGif
 
             if (_bgWorker?.GetState() == GifBackgroundWorker.State.Running & _bitmap != null)
             {
-                using(var lockbitmap = _bitmap.Lock())
-                _gifRenderer.TransferScratchToBitmap(lockbitmap);
+                using (var lockbitmap = _bitmap.Lock())
+                    _gifRenderer.TransferScratchToBitmap(lockbitmap);
             }
 
             if (_bitmap != null)
                 context.DrawImage(_bitmap, 1, sourceRect, destRect, interpolationMode);
-            setSourceMutex.ReleaseMutex();
 
+            setSourceMutex.ReleaseMutex();
         }
 
         /// <summary>
@@ -227,19 +206,18 @@ namespace AvaloniaGif
         {
             var source = _bitmap;
 
-            if (_gifRenderer != null & _bitmap != null)
-            {
-                viewPort = new Rect(Bounds.Size);
-                sourceSize = new Size(source.PixelSize.Width, source.PixelSize.Height);
-                scale = Stretch.CalculateScaling(Bounds.Size, sourceSize);
-                scaledSize = sourceSize * scale;
-                destRect = viewPort
-                    .CenterRect(new Rect(scaledSize))
-                    .Intersect(viewPort);
-                sourceRect = new Rect(sourceSize)
-                    .CenterRect(new Rect(destRect.Size / scale));
-                interpolationMode = RenderOptions.GetBitmapInterpolationMode(this);
-            }
+            if (!(_gifRenderer != null & _bitmap != null)) return;
+            
+            viewPort = new Rect(Bounds.Size);
+            sourceSize = new Size(source.PixelSize.Width, source.PixelSize.Height);
+            scale = Stretch.CalculateScaling(Bounds.Size, sourceSize);
+            scaledSize = sourceSize * scale;
+            destRect = viewPort
+                .CenterRect(new Rect(scaledSize))
+                .Intersect(viewPort);
+            sourceRect = new Rect(sourceSize)
+                .CenterRect(new Rect(destRect.Size / scale));
+            interpolationMode = RenderOptions.GetBitmapInterpolationMode(this);
         }
     }
 }

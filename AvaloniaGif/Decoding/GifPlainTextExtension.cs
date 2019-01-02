@@ -34,14 +34,14 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.GraphicRendering; }
         }
 
-        internal new static GifPlainTextExtension ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        internal new static GifPlainTextExtension Read(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             var plainText = new GifPlainTextExtension();
-            plainText.ReadInternalAsync(stream, controlExtensions);
+            plainText.ReadInternal(stream, controlExtensions);
             return plainText;
         }
 
-        private void ReadInternalAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        private void ReadInternal(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             // Note: at this point, the label (0x01) has already been read
 

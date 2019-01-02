@@ -25,24 +25,24 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.GraphicRendering; }
         }
 
-        internal new static GifFrame ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        internal new static GifFrame Read(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             var frame = new GifFrame();
 
-            frame.ReadInternalAsync(stream, controlExtensions);
+            frame.ReadInternal(stream, controlExtensions);
             return frame;
         }
 
-        private void ReadInternalAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        private void ReadInternal(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             // Note: at this point, the Image Separator (0x2C) has already been read
 
-            Descriptor = GifImageDescriptor.ReadAsync(stream);
+            Descriptor = GifImageDescriptor.Read(stream);
             if (Descriptor.HasLocalColorTable)
             {
                 LocalColorTable =  GifHelpers.ReadColorTable(stream, Descriptor.LocalColorTableSize);
             }
-            ImageData = GifImageData.ReadAsync(stream);
+            ImageData = GifImageData.Read(stream);
             Extensions = controlExtensions.ToList().AsReadOnly();
             GraphicControl = Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
         }

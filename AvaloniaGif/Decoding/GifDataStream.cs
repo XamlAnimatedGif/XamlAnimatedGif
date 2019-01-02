@@ -18,22 +18,22 @@ namespace AvaloniaGif.Decoding
         {
         }
 
-        internal static GifDataStream ReadAsync(Stream stream)
+        internal static GifDataStream Read(Stream stream)
         {
             var file = new GifDataStream();
-            file.ReadInternalAsync(stream);
+            file.ReadInternal(stream);
             return file;
         }
 
-        private void ReadInternalAsync(Stream stream)
+        private void ReadInternal(Stream stream)
         {
-            Header = GifHeader.ReadAsync(stream);
+            Header = GifHeader.Read(stream);
 
             if (Header.LogicalScreenDescriptor.HasGlobalColorTable)
             {
                 GlobalColorTable = GifHelpers.ReadColorTable(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize);
             }
-            ReadFramesAsync(stream);
+            ReadFrames(stream);
 
             var netscapeExtension =
                             Extensions
@@ -45,7 +45,7 @@ namespace AvaloniaGif.Decoding
                 : (ushort)1;
         }
 
-        private void ReadFramesAsync(Stream stream)
+        private void ReadFrames(Stream stream)
         {
             List<GifFrame> frames = new List<GifFrame>();
             List<GifExtension> controlExtensions = new List<GifExtension>();
@@ -54,7 +54,7 @@ namespace AvaloniaGif.Decoding
             {
                 try
                 {
-                    var block = GifBlock.ReadAsync(stream, controlExtensions);
+                    var block = GifBlock.Read(stream, controlExtensions);
 
                     if (block.Kind == GifBlockKind.GraphicRendering)
                         controlExtensions = new List<GifExtension>();

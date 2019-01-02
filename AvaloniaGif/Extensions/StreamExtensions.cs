@@ -7,18 +7,6 @@ namespace AvaloniaGif.Extensions
 {
     static class StreamExtensions
     {
-        public static async Task ReadAllAsync(this Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            int totalRead = 0;
-            while (totalRead < count)
-            {
-                int n = await stream.ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken);
-                if (n == 0)
-                    throw new EndOfStreamException();
-                totalRead += n;
-            }
-        }
-
         public static void ReadAll(this Stream stream, byte[] buffer, int offset, int count)
         {
             int totalRead = 0;
@@ -30,16 +18,7 @@ namespace AvaloniaGif.Extensions
                 totalRead += n;
             }
         }
-
-        public static async Task<int> ReadByteAsync(this Stream stream, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var buffer = new byte[1];
-            int n = await stream.ReadAsync(buffer, 0, 1, cancellationToken);
-            if (n == 0)
-                return -1;
-            return buffer[0];
-        }
- 
+         
         public static async Task CopyToAsync(this Stream source, Stream destination, IProgress<long> progress, int bufferSize = 81920, CancellationToken cancellationToken = default(CancellationToken))
         {
             byte[] buffer = new byte[bufferSize];

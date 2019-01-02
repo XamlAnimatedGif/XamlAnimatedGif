@@ -12,14 +12,14 @@ namespace AvaloniaGif.Decoding
         {
         }
 
-        internal static GifImageData ReadAsync(Stream stream)
+        internal static GifImageData Read(Stream stream)
         {
             var imgData = new GifImageData();
-            imgData.ReadInternalAsync(stream);
+            imgData.ReadInternal(stream);
             return imgData;
         }
 
-        private void ReadInternalAsync(Stream stream)
+        private void ReadInternal(Stream stream)
         {
             LzwMinimumCodeSize = (byte)stream.ReadByte();
             CompressedDataStartOffset = stream.Position;

@@ -20,14 +20,14 @@ namespace AvaloniaGif.Decoding
         {
         }
 
-        internal static GifImageDescriptor ReadAsync(Stream stream)
+        internal static GifImageDescriptor Read(Stream stream)
         {
             var descriptor = new GifImageDescriptor();
-            descriptor.ReadInternalAsync(stream);
+            descriptor.ReadInternal(stream);
             return descriptor;
         }
 
-        private void ReadInternalAsync(Stream stream)
+        private void ReadInternal(Stream stream)
         {
             byte[] bytes = new byte[9];
             stream.ReadAll(bytes, 0, bytes.Length);

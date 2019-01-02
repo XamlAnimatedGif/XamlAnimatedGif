@@ -27,11 +27,11 @@ namespace AvaloniaGif.Decoding
         internal static GifApplicationExtension Read(Stream stream)
         {
             var ext = new GifApplicationExtension();
-             ext.ReadInternalAsync(stream);
+             ext.ReadInternal(stream);
             return ext;
         }
 
-        private void ReadInternalAsync(Stream stream)
+        private void ReadInternal(Stream stream)
         {
             // Note: at this point, the label (0xFF) has already been read
 

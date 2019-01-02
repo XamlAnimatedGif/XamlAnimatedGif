@@ -8,7 +8,7 @@ namespace AvaloniaGif.Decoding
     {
         internal const int ExtensionIntroducer = 0x21;
 
-        internal new static GifExtension ReadAsync(Stream stream, IEnumerable<GifExtension> controlExtensions)
+        internal new static GifExtension Read(Stream stream, IEnumerable<GifExtension> controlExtensions)
         {
             // Note: at this point, the Extension Introducer (0x21) has already been read
 
@@ -18,11 +18,11 @@ namespace AvaloniaGif.Decoding
             switch (label)
             {
                 case GifGraphicControlExtension.ExtensionLabel:
-                    return GifGraphicControlExtension.ReadAsync(stream);
+                    return GifGraphicControlExtension.Read(stream);
                 case GifCommentExtension.ExtensionLabel:
-                    return GifCommentExtension.ReadAsync(stream);
+                    return GifCommentExtension.Read(stream);
                 case GifPlainTextExtension.ExtensionLabel:
-                    return GifPlainTextExtension.ReadAsync(stream, controlExtensions);
+                    return GifPlainTextExtension.Read(stream, controlExtensions);
                 case GifApplicationExtension.ExtensionLabel:
                     return GifApplicationExtension.Read(stream);
                 default:

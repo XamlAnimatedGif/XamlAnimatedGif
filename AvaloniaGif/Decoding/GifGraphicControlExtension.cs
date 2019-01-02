@@ -27,14 +27,14 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.Control; }
         }
 
-        internal static GifGraphicControlExtension ReadAsync(Stream stream)
+        internal static GifGraphicControlExtension Read(Stream stream)
         {
             var ext = new GifGraphicControlExtension();
-            ext.ReadInternalAsync(stream);
+            ext.ReadInternal(stream);
             return ext;
         }
 
-        private void ReadInternalAsync(Stream stream)
+        private void ReadInternal(Stream stream)
         {
             // Note: at this point, the label (0xF9) has already been read
 

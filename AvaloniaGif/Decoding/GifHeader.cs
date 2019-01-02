@@ -18,14 +18,14 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.Other; }
         }
 
-        internal static GifHeader ReadAsync(Stream stream)
+        internal static GifHeader Read(Stream stream)
         {
             var header = new GifHeader();
-            header.ReadInternalAsync(stream);
+            header.ReadInternal(stream);
             return header;
         }
 
-        private void ReadInternalAsync(Stream stream)
+        private void ReadInternal(Stream stream)
         {
             Signature = GifHelpers.ReadString(stream, 3);
             if (Signature != "GIF")
@@ -33,7 +33,7 @@ namespace AvaloniaGif.Decoding
             Version = GifHelpers.ReadString(stream, 3);
             if (Version != "87a" && Version != "89a")
                 throw GifHelpers.UnsupportedVersionException(Version);
-            LogicalScreenDescriptor = GifLogicalScreenDescriptor.ReadAsync(stream);
+            LogicalScreenDescriptor = GifLogicalScreenDescriptor.Read(stream);
         }
     }
 }

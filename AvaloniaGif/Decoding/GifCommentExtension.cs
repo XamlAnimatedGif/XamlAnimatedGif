@@ -18,14 +18,14 @@ namespace AvaloniaGif.Decoding
             get { return GifBlockKind.SpecialPurpose; }
         }
 
-        internal static GifCommentExtension ReadAsync(Stream stream)
+        internal static GifCommentExtension Read(Stream stream)
         {
             var comment = new GifCommentExtension();
-            comment.ReadInternalAsync(stream);
+            comment.ReadInternal(stream);
             return comment;
         }
 
-        private void ReadInternalAsync(Stream stream)
+        private void ReadInternal(Stream stream)
         {
             // Note: at this point, the label (0xFE) has already been read
 

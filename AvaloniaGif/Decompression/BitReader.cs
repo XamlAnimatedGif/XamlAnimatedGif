@@ -1,4 +1,6 @@
-﻿namespace AvaloniaGif.Decompression
+﻿using System;
+
+namespace AvaloniaGif.Decompression
 {
     class BitReader
     {
@@ -15,17 +17,15 @@
         public int ReadBits(int bitCount)
         {
             // The following code assumes it's running on a little-endian architecture.
-            // It's probably safe to assume it will always be the case, because:
-            // - Windows only supports little-endian architectures: x86/x64 and ARM (which supports
-            //   both endiannesses, but Windows on ARM is always in little-endian mode)
-            // - No platforms other than Windows support XAML applications
-            // If the situation changes, this code will have to be updated.
+
+            if (!BitConverter.IsLittleEndian)
+                throw new InvalidProgramException("GIF BitReader does not support Big-Endian architectures.");
 
             if (_bytePosition == -1)
             {
                 _bytePosition = 0;
                 _bitPosition = 0;
-                _currentValue = ReadInt32(); //BitConverter.ToInt32(_buffer, _bytePosition);
+                _currentValue = ReadInt32();
             }
             else if (bitCount > 32 - _bitPosition)
             {
@@ -43,8 +43,8 @@
 
         private int ReadInt32()
         {
-            int value = 0;
-            for (int i = 0; i < 4; i++)
+            var value = 0;
+            for (var i = 0; i < 4; i++)
             {
                 if (_bytePosition + i >= _buffer.Length)
                     break;
