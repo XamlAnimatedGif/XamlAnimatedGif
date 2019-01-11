@@ -118,8 +118,7 @@ namespace AvaloniaGif
         {
 #if TEST
             var k = System.Diagnostics.Stopwatch.StartNew();
-            var tmp = new AvaloniaGif.NewDecoder.GifStream(stream);
-            var dec = new AvaloniaGif.NewDecoder.GifDecoder(tmp);
+            var dec = new AvaloniaGif.NewDecoder.GifDecoder(stream);
             var l = k.Elapsed;
             k.Stop();
 
