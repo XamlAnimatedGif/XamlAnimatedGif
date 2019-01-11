@@ -14,18 +14,25 @@ namespace AvaloniaGif.NewDecoder
         private GifColor _bgColor;
         private Stream _fileStream;
         private GifHeader _gifHeader;
-        private static Memory<GifColor> _globalColorTable = new Memory<GifColor>(new GifColor[256]);
+        private static Memory<GifColor> _globalColorTable
+            = new Memory<GifColor>(new GifColor[256]);
+
+        private static ReadOnlyMemory<byte> GIFMagic
+                     = Encoding.ASCII.GetBytes("GIF").AsMemory();
+        private static ReadOnlyMemory<byte> G87AMagic
+                     = Encoding.ASCII.GetBytes("87a").AsMemory();
+        private static ReadOnlyMemory<byte> G89AMagic
+                     = Encoding.ASCII.GetBytes("89a").AsMemory();
 
         public GifHeader Header => _gifHeader;
 
-        public void Start()
-        {
-            ReadHeader();
-        }
+        internal Stream FileStream => _fileStream;
 
         public GifStream(Stream fileStream)
         {
             _fileStream = fileStream;
+
+            ReadHeader();
         }
 
         /// <summary>
@@ -33,29 +40,27 @@ namespace AvaloniaGif.NewDecoder
         /// </summary>
         private void ReadHeader()
         {
-            var GIFMagic = Encoding.ASCII.GetBytes("GIF").AsSpan();
-            var G87AMagic = Encoding.ASCII.GetBytes("87a").AsSpan();
-            var G89AMagic = Encoding.ASCII.GetBytes("89a").AsSpan();
 
-            var rentedBuf = ArrayPool<byte>.Shared.Rent(1024);
-            
-            var val = new Span<byte>(rentedBuf, 0, 3);
+            Span<byte> val = stackalloc byte[1024];
 
-            _fileStream.Read(val);
+            var triplet = val.Slice(0, 3);
 
-            if (!val.SequenceEqual(GIFMagic))
+            _fileStream.Read(triplet);
+
+            if (!triplet.SequenceEqual(GIFMagic.Span))
                 throw new InvalidFormatException("Invalid GIF Header");
 
-            _fileStream.Read(val);
+            _fileStream.Read(triplet);
 
-            if (!(val.SequenceEqual(G87AMagic) | val.SequenceEqual(G89AMagic)))
-                throw new InvalidFormatException("Unsupported GIF Version: " + Encoding.ASCII.GetString(val));
+            if (!(triplet.SequenceEqual(G87AMagic.Span) | triplet.SequenceEqual(G89AMagic.Span)))
+                throw new InvalidFormatException("Unsupported GIF Version: " +
+                     Encoding.ASCII.GetString(triplet));
 
-            ReadLogicalScreenDescriptor(ref rentedBuf);
+            ReadLogicalScreenDescriptor(val);
 
             if (_globalColorTableUsed)
             {
-                ReadColorTable(ref _fileStream, ref rentedBuf, _globalColorTable.Span, _gctSize);
+                ReadColorTable(ref _fileStream, val, _globalColorTable.Span, _gctSize);
                 _bgColor = _globalColorTable.Span[_bgIndex];
             }
 
@@ -66,21 +71,20 @@ namespace AvaloniaGif.NewDecoder
                 HasGlobalColorTable = _globalColorTableUsed,
                 GlobalColorTable = _globalColorTable,
                 GlobalColorTableSize = _gctSize,
-                BackgroundColor = _bgColor
+                BackgroundColor = _bgColor,
+                HeaderSize = _fileStream.Position
             };
 
-
-            ArrayPool<byte>.Shared.Return(rentedBuf);
         }
 
         /// <summary>
         /// Parses colors from file stream to target color table.
         /// </summary> 
-        private static bool ReadColorTable(ref Stream stream, ref byte[] rentedBuf,
+        private static bool ReadColorTable(ref Stream stream, Span<byte> rentedBuf,
                                            Span<GifColor> targetColorTable, int ncolors)
         {
             var nbytes = 3 * ncolors;
-            var rawBufSpan = rentedBuf.AsSpan().Slice(0, nbytes);
+            var rawBufSpan = rentedBuf.Slice(0, nbytes);
             var n = stream.Read(rawBufSpan);
 
             if (n < nbytes)
@@ -103,19 +107,19 @@ namespace AvaloniaGif.NewDecoder
         /// <summary>
         /// Parses screen and other GIF descriptors. 
         /// </summary>
-        private void ReadLogicalScreenDescriptor(ref byte[] tempBuf)
+        private void ReadLogicalScreenDescriptor(Span<byte> tempBuf)
         {
-            _width = _fileStream.ReadUInt16A(ref tempBuf);
-            _height = _fileStream.ReadUInt16A(ref tempBuf);
+            _width = _fileStream.ReadUShortS(tempBuf);
+            _height = _fileStream.ReadUShortS(tempBuf);
 
-            var packed = _fileStream.ReadByteA(ref tempBuf);
+            var packed = _fileStream.ReadByteS(tempBuf);
 
             _globalColorTableUsed = (packed & 0x80) != 0; // 1   : global color table flag
                                                           // 2-4 : color resolution - ignore
                                                           // 5   : gct sort flag - ignore
 
             _gctSize = 2 << (packed & 7);                 // 6-8 : gct size
-            _bgIndex = _fileStream.ReadByteA(ref tempBuf);
+            _bgIndex = _fileStream.ReadByteS(tempBuf);
 
             _fileStream.Skip(1);                          // pixel aspect ratio - ignore
         }

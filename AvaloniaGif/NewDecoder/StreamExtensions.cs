@@ -10,52 +10,61 @@ namespace AvaloniaGif.NewDecoder
     internal static class StreamExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+        public static ushort SpanToShort(Span<byte> b) 
+                  => (ushort)(b[0] | (b[1] << 8));
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Skip(this Stream stream, long count)
         {
             stream.Position += count;
         }
 
         /// <summary>
-        /// Read a <see cref="byte"/> from stream while advancing the position.
+        /// Read a Gif block from stream while advancing the position.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte ReadByte(this Stream stream)
+        public static int ReadBlock(this Stream stream, Span<byte> tempBuf)
         {
-            var tmpBuf = ArrayPool<byte>.Shared.Rent(2);
-            var val = new Span<byte>(tmpBuf, 0, 2);
+            Span<byte> lenR = stackalloc byte[1];
 
-            stream.Read(val);
-            var finalVal = stream.ReadByteA(ref tmpBuf);
+            stream.Read(lenR);
 
-            ArrayPool<byte>.Shared.Return(tmpBuf);
-            return finalVal;
+            var blockLength = (int)lenR[0];
+
+            if (blockLength > 0)
+            {
+                stream.Read(tempBuf.Slice(0, blockLength));
+            }
+
+            return blockLength;
         }
 
-        /// <summary>
-        /// Read a <see cref="byte"/> from stream by providing a <see cref="ArrayPool{T}"/> rented buffer.
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte ReadByteA(this Stream stream, ref byte[] tmpBuf)
+        public static void SkipBlocks(this Stream stream)
         {
-            var val = new Span<byte>(tmpBuf, 0, 1);
-            stream.Read(val);
-            var finalVal = val[0];
-            return finalVal;
+            Span<byte> lenR = stackalloc byte[1];
+            int blockLength;
+            do
+            {
+                stream.Read(lenR);
+                blockLength = (int)lenR[0];
+                stream.Position += blockLength;
+            } while (blockLength > 0);
         }
 
         /// <summary>
         /// Read a <see cref="ushort"/> from stream while advancing the position.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt16 ReadUInt16(this Stream stream)
+        public static ushort ReadUShort(this Stream stream)
         {
-            var tmpBuf = ArrayPool<byte>.Shared.Rent(2);
-            var val = new Span<byte>(tmpBuf, 0, 2);
+            Span<byte> val = stackalloc byte[2];
 
             stream.Read(val);
-            var finalVal = stream.ReadUInt16A(ref tmpBuf);
+            var finalVal = stream.ReadUShortS(val);
 
-            ArrayPool<byte>.Shared.Return(tmpBuf);
             return finalVal;
         }
 
@@ -64,11 +73,36 @@ namespace AvaloniaGif.NewDecoder
         /// Read a <see cref="ushort"/> from stream by providing a <see cref="ArrayPool{T}"/> rented buffer.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt16 ReadUInt16A(this Stream stream, ref byte[] tmpBuf)
+        public static ushort ReadUShortS(this Stream stream, Span<byte> tempBuf)
         {
-            var val = new Span<byte>(tmpBuf, 0, 2);
+            var val = tempBuf.Slice(0, 2);
             stream.Read(val);
-            var finalVal = (UInt16)(val[0] | (val[1] << 8));
+            return SpanToShort(val);
+        }
+
+        /// <summary>
+        /// Read a <see cref="ushort"/> from stream while advancing the position.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte ReadByte(this Stream stream)
+        {
+            Span<byte> val = stackalloc byte[1];
+
+            stream.Read(val);
+            var finalVal = stream.ReadByteS(val);
+
+            return finalVal;
+        }
+
+        /// <summary>
+        /// Read a <see cref="ushort"/> from stream by providing a <see cref="ArrayPool{T}"/> rented buffer.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte ReadByteS(this Stream stream, Span<byte> tempBuf)
+        {
+            var val = tempBuf.Slice(0, 1);
+            stream.Read(val);
+            var finalVal = val[0];
             return finalVal;
         }
     }

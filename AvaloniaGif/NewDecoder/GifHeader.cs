@@ -1,7 +1,9 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace AvaloniaGif.NewDecoder
 {
+    [StructLayout(LayoutKind.Auto)]
     public struct GifHeader
     {
         public int Width;
@@ -10,5 +12,6 @@ namespace AvaloniaGif.NewDecoder
         public int GlobalColorTableSize;
         public Memory<GifColor> GlobalColorTable;
         public GifColor BackgroundColor;
+        public long HeaderSize;
     }
 }

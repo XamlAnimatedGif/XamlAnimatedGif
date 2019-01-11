@@ -117,12 +117,19 @@ namespace AvaloniaGif
         private void Initialize(Stream stream)
         {
 #if TEST
+            var k = System.Diagnostics.Stopwatch.StartNew();
             var tmp = new AvaloniaGif.NewDecoder.GifStream(stream);
-            tmp.Start();
+            var dec = new AvaloniaGif.NewDecoder.GifDecoder(tmp);
+            var l = k.Elapsed;
+            k.Stop();
+
             stream.Position = 0;
 
 #endif
+            k.Restart();
             _gifRenderer = new GifRenderer(stream);
+            var z = k.Elapsed;
+            k.Stop();
             _bgWorker = new GifBackgroundWorker(_gifRenderer, _gifRenderer.GifFrameTimes, cts.Token);
             _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
             _bitmap = _gifRenderer.CreateBitmapForRender();
