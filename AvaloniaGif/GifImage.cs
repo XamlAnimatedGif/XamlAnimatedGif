@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define TEST
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -105,16 +107,7 @@ namespace AvaloniaGif
 
             if (!stream.CanSeek) throw new InvalidDataException("Stream must be seekable.");
 
-            var streamMagicNum = new byte[4];
-            await stream.ReadAsync(streamMagicNum, 0, streamMagicNum.Length);
-            stream.Position = 0;
-
-            var isGIFstream = Enumerable.SequenceEqual(streamMagicNum, GIFMagicNumber);
-
-            if (isGIFstream)
-                Initialize(stream);
-            else
-                throw new InvalidDataException("File or stream is not a GIF file.");
+            Initialize(stream);
 
             setSourceMutex.ReleaseMutex();
         }
@@ -123,6 +116,12 @@ namespace AvaloniaGif
 
         private void Initialize(Stream stream)
         {
+#if TEST
+            var tmp = new AvaloniaGif.NewDecoder.GifStream(stream);
+            tmp.Start();
+            stream.Position = 0;
+
+#endif
             _gifRenderer = new GifRenderer(stream);
             _bgWorker = new GifBackgroundWorker(_gifRenderer, _gifRenderer.GifFrameTimes, cts.Token);
             _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
@@ -132,7 +131,7 @@ namespace AvaloniaGif
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
             setSourceMutex.WaitOne();
-            
+
             var bgwState = _bgWorker?.GetState();
 
             if (bgwState == GifBackgroundWorker.State.Start | bgwState == GifBackgroundWorker.State.Running & _bitmap != null)
