@@ -114,36 +114,56 @@ namespace AvaloniaGif
 
         readonly Mutex setSourceMutex = new Mutex();
 
+        AvaloniaGif.NewDecoder.GifDecoder newdec;
+
         private void Initialize(Stream stream)
         {
-#if TEST
-            var k = System.Diagnostics.Stopwatch.StartNew();
-            var dec = new AvaloniaGif.NewDecoder.GifDecoder(stream);
-            var l = k.Elapsed;
-            k.Stop();
-
+            setSourceMutex.WaitOne();
             stream.Position = 0;
 
+#if TEST
+            // var k = System.Diagnostics.Stopwatch.StartNew();
+            this.newdec = new AvaloniaGif.NewDecoder.GifDecoder(stream);
+            // var l = k.Elapsed;
+            // k.Stop();
+
+            // stream.Position = 0;
+
 #endif
-            k.Restart();
-            _gifRenderer = new GifRenderer(stream);
-            var z = k.Elapsed;
-            k.Stop();
-            _bgWorker = new GifBackgroundWorker(_gifRenderer, _gifRenderer.GifFrameTimes, cts.Token);
-            _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
-            _bitmap = _gifRenderer.CreateBitmapForRender();
+            // k.Restart();
+            // _gifRenderer = new GifRenderer(stream);
+            // var z = k.Elapsed;
+            // k.Stop();
+            // _bgWorker = new GifBackgroundWorker(_gifRenderer, _gifRenderer.GifFrameTimes, cts.Token);
+            // _bgWorker.SendCommand(GifBackgroundWorker.Command.Stop);
+
+            if (_bitmap != null) _bitmap.Dispose();
+
+            _bitmap = newdec.CreateBitmapForRender();
+            setSourceMutex.ReleaseMutex();
         }
+
+        int skipframe;
 
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
             setSourceMutex.WaitOne();
 
-            var bgwState = _bgWorker?.GetState();
+            // var bgwState = _bgWorker?.GetState();
 
-            if (bgwState == GifBackgroundWorker.State.Start | bgwState == GifBackgroundWorker.State.Running & _bitmap != null)
+            // if (bgwState == GifBackgroundWorker.State.Start | bgwState == GifBackgroundWorker.State.Running & _bitmap != null)
+            // {
+
+            //     // _gifRenderer.TransferScratchToBitmap(lockbitmap);
+
+
+            if (_bitmap != null)
             {
                 using (var lockbitmap = _bitmap.Lock())
-                    _gifRenderer.TransferScratchToBitmap(lockbitmap);
+                {
+                    newdec.DecodeFrame(1);
+                    newdec.WriteBackBufToFB(lockbitmap);
+                }
             }
 
             if (_bitmap != null)
@@ -213,10 +233,10 @@ namespace AvaloniaGif
         {
             var source = _bitmap;
 
-            if (!(_gifRenderer != null & _bitmap != null)) return;
+            if (_bitmap == null | newdec == null) return;
 
             viewPort = new Rect(Bounds.Size);
-            sourceSize = new Size(source.PixelSize.Width, source.PixelSize.Height);
+            sourceSize = new Size(_bitmap.PixelSize.Width, _bitmap.PixelSize.Height);
             scale = Stretch.CalculateScaling(Bounds.Size, sourceSize);
             scaledSize = sourceSize * scale;
             destRect = viewPort

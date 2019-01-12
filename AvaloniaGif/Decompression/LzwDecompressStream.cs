@@ -133,7 +133,9 @@ namespace AvaloniaGif.Decompression
                     InitCodeTable();
                     return true;
                 }
+
                 _remainingBytes = CopySequenceToBuffer(sequence.Bytes, buffer, offset, count, ref read);
+                
                 if (_prevCode >= 0)
                 {
                     var prev = _codeTable[_prevCode];
