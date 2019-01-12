@@ -140,7 +140,12 @@ namespace AvaloniaGif
             if (_bitmap != null) _bitmap.Dispose();
 
             _bitmap = newdec.CreateBitmapForRender();
+
+            newdec.RenderFrame(0);
+            newdec.RenderFrame(1);
+
             setSourceMutex.ReleaseMutex();
+
         }
 
         int skipframe;
@@ -161,7 +166,6 @@ namespace AvaloniaGif
             {
                 using (var lockbitmap = _bitmap.Lock())
                 {
-                    newdec.DecodeFrame(1);
                     newdec.WriteBackBufToFB(lockbitmap);
                 }
             }

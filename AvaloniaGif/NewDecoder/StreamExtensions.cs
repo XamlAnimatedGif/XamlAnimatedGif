@@ -1,3 +1,6 @@
+// Licensed under the MIT License.
+// Copyright (C) 2018 Jumar A. Macato, All Rights Reserved.
+
 using System.IO;
 using System;
 using System.Buffers;
@@ -10,9 +13,8 @@ namespace AvaloniaGif.NewDecoder
     internal static class StreamExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-
         public static ushort SpanToShort(Span<byte> b)
-                  => (ushort)(b[0] | (b[1] << 8));
+            => (ushort) (b[0] | (b[1] << 8));
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,11 +29,9 @@ namespace AvaloniaGif.NewDecoder
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ReadBlock(this Stream stream, Span<byte> tempBuf)
         {
-            Span<byte> lenR = stackalloc byte[1];
+            stream.Read(tempBuf.Slice(0, 1));
 
-            stream.Read(lenR);
-
-            var blockLength = (int)lenR[0];
+            var blockLength = (int) tempBuf[0];
 
             if (blockLength > 0)
                 stream.Read(tempBuf.Slice(0, blockLength));
@@ -43,14 +43,13 @@ namespace AvaloniaGif.NewDecoder
         /// Skips GIF blocks until it encounters an empty block.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void SkipBlocks(this Stream stream)
+        public static void SkipBlocks(this Stream stream, Span<byte> tempBuf)
         {
-            Span<byte> lenR = stackalloc byte[1];
             int blockLength;
             do
             {
-                stream.Read(lenR);
-                blockLength = (int)lenR[0];
+                stream.Read(tempBuf.Slice(0, 1));
+                blockLength = (int) tempBuf[0];
                 stream.Position += blockLength;
             } while (blockLength > 0);
         }

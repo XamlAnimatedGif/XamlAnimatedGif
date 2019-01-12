@@ -1,3 +1,6 @@
+// Licensed under the MIT License.
+// Copyright (C) 2018 Jumar A. Macato, All Rights Reserved.
+
 using System;
 using System.Runtime.InteropServices;
 
@@ -11,7 +14,7 @@ namespace AvaloniaGif.NewDecoder
         public bool HasGlobalColorTable;
         public int GlobalColorTableSize;
         public Memory<GifColor> GlobalColorTable;
-        public GifColor BackgroundColor;
+        public int BackgroundColorIndex;
         public long HeaderSize;
     }
 }

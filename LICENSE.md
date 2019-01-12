@@ -1,9 +1,9 @@
 MIT License
 
+Copyright (c) 2018 Jumar Macato
 
 Copyright (c) 2014 Thomas Levesque
-
-Copyright (c) 2018 Jumar Macato
+Copyright (C) 2015 The Gifplayer Authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
