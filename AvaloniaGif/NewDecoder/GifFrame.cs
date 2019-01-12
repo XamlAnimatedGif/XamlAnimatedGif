@@ -7,12 +7,12 @@ namespace AvaloniaGif.NewDecoder
 {
     public class GifFrame
     {
-        internal bool _transparency, _interlaced, _lctUsed;
-        internal byte _transparentColorIndex;
-        internal int _lzwMinCodeSize, _lctSize, _frameX, _frameY, _frameW, _frameH;
-        internal long _lzwStreamPos;
-        internal TimeSpan _frameDelay;
-        internal FrameDisposal _disposalMethod;
-        internal Memory<GifColor>? _localColorTable;
+        public bool HasTransparency, _interlaced, _lctUsed;
+        public byte _transparentColorIndex;
+        public int _lzwMinCodeSize, _lctSize, _frameX, _frameY, _frameW, _frameH;
+        public long _lzwStreamPos;
+        public TimeSpan _frameDelay;
+        public FrameDisposal _disposalMethod;
+        public Memory<GifColor>? _localColorTable;
     }
 }

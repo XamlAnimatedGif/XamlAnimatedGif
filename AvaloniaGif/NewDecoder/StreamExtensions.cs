@@ -14,7 +14,7 @@ namespace AvaloniaGif.NewDecoder
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort SpanToShort(Span<byte> b)
-            => (ushort) (b[0] | (b[1] << 8));
+            => (ushort)(b[0] | (b[1] << 8));
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -31,7 +31,7 @@ namespace AvaloniaGif.NewDecoder
         {
             stream.Read(tempBuf.Slice(0, 1));
 
-            var blockLength = (int) tempBuf[0];
+            var blockLength = (int)tempBuf[0];
 
             if (blockLength > 0)
                 stream.Read(tempBuf.Slice(0, blockLength));
@@ -49,8 +49,12 @@ namespace AvaloniaGif.NewDecoder
             do
             {
                 stream.Read(tempBuf.Slice(0, 1));
-                blockLength = (int) tempBuf[0];
+                blockLength = (int)tempBuf[0];
                 stream.Position += blockLength;
+                
+                if (stream.Position >= stream.Length)
+                    throw new InvalidProgramException("Reach the end of the filestream without trailer block.");
+
             } while (blockLength > 0);
         }
 

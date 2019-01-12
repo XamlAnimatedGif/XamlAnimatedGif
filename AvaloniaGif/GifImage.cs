@@ -121,7 +121,8 @@ namespace AvaloniaGif
             setSourceMutex.WaitOne();
             stream.Position = 0;
 
-#if TEST
+            if(newdec != null) newdec.Dispose();
+            
             // var k = System.Diagnostics.Stopwatch.StartNew();
             this.newdec = new AvaloniaGif.NewDecoder.GifDecoder(stream);
             // var l = k.Elapsed;
@@ -129,7 +130,6 @@ namespace AvaloniaGif
 
             // stream.Position = 0;
 
-#endif
             // k.Restart();
             // _gifRenderer = new GifRenderer(stream);
             // var z = k.Elapsed;
@@ -166,7 +166,7 @@ namespace AvaloniaGif
             {
                 using (var lockbitmap = _bitmap.Lock())
                 {
-                    newdec.WriteBackBufToFB(lockbitmap);
+                    newdec.WriteBackBufToFb(lockbitmap);
                 }
             }
 
