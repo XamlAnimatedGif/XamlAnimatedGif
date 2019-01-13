@@ -3,14 +3,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using AvaloniaGif.NewDecoder;
 
 namespace AvaloniaGif
 {
     internal class GifBackgroundWorker
     {
-        private readonly GifRenderer _gifRenderer;
+        private GifDecoder _gifDecode;
+
         private readonly CancellationToken _token;
-        private readonly Memory<TimeSpan> _frameTimes;
         private int _currentIndex = -1;
         private readonly int _frameCount;
         private Task _bgThread;
@@ -19,7 +20,6 @@ namespace AvaloniaGif
         private readonly Mutex _stateMutex = new Mutex();
         private readonly ConcurrentQueue<Command> _cmdQueue = new ConcurrentQueue<Command>();
         private volatile bool _shouldStop;
-        
         private static readonly Stopwatch _timer = Stopwatch.StartNew();
 
         public enum Command
@@ -40,16 +40,10 @@ namespace AvaloniaGif
             Stop
         }
 
-        public GifBackgroundWorker(
-            GifRenderer gifRenderer,
-            Memory<TimeSpan> frameTimes,
-            CancellationToken cts) 
+        public GifBackgroundWorker(GifDecoder gifDecode, CancellationToken token)
         {
-            _gifRenderer = gifRenderer;
-            _token = cts;
-            _frameTimes = frameTimes;
-            _frameCount = _gifRenderer.FrameCount;
-
+            _gifDecode = gifDecode;
+            _token = token;
             _bgThread = Task.Factory.StartNew(MainLoop, _token, TaskCreationOptions.LongRunning,
                 TaskScheduler.Current);
         }
@@ -86,11 +80,11 @@ namespace AvaloniaGif
 
                         case Command.Start:
                             SetState(State.Start);
-                            break; 
+                            break;
                     }
 
                 if (_state == State.Null) continue;
-                
+
                 switch (_state)
                 {
                     case State.Start:
@@ -115,7 +109,7 @@ namespace AvaloniaGif
         {
             SetState(State.Stop);
             _shouldStop = true;
-            _gifRenderer.Dispose();
+            _gifDecode.Dispose();
         }
 
         private void ShowFirstFrame()
@@ -123,22 +117,22 @@ namespace AvaloniaGif
             if (GetState() == State.Stop)
                 return;
 
-            _gifRenderer.RenderFrame(0);
+            _gifDecode.RenderFrame(0);
         }
 
         private void WaitAndRenderNext()
         {
-            _currentIndex = (_currentIndex + 1) % _frameCount;
-            var targetDelay = _frameTimes.Span[_currentIndex];
-            
+            _currentIndex = (_currentIndex + 1) % _gifDecode.Frames.Count;
+            var targetDelay = _gifDecode.Frames[_currentIndex]._frameDelay;
+
             var t1 = _timer.Elapsed;
 
-            _gifRenderer.RenderFrame(_currentIndex);
+            _gifDecode.RenderFrame(_currentIndex);
 
             var t2 = _timer.Elapsed;
             var delta = t2 - t1;
-            
-            if(delta > targetDelay) return;
+
+            if (delta > targetDelay) return;
             Thread.Sleep(targetDelay - delta);
         }
 

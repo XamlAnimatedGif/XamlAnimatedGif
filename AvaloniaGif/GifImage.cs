@@ -33,8 +33,6 @@ namespace AvaloniaGif
 
         private GifBackgroundWorker _bgWorker;
 
-        private static readonly byte[] GIFMagicNumber = new byte[] { 0x47, 0x49, 0x46, 0x38 };
-
         static GifImage()
         {
             AffectsRender<GifImage>(SourceProperty, StretchProperty);
@@ -67,7 +65,9 @@ namespace AvaloniaGif
             this.GetPropertyChangedObservable(SourceProperty).Subscribe(SetRenderBounds);
             this.GetPropertyChangedObservable(BoundsProperty).Subscribe(SetRenderBounds);
             this.GetPropertyChangedObservable(StretchProperty).Subscribe(SetRenderBounds);
-            this.GetPropertyChangedObservable(RenderOptions.BitmapInterpolationModeProperty).Subscribe(SetRenderBounds);
+            this.GetPropertyChangedObservable(RenderOptions.BitmapInterpolationModeProperty)
+                                            .Subscribe(SetRenderBounds);
+            
         }
 
         private void SourceChanged(AvaloniaPropertyChangedEventArgs e)
@@ -114,38 +114,22 @@ namespace AvaloniaGif
 
         readonly Mutex setSourceMutex = new Mutex();
 
-        AvaloniaGif.NewDecoder.GifDecoder newdec;
+        AvaloniaGif.NewDecoder.GifDecoder _gifDecode;
 
         private void Initialize(Stream stream)
         {
             setSourceMutex.WaitOne();
             stream.Position = 0;
 
-            if(newdec != null) newdec.Dispose();
-            
-            // var k = System.Diagnostics.Stopwatch.StartNew();
-            this.newdec = new AvaloniaGif.NewDecoder.GifDecoder(stream);
-            // var l = k.Elapsed;
-            // k.Stop();
-
-            // stream.Position = 0;
-
-            // k.Restart();
-            // _gifRenderer = new GifRenderer(stream);
-            // var z = k.Elapsed;
-            // k.Stop();
-            // _bgWorker = new GifBackgroundWorker(_gifRenderer, _gifRenderer.GifFrameTimes, cts.Token);
-            // _bgWorker.SendCommand(GifBackgroundWorker.Command.Stop);
-
             if (_bitmap != null) _bitmap.Dispose();
+            if (_bgWorker != null) _bgWorker.SendCommand(GifBackgroundWorker.Command.Stop);
+        
+            _gifDecode = new AvaloniaGif.NewDecoder.GifDecoder(stream);
+            _bgWorker = new GifBackgroundWorker(_gifDecode, cts.Token);
+            _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
 
-            _bitmap = newdec.CreateBitmapForRender();
-
-            newdec.RenderFrame(0);
-            newdec.RenderFrame(1);
-
+            _bitmap = _gifDecode.CreateBitmapForRender();
             setSourceMutex.ReleaseMutex();
-
         }
 
         int skipframe;
@@ -166,7 +150,7 @@ namespace AvaloniaGif
             {
                 using (var lockbitmap = _bitmap.Lock())
                 {
-                    newdec.WriteBackBufToFb(lockbitmap);
+                    _gifDecode.WriteBackBufToFb(lockbitmap);
                 }
             }
 
@@ -237,7 +221,7 @@ namespace AvaloniaGif
         {
             var source = _bitmap;
 
-            if (_bitmap == null | newdec == null) return;
+            if (_bitmap == null | _gifDecode == null) return;
 
             viewPort = new Rect(Bounds.Size);
             sourceSize = new Size(_bitmap.PixelSize.Width, _bitmap.PixelSize.Height);

@@ -6,8 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace AvaloniaGif.NewDecoder
 {
-    [StructLayout(LayoutKind.Auto)]
-    public struct GifHeader
+    public class GifHeader
     {
         public int Width;
         public int Height;

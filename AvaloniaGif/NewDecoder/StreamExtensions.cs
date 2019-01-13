@@ -43,15 +43,17 @@ namespace AvaloniaGif.NewDecoder
         /// Skips GIF blocks until it encounters an empty block.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void SkipBlocks(this Stream stream, Span<byte> tempBuf)
+        public static void SkipBlocks(this Stream stream)
         {
+            Span<byte> val = stackalloc byte[1];
             int blockLength;
             do
             {
-                stream.Read(tempBuf.Slice(0, 1));
-                blockLength = (int)tempBuf[0];
+                stream.Read(val);
+                blockLength = (int)val[0];
                 stream.Position += blockLength;
-                
+
+                // Guard against infinite loop.
                 if (stream.Position >= stream.Length)
                     throw new InvalidProgramException("Reach the end of the filestream without trailer block.");
 
@@ -62,9 +64,9 @@ namespace AvaloniaGif.NewDecoder
         /// Read a <see cref="ushort"/> from stream by providing a temporary buffer.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ushort ReadUShortS(this Stream stream, Span<byte> tempBuf)
+        public static ushort ReadUShortS(this Stream stream)
         {
-            var val = tempBuf.Slice(0, 2);
+            Span<byte> val = stackalloc byte[2];
             stream.Read(val);
             return SpanToShort(val);
         }
@@ -73,9 +75,9 @@ namespace AvaloniaGif.NewDecoder
         /// Read a <see cref="ushort"/> from stream by providing a temporary buffer.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte ReadByteS(this Stream stream, Span<byte> tempBuf)
+        public static byte ReadByteS(this Stream stream)
         {
-            var val = tempBuf.Slice(0, 1);
+            Span<byte> val = stackalloc byte[1];
             stream.Read(val);
             var finalVal = val[0];
             return finalVal;
