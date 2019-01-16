@@ -9,11 +9,12 @@ namespace AvaloniaGif.NewDecoder
     {
         public bool HasTransparency, _interlaced, _lctUsed;
         public byte _transparentColorIndex;
-        public int _lzwMinCodeSize, _lctSize, _frameX, _frameY, _frameW, _frameH;
+        public int _lzwMinCodeSize, _lctSize;
         public long _lzwStreamPos;
         public TimeSpan _frameDelay;
         public FrameDisposal _disposalMethod;
         public Memory<GifColor>? _localColorTable;
         internal bool _doBackup;
+        public Int32Rect _rect;
     }
 }
