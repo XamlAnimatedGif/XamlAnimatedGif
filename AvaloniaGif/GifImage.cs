@@ -136,6 +136,7 @@ namespace AvaloniaGif
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
             setSourceMutex.WaitOne();
+            
             try
             {
                 if (_bitmap != null)
@@ -148,14 +149,11 @@ namespace AvaloniaGif
 
                 if (_bitmap != null)
                     context.DrawImage(_bitmap, 1, sourceRect, destRect, interpolationMode);
-
             }
             finally
             {
-
+                setSourceMutex.ReleaseMutex();
             }
-
-            setSourceMutex.ReleaseMutex();
         }
 
         /// <summary>

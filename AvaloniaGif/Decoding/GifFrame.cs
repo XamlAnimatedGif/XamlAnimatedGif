@@ -13,8 +13,7 @@ namespace AvaloniaGif.Decoding
         public long _lzwStreamPos;
         public TimeSpan _frameDelay;
         public FrameDisposal _disposalMethod;
-        internal GifColor[] _lctBackBuf;
-        public ReadOnlyMemory<GifColor>? _localColorTable;
+        public ulong _localColorTable;
         internal bool _doBackup;
         public Int32Rect _rect;
     }
