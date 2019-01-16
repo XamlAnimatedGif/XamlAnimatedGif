@@ -14,5 +14,6 @@ namespace AvaloniaGif.NewDecoder
         public TimeSpan _frameDelay;
         public FrameDisposal _disposalMethod;
         public Memory<GifColor>? _localColorTable;
+        internal bool _doBackup;
     }
 }
