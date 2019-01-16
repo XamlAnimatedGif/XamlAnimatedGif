@@ -114,7 +114,7 @@ namespace AvaloniaGif
 
         readonly Mutex setSourceMutex = new Mutex();
 
-        AvaloniaGif.NewDecoder.GifDecoder _gifDecode;
+        AvaloniaGif.Decoding.GifDecoder _gifDecode;
 
         private void Initialize(Stream stream)
         {
@@ -124,7 +124,7 @@ namespace AvaloniaGif
             if (_bitmap != null) _bitmap.Dispose();
             if (_bgWorker != null) _bgWorker.SendCommand(GifBackgroundWorker.Command.Stop);
         
-            _gifDecode = new AvaloniaGif.NewDecoder.GifDecoder(stream);
+            _gifDecode = new AvaloniaGif.Decoding.GifDecoder(stream);
             _bgWorker = new GifBackgroundWorker(_gifDecode, cts.Token);
             _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
 

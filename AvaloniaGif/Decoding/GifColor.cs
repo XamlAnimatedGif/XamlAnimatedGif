@@ -1,21 +1,39 @@
+// Licensed under the MIT License.
+// Copyright (C) 2018 Jumar A. Macato, All Rights Reserved.
+
+using System.Runtime.InteropServices;
+
 namespace AvaloniaGif.Decoding
 {
-    internal struct GifColor
+    [StructLayout(LayoutKind.Explicit)]
+    public struct GifColor
     {
-        internal GifColor(byte r, byte g, byte b)
-        {
-            R = r;
-            G = g;
-            B = b;
-        }
+        [FieldOffset(3)]
+        public byte a;
 
-        public byte R { get; }
-        public byte G { get; }
-        public byte B { get; }
+        [FieldOffset(2)]
+        public byte r;
 
-        public override string ToString()
+        [FieldOffset(1)]
+        public byte g;
+
+        [FieldOffset(0)]
+        public byte b;
+
+        /// <summary>
+        /// A struct that represents a ARGB color and is aligned as
+        /// a BGRA bytefield in memory.
+        /// </summary>
+        /// <param name="r">Red</param>
+        /// <param name="g">Green</param>
+        /// <param name="b">Blue</param>
+        /// <param name="a">Alpha</param>
+        public GifColor(byte r, byte g, byte b, byte? a = null)
         {
-            return $"#{R:x2}{G:x2}{B:x2}";
+            this.a = a ?? 255;
+            this.r = r;
+            this.g = g;
+            this.b = b;
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using AvaloniaGif.NewDecoder;
+using AvaloniaGif.Decoding;
 
 namespace AvaloniaGif
 {

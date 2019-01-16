@@ -19,10 +19,10 @@ using System.Text;
 using Avalonia;
 using Avalonia.Platform;
 using Avalonia.Media.Imaging;
-using static AvaloniaGif.NewDecoder.StreamExtensions;
+using static AvaloniaGif.Decoding.StreamExtensions;
 using System.Threading.Tasks;
 
-namespace AvaloniaGif.NewDecoder
+namespace AvaloniaGif.Decoding
 {
     public class GifDecoder : IDisposable
     {

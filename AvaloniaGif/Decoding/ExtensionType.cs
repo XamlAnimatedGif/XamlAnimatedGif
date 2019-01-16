@@ -1,4 +1,4 @@
-namespace AvaloniaGif.NewDecoder
+namespace AvaloniaGif.Decoding
 {
     public enum ExtensionType
     {

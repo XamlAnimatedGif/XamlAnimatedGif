@@ -7,7 +7,7 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace AvaloniaGif.NewDecoder
+namespace AvaloniaGif.Decoding
 {
     [DebuggerStepThrough]
     internal static class StreamExtensions
