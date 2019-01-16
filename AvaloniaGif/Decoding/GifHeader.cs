@@ -10,7 +10,7 @@ namespace AvaloniaGif.Decoding
     {
         public bool HasGlobalColorTable;
         public int GlobalColorTableSize;
-        public Memory<GifColor>? GlobalColorTable;
+        public ReadOnlyMemory<GifColor>? GlobalColorTable;
         public int BackgroundColorIndex;
         public long HeaderSize;
         public Int32Rect Rect;

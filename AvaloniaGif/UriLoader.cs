@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AvaloniaGif.Extensions;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;

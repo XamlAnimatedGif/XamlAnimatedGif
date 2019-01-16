@@ -7,7 +7,7 @@ using AvaloniaGif.Decoding;
 
 namespace AvaloniaGif
 {
-    internal class GifBackgroundWorker
+    internal sealed class GifBackgroundWorker
     {
         private GifDecoder _gifDecode;
 

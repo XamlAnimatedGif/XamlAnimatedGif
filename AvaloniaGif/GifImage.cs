@@ -17,7 +17,6 @@ namespace AvaloniaGif
     public class GifImage : Control, IRenderTimeCriticalVisual
     {
         private bool _streamCanDispose;
-        private GifRenderer _gifRenderer;
         private Rect viewPort;
         private Size sourceSize;
         private Vector scale;
@@ -67,7 +66,7 @@ namespace AvaloniaGif
             this.GetPropertyChangedObservable(StretchProperty).Subscribe(SetRenderBounds);
             this.GetPropertyChangedObservable(RenderOptions.BitmapInterpolationModeProperty)
                                             .Subscribe(SetRenderBounds);
-            
+
         }
 
         private void SourceChanged(AvaloniaPropertyChangedEventArgs e)
@@ -123,7 +122,7 @@ namespace AvaloniaGif
 
             if (_bitmap != null) _bitmap.Dispose();
             if (_bgWorker != null) _bgWorker.SendCommand(GifBackgroundWorker.Command.Stop);
-        
+
             _gifDecode = new AvaloniaGif.Decoding.GifDecoder(stream);
             _bgWorker = new GifBackgroundWorker(_gifDecode, cts.Token);
             _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
@@ -137,25 +136,24 @@ namespace AvaloniaGif
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
             setSourceMutex.WaitOne();
-
-            // var bgwState = _bgWorker?.GetState();
-
-            // if (bgwState == GifBackgroundWorker.State.Start | bgwState == GifBackgroundWorker.State.Running & _bitmap != null)
-            // {
-
-            //     // _gifRenderer.TransferScratchToBitmap(lockbitmap);
-
-
-            if (_bitmap != null)
+            try
             {
-                using (var lockbitmap = _bitmap.Lock())
+                if (_bitmap != null)
                 {
-                    _gifDecode.WriteBackBufToFb(lockbitmap);
+                    using (var lockbitmap = _bitmap.Lock())
+                    {
+                        _gifDecode.WriteBackBufToFb(lockbitmap);
+                    }
                 }
-            }
 
-            if (_bitmap != null)
-                context.DrawImage(_bitmap, 1, sourceRect, destRect, interpolationMode);
+                if (_bitmap != null)
+                    context.DrawImage(_bitmap, 1, sourceRect, destRect, interpolationMode);
+
+            }
+            finally
+            {
+
+            }
 
             setSourceMutex.ReleaseMutex();
         }

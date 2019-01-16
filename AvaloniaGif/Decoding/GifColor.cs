@@ -6,19 +6,19 @@ using System.Runtime.InteropServices;
 namespace AvaloniaGif.Decoding
 {
     [StructLayout(LayoutKind.Explicit)]
-    public struct GifColor
+    public readonly struct GifColor
     {
         [FieldOffset(3)]
-        public byte a;
+        public readonly byte a;
 
         [FieldOffset(2)]
-        public byte r;
+        public readonly byte r;
 
         [FieldOffset(1)]
-        public byte g;
+        public readonly byte g;
 
         [FieldOffset(0)]
-        public byte b;
+        public readonly byte b;
 
         /// <summary>
         /// A struct that represents a ARGB color and is aligned as
