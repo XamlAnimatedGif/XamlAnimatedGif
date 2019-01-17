@@ -21,19 +21,20 @@ namespace AvaloniaGif.Caching
     ///
     /// Null values are allowed.
     /// </summary>
-    internal sealed class CacheImpl<K, V> : ICache<K,V>
+    internal sealed class CacheImpl<K, V> : ICache<K, V>
     {
         internal static readonly TimeSpan DefaultPurgeInterval = TimeSpan.FromSeconds(30);
 
         private readonly Func<K, V> _loaderFn;
         private readonly TimeSpan? _expiration;
         private readonly TimeSpan? _purgeInterval;
+        private readonly bool _doSlidingExp;
         private readonly int? _maxEntries;
         private readonly IDictionary<K, CacheEntry<K, V>> _entries;
         private readonly LinkedList<K> _keysInCreationOrder = new LinkedList<K>();
         private readonly ReaderWriterLockSlim _wholeCacheLock = new ReaderWriterLockSlim();
         private volatile bool _disposed = false;
-        
+
         public CacheImpl(CacheBuilder<K, V> builder)
         {
             if (builder.InitialCapacity != null)
@@ -48,6 +49,7 @@ namespace AvaloniaGif.Caching
             _loaderFn = builder.LoaderFn;
             _expiration = builder.Expiration;
             _purgeInterval = builder.PurgeInterval;
+            _doSlidingExp = builder.DoSlidingExpiration ?? false;
             if (_expiration.HasValue && _purgeInterval.HasValue)
             {
                 TimeSpan interval = _purgeInterval.Value;
@@ -80,6 +82,9 @@ namespace AvaloniaGif.Caching
             }
             if (entryExists)
             {
+                if (_doSlidingExp & _expiration.HasValue)
+                    entry.expirationTime = DateTime.Now.Add(_expiration.Value);
+
                 if (entry.IsExpired())
                 {
                     // If _purgeInterval is non-null then we will leave it for the background task to handle.
@@ -110,6 +115,8 @@ namespace AvaloniaGif.Caching
                     // Note that if _computeFn is null, we shouldn't have added a cache entry without a value
                     // in the first place, but if that somehow happens then we want to fall through here and
                     // and treat it as a miss.
+
+
                 }
             }
 
@@ -134,7 +141,7 @@ namespace AvaloniaGif.Caching
                         _keysInCreationOrder.Remove(entry.node);
                     }
                     DateTime? expTime = null;
-                    
+
                     if (_expiration.HasValue)
                     {
                         expTime = DateTime.Now.Add(_expiration.Value);
@@ -179,7 +186,7 @@ namespace AvaloniaGif.Caching
                 return value;
             }
         }
-        
+
         public void Set(K key, V value)
         {
             _wholeCacheLock.EnterWriteLock();
@@ -206,7 +213,7 @@ namespace AvaloniaGif.Caching
                 _wholeCacheLock.ExitWriteLock();
             }
         }
-        
+
         public void Remove(K key)
         {
             _wholeCacheLock.EnterWriteLock();
@@ -223,7 +230,7 @@ namespace AvaloniaGif.Caching
                 _wholeCacheLock.ExitWriteLock();
             }
         }
-        
+
         public void Clear()
         {
             _wholeCacheLock.EnterWriteLock();
@@ -296,7 +303,7 @@ namespace AvaloniaGif.Caching
 
     internal class CacheEntry<K, V>
     {
-        public readonly DateTime? expirationTime;
+        public DateTime? expirationTime;
         public readonly object entryLock;
         public readonly LinkedListNode<K> node;
         public volatile CacheValue<V> value;

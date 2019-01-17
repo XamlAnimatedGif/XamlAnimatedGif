@@ -28,7 +28,7 @@ namespace AvaloniaGif
 
         readonly CancellationTokenSource cts = new CancellationTokenSource();
 
-        public bool HasNewFrame => true;
+        public bool HasNewFrame { get; private set; } = true;
 
         private GifBackgroundWorker _bgWorker;
 
@@ -82,7 +82,7 @@ namespace AvaloniaGif
 
         private async void SetSource(object newValue)
         {
-            setSourceMutex.WaitOne();
+            HasNewFrame = false;
 
             var sourceUri = newValue as Uri;
             var sourceStr = newValue as Stream;
@@ -108,7 +108,7 @@ namespace AvaloniaGif
 
             Initialize(stream);
 
-            setSourceMutex.ReleaseMutex();
+            HasNewFrame = true;
         }
 
         readonly Mutex setSourceMutex = new Mutex();
@@ -136,7 +136,7 @@ namespace AvaloniaGif
         public void ThreadSafeRender(DrawingContext context, Size logicalSize, double scaling)
         {
             setSourceMutex.WaitOne();
-            
+
             try
             {
                 if (_bitmap != null)

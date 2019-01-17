@@ -13,6 +13,7 @@ namespace AvaloniaGif.Caching
     {
         internal TimeSpan? Expiration { get; private set; }
         internal TimeSpan? PurgeInterval { get; private set; }
+        internal bool? DoSlidingExpiration { get; private set; }
 
         /// <summary>
         /// Sets the maximum time (TTL) that any value will be retained in the cache. This time is
@@ -25,6 +26,12 @@ namespace AvaloniaGif.Caching
         public B WithExpiration(TimeSpan? expiration)
         {
             Expiration = expiration;
+            return (B)this;
+        }
+
+        public B WithSlidingExpiration()
+        {
+            DoSlidingExpiration = true;
             return (B)this;
         }
 

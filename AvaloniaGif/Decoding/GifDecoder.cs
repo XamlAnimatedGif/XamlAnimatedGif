@@ -63,8 +63,9 @@ namespace AvaloniaGif.Decoding
 
         private static ICache<ulong, GifColor[]> colorCache
             = Caches.KeyValue<ulong, GifColor[]>()
-              .WithBackgroundPurge(TimeSpan.FromSeconds(15))
-              //  .WithExpiration(TimeSpan.FromSeconds(20))
+              .WithBackgroundPurge(TimeSpan.FromSeconds(5))
+              .WithExpiration(TimeSpan.FromSeconds(10))
+              .WithSlidingExpiration()
               .Build();
 
         public GifDecoder(Stream fileStream)
@@ -86,7 +87,10 @@ namespace AvaloniaGif.Decoding
 
             _backBufferBytes = pixelCount * Marshal.SizeOf(typeof(GifColor));
 
-            ClearArea(_gifRect);
+            Array.Fill<short>(_prefixBuf, 0);
+            Array.Fill<byte>(_suffixBuf, 0);
+            Array.Fill<byte>(_indexBuf, 0);
+            Array.Fill<byte>(_prevFrameIndexBuf, 0);
         }
 
         public void Dispose()
@@ -192,6 +196,7 @@ namespace AvaloniaGif.Decoding
             //for (var row = 0; row < cH; row++)
             foreach (var row in rows)
             {
+
                 // Get the starting point of the current row on frame's index stream.
                 var indexOffset = row * cW;
 
@@ -206,7 +211,7 @@ namespace AvaloniaGif.Decoding
                 {
                     var indexColor = indexSpan[i];
 
-                    if (targetOffset >= len) return;
+                    if (targetOffset >= len | indexColor >= activeColorTable.Length) return;
 
                     if (!(curFrame.HasTransparency & indexColor == curFrame._transparentColorIndex))
                         _bBuf[targetOffset] = activeColorTable[indexColor];
