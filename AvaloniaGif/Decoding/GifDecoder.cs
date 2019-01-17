@@ -51,6 +51,7 @@ namespace AvaloniaGif.Decoding
         public GifHeader Header => _gifHeader;
         public List<GifFrame> Frames = new List<GifFrame>();
         private readonly Mutex renderMutex = new Mutex();
+        private readonly bool _shouldBackup;
         private readonly GifColor[] _bBuf;
         private readonly int _backBufferBytes;
 
@@ -65,7 +66,7 @@ namespace AvaloniaGif.Decoding
 
         private static ICache<ulong, GifColor[]> colorCache
             = Caches.KeyValue<ulong, GifColor[]>()
-              .WithBackgroundPurge(TimeSpan.FromSeconds(5))
+              .WithBackgroundPurge(TimeSpan.FromSeconds(30))
               .WithExpiration(TimeSpan.FromSeconds(10))
               .WithSlidingExpiration()
               .Build();
@@ -79,9 +80,15 @@ namespace AvaloniaGif.Decoding
 
             var pixelCount = _gifRect.TotalPixels;
 
+            _shouldBackup = Frames
+                            .Where(f => f._disposalMethod == FrameDisposal.DISPOSAL_METHOD_RESTORE)
+                            .Any();
+
             _bBuf = ArrayPool<GifColor>.Shared.Rent(pixelCount);
             _indexBuf = ArrayPool<byte>.Shared.Rent(pixelCount);
-            _prevFrameIndexBuf = ArrayPool<byte>.Shared.Rent(pixelCount);
+
+            if (_shouldBackup)
+                _prevFrameIndexBuf = ArrayPool<byte>.Shared.Rent(pixelCount);
 
             _prefixBuf = ArrayPool<short>.Shared.Rent(MaxStackSize);
             _suffixBuf = ArrayPool<byte>.Shared.Rent(MaxStackSize);
@@ -92,19 +99,24 @@ namespace AvaloniaGif.Decoding
             Array.Fill<short>(_prefixBuf, 0);
             Array.Fill<byte>(_suffixBuf, 0);
             Array.Fill<byte>(_indexBuf, 0);
-            Array.Fill<byte>(_prevFrameIndexBuf, 0);
+
+            if (_shouldBackup)
+                Array.Fill<byte>(_prevFrameIndexBuf, 0);
         }
 
         public void Dispose()
         {
             renderMutex.WaitOne();
 
+            Frames.Clear();
             ArrayPool<GifColor>.Shared.Return(_bBuf);
             ArrayPool<short>.Shared.Return(_prefixBuf);
             ArrayPool<byte>.Shared.Return(_suffixBuf);
             ArrayPool<byte>.Shared.Return(_pixelStack);
             ArrayPool<byte>.Shared.Return(_indexBuf);
-            ArrayPool<byte>.Shared.Return(_prevFrameIndexBuf);
+
+            if (_shouldBackup)
+                ArrayPool<byte>.Shared.Return(_prevFrameIndexBuf);
 
             _fileStream?.Dispose();
             renderMutex.ReleaseMutex();
@@ -166,9 +178,10 @@ namespace AvaloniaGif.Decoding
                 var curFrame = Frames[fIndex];
 
                 DisposePreviousFrame();
+
                 DecompressFrameToIndexBuffer(curFrame, _indexBuf, tmpB);
 
-                if (curFrame._doBackup)
+                if (_shouldBackup & curFrame._doBackup)
                     Buffer.BlockCopy(_indexBuf, 0, _prevFrameIndexBuf, 0, curFrame._rect.TotalPixels);
 
                 DrawFrame(curFrame, _indexBuf);
@@ -431,8 +444,11 @@ namespace AvaloniaGif.Decoding
 
             str.Read(headerMagic);
 
+            if (!headerMagic.Slice(0, 3).SequenceEqual(G87AMagic.Slice(0, 3).Span))
+                throw new InvalidGifStreamException("Not a GIF stream.");
+
             if (!(headerMagic.SequenceEqual(G87AMagic.Span) | headerMagic.SequenceEqual(G89AMagic.Span)))
-                throw new InvalidGifStreamException("Unsupported stream or invalid GIF Header: " +
+                throw new InvalidGifStreamException("Unsupported GIF Version: " +
                                                     Encoding.ASCII.GetString(headerMagic));
 
             ProcessScreenDescriptor(tempBuf);
