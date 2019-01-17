@@ -82,6 +82,7 @@ namespace AvaloniaGif.Caching
             }
             if (entryExists)
             {
+                // Reset entry expiration when sliding expiration is enabled.
                 if (_doSlidingExp & _expiration.HasValue)
                     entry.expirationTime = DateTime.Now.Add(_expiration.Value);
 

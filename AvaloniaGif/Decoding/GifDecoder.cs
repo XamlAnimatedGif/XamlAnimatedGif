@@ -33,12 +33,15 @@ namespace AvaloniaGif.Decoding
             = Encoding.ASCII.GetBytes("GIF89a").AsMemory();
         private static readonly ReadOnlyMemory<byte> NetscapeMagic
             = Encoding.ASCII.GetBytes("NETSCAPE2.0").AsMemory();
+
         private static readonly TimeSpan FrameDelayThreshold = TimeSpan.FromMilliseconds(10);
         private static readonly TimeSpan FrameDelayDefault = TimeSpan.FromMilliseconds(100);
         private static readonly GifColor TransparentColor = new GifColor(0, 0, 0, 0);
+        private static readonly XXHash64 hasher = new XXHash64();
         private static readonly int MaxTempBuf = 768;
         private static readonly int MaxStackSize = 4096;
         private static readonly int MaxBits = 4097;
+
         private int _iterationCount, _gctSize, _bgIndex, _prevFrame;
         private Int32Rect _gifRect;
         private bool _gctUsed;
@@ -50,7 +53,6 @@ namespace AvaloniaGif.Decoding
         private readonly Mutex renderMutex = new Mutex();
         private readonly GifColor[] _bBuf;
         private readonly int _backBufferBytes;
-
 
         private readonly short[] _prefixBuf;
         private readonly byte[] _suffixBuf;
@@ -109,41 +111,44 @@ namespace AvaloniaGif.Decoding
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int PixCoord(int x, int y) => x + y * _gifRect.Width;
+        private int PixCoord(int x, int y) => x + (y * _gifRect.Width);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private IEnumerable<int> NormalRows(int height)
+        /*
+         * 4 passes:
+         * Pass 1: rows 0, 8, 16, 24...
+         * Pass 2: rows 4, 12, 20, 28...
+         * Pass 3: rows 2, 6, 10, 14...
+         * Pass 4: rows 1, 3, 5, 7...
+         * */
+        static readonly (int Start, int Step)[] passes =
         {
-            return Enumerable.Range(0, height);
-        }
+            (0, 8),
+            (4, 8),
+            (2, 4),
+            (1, 2)
+        };
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private IEnumerable<int> InterlacedRows(int height)
+        private static readonly Action<int, Action<int>> InterlaceRows = (height, RowAction) =>
         {
-            /*
-             * 4 passes:
-             * Pass 1: rows 0, 8, 16, 24...
-             * Pass 2: rows 4, 12, 20, 28...
-             * Pass 3: rows 2, 6, 10, 14...
-             * Pass 4: rows 1, 3, 5, 7...
-             * */
-            var passes = new[]
+            for (int i = 0; i < 4; i++)
             {
-                new {Start = 0, Step = 8},
-                new {Start = 4, Step = 8},
-                new {Start = 2, Step = 4},
-                new {Start = 1, Step = 2}
-            };
-            foreach (var pass in passes)
-            {
+                var pass = passes[i];
                 var y = pass.Start;
                 while (y < height)
                 {
-                    yield return y;
+                    RowAction(y);
                     y += pass.Step;
                 }
             }
-        }
+        };
+
+        private static readonly Action<int, Action<int>> NormalRows = (height, RowAction) =>
+        {
+            for (int i = 0; i < height; i++)
+            {
+                RowAction(i);
+            }
+        };
 
         public void RenderFrame(int fIndex)
         {
@@ -153,19 +158,18 @@ namespace AvaloniaGif.Decoding
                 if (fIndex < 0 | fIndex >= Frames.Count)
                     return;
 
+                if (fIndex == 0)
+                    ClearArea(_gifRect);
+
                 var tmpB = ArrayPool<byte>.Shared.Rent(MaxTempBuf);
-                var tempBuf = tmpB.AsSpan();
 
                 var curFrame = Frames[fIndex];
 
                 DisposePreviousFrame();
-
-                DecompressFrameToIndexBuffer(curFrame, _indexBuf.AsSpan(), tempBuf);
+                DecompressFrameToIndexBuffer(curFrame, _indexBuf, tmpB);
 
                 if (curFrame._doBackup)
-                {
                     Buffer.BlockCopy(_indexBuf, 0, _prevFrameIndexBuf, 0, curFrame._rect.TotalPixels);
-                }
 
                 DrawFrame(curFrame, _indexBuf);
 
@@ -191,12 +195,14 @@ namespace AvaloniaGif.Decoding
             var cH = curFrame._rect.Height;
             var cW = curFrame._rect.Width;
 
-            var rows = curFrame._interlaced ? InterlacedRows(cH) : NormalRows(cH);
+            if (curFrame._interlaced)
+                InterlaceRows(cH, DrawRow);
+            else
+                NormalRows(cH, DrawRow);
 
             //for (var row = 0; row < cH; row++)
-            foreach (var row in rows)
+            void DrawRow(int row)
             {
-
                 // Get the starting point of the current row on frame's index stream.
                 var indexOffset = row * cW;
 
@@ -454,7 +460,6 @@ namespace AvaloniaGif.Decoding
             var pxSize = new PixelSize(_gifRect.Width, _gifRect.Height);
             return new WriteableBitmap(pxSize, defDpi, PixelFormat.Bgra8888);
         }
-        private static readonly XXHash64 hasher = new XXHash64();
 
         /// <summary>
         /// Parses colors from file stream to target color table.
@@ -510,7 +515,7 @@ namespace AvaloniaGif.Decoding
         }
 
         /// <summary>
-        /// Parses all frame data for random-seeking.
+        /// Parses all frame data.
         /// </summary>
         private void ProcessFrameData()
         {
@@ -615,7 +620,8 @@ namespace AvaloniaGif.Decoding
 
                     currentFrame._disposalMethod = (FrameDisposal)((packed & 0x1c) >> 2);
 
-                    if (currentFrame._disposalMethod != FrameDisposal.DISPOSAL_METHOD_RESTORE)
+                    if (currentFrame._disposalMethod != FrameDisposal.DISPOSAL_METHOD_RESTORE |
+                        currentFrame._disposalMethod != FrameDisposal.DISPOSAL_METHOD_BACKGROUND)
                         currentFrame._doBackup = true;
 
                     currentFrame.HasTransparency = (packed & 1) != 0;

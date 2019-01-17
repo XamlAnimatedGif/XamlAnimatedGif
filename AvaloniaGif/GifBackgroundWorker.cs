@@ -27,8 +27,7 @@ namespace AvaloniaGif
             Null,
             Start,
             Pause,
-            Stop,
-            Refresh_Properties
+            Stop
         }
 
         public enum State
