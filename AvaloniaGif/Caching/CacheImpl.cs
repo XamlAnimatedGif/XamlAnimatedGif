@@ -300,9 +300,6 @@ namespace AvaloniaGif.Caching
             {
                 _wholeCacheLock.ExitWriteLock();
             }
-            
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
         }
 
         private async Task PurgeExpiredEntriesAsync(TimeSpan interval)
