@@ -112,7 +112,6 @@ namespace AvaloniaGif.Decoding
             _prevFrameIndexBuf = null;
 
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
 
             _fileStream?.Dispose();
             _renderMutex.ReleaseMutex();
