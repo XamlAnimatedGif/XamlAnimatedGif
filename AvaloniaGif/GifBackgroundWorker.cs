@@ -122,7 +122,7 @@ namespace AvaloniaGif
         private void WaitAndRenderNext()
         {
             _currentIndex = (_currentIndex + 1) % _gifDecode.Frames.Count;
-            var targetDelay = _gifDecode.Frames[_currentIndex]._frameDelay;
+            var targetDelay = _gifDecode.Frames[_currentIndex].FrameDelay;
 
             var t1 = _timer.Elapsed;
 

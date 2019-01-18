@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,6 +46,7 @@ namespace AvaloniaGif.Caching
             {
                 _entries = new Dictionary<K, CacheEntry<K, V>>();
             }
+
             _maxEntries = builder.MaximumEntries;
             _loaderFn = builder.LoaderFn;
             _expiration = builder.Expiration;
@@ -64,6 +66,7 @@ namespace AvaloniaGif.Caching
                 // Always true because if we didn't already have a value, Get will acquire one.
                 return true;
             }
+
             return TryGetValue(key, out var ignoreValue);
         }
 
@@ -80,6 +83,7 @@ namespace AvaloniaGif.Caching
             {
                 _wholeCacheLock.ExitReadLock();
             }
+
             if (entryExists)
             {
                 // Reset entry expiration when sliding expiration is enabled.
@@ -108,16 +112,16 @@ namespace AvaloniaGif.Caching
                         value = v.Value;
                         return true;
                     }
+
                     if (_loaderFn != null)
                     {
                         value = MaybeComputeValue(key, entry);
                         return true;
                     }
+
                     // Note that if _computeFn is null, we shouldn't have added a cache entry without a value
                     // in the first place, but if that somehow happens then we want to fall through here and
                     // and treat it as a miss.
-
-
                 }
             }
 
@@ -141,6 +145,7 @@ namespace AvaloniaGif.Caching
                     {
                         _keysInCreationOrder.Remove(entry.node);
                     }
+
                     DateTime? expTime = null;
 
                     if (_expiration.HasValue)
@@ -159,6 +164,7 @@ namespace AvaloniaGif.Caching
             {
                 _wholeCacheLock.ExitWriteLock();
             }
+
             // Now proceed as if the entry was already in the cache, computing its value if necessary
             value = MaybeComputeValue(key, entry);
             return true;
@@ -182,6 +188,7 @@ namespace AvaloniaGif.Caching
                 {
                     return entry.value.Value;
                 }
+
                 var value = _loaderFn.Invoke(key);
                 entry.value = new CacheValue<V>(value);
                 return value;
@@ -197,11 +204,13 @@ namespace AvaloniaGif.Caching
                 {
                     _keysInCreationOrder.Remove(oldEntry.node);
                 }
+
                 DateTime? expTime = null;
                 if (_expiration.HasValue)
                 {
                     expTime = DateTime.Now.Add(_expiration.Value);
                 }
+
                 var node = new LinkedListNode<K>(key);
                 var entry = new CacheEntry<K, V>(expTime, node);
                 entry.value = new CacheValue<V>(value);
@@ -263,6 +272,7 @@ namespace AvaloniaGif.Caching
             {
                 return;
             }
+
             if (_maxEntries != null)
             {
                 while (_entries.Count > _maxEntries.Value)
@@ -290,6 +300,9 @@ namespace AvaloniaGif.Caching
             {
                 _wholeCacheLock.ExitWriteLock();
             }
+            
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
         }
 
         private async Task PurgeExpiredEntriesAsync(TimeSpan interval)

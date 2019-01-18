@@ -7,14 +7,14 @@ namespace AvaloniaGif.Decoding
 {
     public class GifFrame
     {
-        public bool HasTransparency, _interlaced, _lctUsed;
-        public byte _transparentColorIndex;
-        public int _lzwMinCodeSize, _lctSize;
-        public long _lzwStreamPos;
-        public TimeSpan _frameDelay;
-        public FrameDisposal _disposalMethod;
-        public ulong _localColorTable;
-        internal bool _doBackup;
-        public Int32Rect _rect;
+        public bool HasTransparency, IsInterlaced, IsLocalColorTableUsed;
+        public byte TransparentColorIndex;
+        public int LZWMinCodeSize, LocalColorTableSize;
+        public long LZWStreamPosition;
+        public TimeSpan FrameDelay;
+        public FrameDisposal FrameDisposalMethod;
+        public ulong LocalColorTableCacheID;
+        public bool ShouldBackup;
+        public Int32Rect Dimensions;
     }
 }
