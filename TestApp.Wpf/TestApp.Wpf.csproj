@@ -110,12 +110,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\XamlAnimatedGif.Wpf\XamlAnimatedGif.Wpf.csproj">
-      <Project>{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}</Project>
-      <Name>XamlAnimatedGif.Wpf</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\bomb-once.gif" />
     <Resource Include="Images\bomb.gif" />
     <Resource Include="Images\earth.gif" />

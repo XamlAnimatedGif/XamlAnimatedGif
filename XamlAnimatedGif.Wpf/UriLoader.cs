@@ -6,9 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-#if !NET40
 using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace XamlAnimatedGif
 {

@@ -1,15 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Will add UWP TFM later -->
     <TargetFrameworks>net45</TargetFrameworks>
+    <ExtrasEnableWpfProjectSetup>true</ExtrasEnableWpfProjectSetup>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <AssemblyName>XamlAnimatedGif</AssemblyName>
+    <AssemblyTitle>GIF Animation Library for XAML Platforms</AssemblyTitle>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="../XamlAnimatedGif.Shared/XamlAnimatedGif.Shared.csproj"/>
+    <ProjectReference Include="../XamlAnimatedGif.Shared/XamlAnimatedGif.Shared.csproj" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.5.4" PrivateAssets="All" />
   </ItemGroup>
 
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')"/>
-
+  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

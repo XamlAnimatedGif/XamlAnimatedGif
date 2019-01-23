@@ -1,17 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlAnimatedGif.Wpf", "XamlAnimatedGif.Wpf\XamlAnimatedGif.Wpf.csproj", "{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{38553433-1849-4E69-A035-23766901DF10}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.Wpf", "TestApp.Wpf\TestApp.Wpf.csproj", "{03020783-A76D-4749-8A42-CD20D64859D3}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "XamlAnimatedGif.Shared", "XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.shproj", "{D408EEBD-D9F1-41FB-9161-546F5BC0DAD4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlAnimatedGif.WinRT", "XamlAnimatedGif.WinRT\XamlAnimatedGif.WinRT.csproj", "{7AEFA46B-4FCB-4C1B-A55F-9AB6170B5454}"
 EndProject
@@ -29,8 +25,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 		NuGet\XamlAnimatedGif.nuspec = NuGet\XamlAnimatedGif.nuspec
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlAnimatedGif.Wpf.4.0", "XamlAnimatedGif.Wpf.4.0\XamlAnimatedGif.Wpf.4.0.csproj", "{AFD68338-7468-4BBA-A936-52066FA0F226}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlAnimatedGif.Silverlight", "XamlAnimatedGif.Silverlight\XamlAnimatedGif.Silverlight.csproj", "{46F409F0-EF0D-4F0D-B05E-F4F22E944683}"
 EndProject
@@ -60,26 +54,22 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "TestApp.Silverlight.Web", "
 		ProjOutputReferences = "{AC67FFFC-7348-4225-8A71-EE40BB8C861C}|ClientBin|false;"
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlAnimatedGif.Shared", "XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.csproj", "{6987FF05-1936-42CF-873F-F363E3AD8A19}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlAnimatedGif.Wpf", "XamlAnimatedGif.Wpf\XamlAnimatedGif.Wpf.csproj", "{B0A1A6D3-0C1F-4ABB-B9DC-A19F149A421A}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{afd68338-7468-4bba-a936-52066fa0f226}*SharedItemsImports = 4
-		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{5ecdd8e1-e176-4d9f-9278-17a313a16cb2}*SharedItemsImports = 4
-		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{7aefa46b-4fcb-4c1b-a55f-9ab6170b5454}*SharedItemsImports = 4
-		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{df7135a1-2026-4529-b880-230892fdcdbb}*SharedItemsImports = 4
-		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{609621a0-e20d-40c9-826a-665e3006b6be}*SharedItemsImports = 13
-		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{5f7f48d6-94e4-4580-8fc4-d70c45dbf6b1}*SharedItemsImports = 4
-		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{d408eebd-d9f1-41fb-9161-546f5bc0dad4}*SharedItemsImports = 13
 		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{46f409f0-ef0d-4f0d-b05e-f4f22e944683}*SharedItemsImports = 4
+		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{5f7f48d6-94e4-4580-8fc4-d70c45dbf6b1}*SharedItemsImports = 4
+		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{609621a0-e20d-40c9-826a-665e3006b6be}*SharedItemsImports = 13
+		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{df7135a1-2026-4529-b880-230892fdcdbb}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{03020783-A76D-4749-8A42-CD20D64859D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{03020783-A76D-4749-8A42-CD20D64859D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03020783-A76D-4749-8A42-CD20D64859D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -100,10 +90,6 @@ Global
 		{5F7F48D6-94E4-4580-8FC4-D70C45DBF6B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F7F48D6-94E4-4580-8FC4-D70C45DBF6B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5F7F48D6-94E4-4580-8FC4-D70C45DBF6B1}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{AFD68338-7468-4BBA-A936-52066FA0F226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AFD68338-7468-4BBA-A936-52066FA0F226}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AFD68338-7468-4BBA-A936-52066FA0F226}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AFD68338-7468-4BBA-A936-52066FA0F226}.Release|Any CPU.Build.0 = Release|Any CPU
 		{46F409F0-EF0D-4F0D-B05E-F4F22E944683}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{46F409F0-EF0D-4F0D-B05E-F4F22E944683}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46F409F0-EF0D-4F0D-B05E-F4F22E944683}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -116,23 +102,33 @@ Global
 		{D848B57F-389D-480D-B1A8-59BB4C5301B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D848B57F-389D-480D-B1A8-59BB4C5301B3}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{D848B57F-389D-480D-B1A8-59BB4C5301B3}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{6987FF05-1936-42CF-873F-F363E3AD8A19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6987FF05-1936-42CF-873F-F363E3AD8A19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6987FF05-1936-42CF-873F-F363E3AD8A19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6987FF05-1936-42CF-873F-F363E3AD8A19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0A1A6D3-0C1F-4ABB-B9DC-A19F149A421A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0A1A6D3-0C1F-4ABB-B9DC-A19F149A421A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0A1A6D3-0C1F-4ABB-B9DC-A19F149A421A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0A1A6D3-0C1F-4ABB-B9DC-A19F149A421A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{5ECDD8E1-E176-4D9F-9278-17A313A16CB2} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
 		{03020783-A76D-4749-8A42-CD20D64859D3} = {38553433-1849-4E69-A035-23766901DF10}
-		{D408EEBD-D9F1-41FB-9161-546F5BC0DAD4} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
 		{7AEFA46B-4FCB-4C1B-A55F-9AB6170B5454} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
 		{2E655DC3-4262-473D-A5A4-6107F03AC680} = {38553433-1849-4E69-A035-23766901DF10}
 		{609621A0-E20D-40C9-826A-665E3006B6BE} = {2E655DC3-4262-473D-A5A4-6107F03AC680}
 		{DF7135A1-2026-4529-B880-230892FDCDBB} = {2E655DC3-4262-473D-A5A4-6107F03AC680}
 		{5F7F48D6-94E4-4580-8FC4-D70C45DBF6B1} = {2E655DC3-4262-473D-A5A4-6107F03AC680}
-		{AFD68338-7468-4BBA-A936-52066FA0F226} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
 		{46F409F0-EF0D-4F0D-B05E-F4F22E944683} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
 		{629CDA11-3FAD-4433-B0D7-D905D4A2A579} = {38553433-1849-4E69-A035-23766901DF10}
 		{AC67FFFC-7348-4225-8A71-EE40BB8C861C} = {629CDA11-3FAD-4433-B0D7-D905D4A2A579}
 		{D848B57F-389D-480D-B1A8-59BB4C5301B3} = {629CDA11-3FAD-4433-B0D7-D905D4A2A579}
+		{6987FF05-1936-42CF-873F-F363E3AD8A19} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
+		{B0A1A6D3-0C1F-4ABB-B9DC-A19F149A421A} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BE41AEDD-38C4-49F4-9B45-7703EDB9618F}
 	EndGlobalSection
 EndGlobal

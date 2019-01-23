@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- Will add UWP TFM later -->
-    <TargetFrameworks>net45;netstandard1.0</TargetFrameworks>
+    <TargetFrameworks>net45</TargetFrameworks>
     <AssemblyName>XamlAnimatedGif</AssemblyName>
   </PropertyGroup>
 
@@ -12,6 +12,6 @@
     <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.40" PrivateAssets="All" />
   </ItemGroup>
 
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')"/>
+  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 
 </Project>
