@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.0</TargetFrameworks> <!-- Will add UWP TFM later -->
+    <!-- Will add UWP TFM later -->
+    <TargetFrameworks>net45;netstandard1.0</TargetFrameworks>
+    <AssemblyName>XamlAnimatedGif</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
