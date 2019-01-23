@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using TaskEx = System.Threading.Tasks.Task;
 
+
 namespace XamlAnimatedGif
 {
     partial class UriLoader
