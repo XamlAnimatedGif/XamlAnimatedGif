@@ -6,6 +6,5 @@ namespace XamlAnimatedGif.Decoding
     {
         internal UnknownBlockTypeException(string message) : base(message) { }
         internal UnknownBlockTypeException(string message, Exception inner) : base(message, inner) { }
-
     }
 }
