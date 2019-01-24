@@ -1,13 +1,8 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-#if WPF || SILVERLIGHT
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-#elif WINRT
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Animation;
-#endif
+using System.Windows.Media.Animation; 
 using XamlAnimatedGif.Decoding;
 
 namespace XamlAnimatedGif

@@ -14,6 +14,7 @@
     <PackageReference Include="System.Memory" Version="4.5.0" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />
     <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.40" PrivateAssets="All" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 
   <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />

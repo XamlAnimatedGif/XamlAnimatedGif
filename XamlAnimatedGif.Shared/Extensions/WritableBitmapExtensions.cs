@@ -1,9 +1,6 @@
 ﻿using System;
-#if WPF || SILVERLIGHT
 using System.Windows.Media.Imaging;
-#elif WINRT
-using Windows.UI.Xaml.Media.Imaging;
-#endif
+
 
 namespace XamlAnimatedGif.Extensions
 {
@@ -11,14 +8,9 @@ namespace XamlAnimatedGif.Extensions
     {
         public static IDisposable LockInScope(this WriteableBitmap bitmap)
         {
-#if WPF
             return new WriteableBitmapLock(bitmap);
-#else
-            return null;
-#endif
         }
 
-#if WPF
         class WriteableBitmapLock : IDisposable
         {
             private readonly WriteableBitmap _bitmap;
@@ -34,6 +26,5 @@ namespace XamlAnimatedGif.Extensions
                 _bitmap.Unlock();
             }
         }
-#endif
     }
 }

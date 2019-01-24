@@ -4,33 +4,19 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-#if WPF || SILVERLIGHT
+
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Runtime.InteropServices;
-#elif WINRT
-using Windows.UI;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Media.Animation;
-using System.Runtime.InteropServices.WindowsRuntime;
-#endif
-#if !NET40 && !SILVERLIGHT
-using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
 using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif
-{
-#if WINRT
-    [Bindable]
-#endif
+{ 
     public abstract class Animator : DependencyObject, IDisposable
     {
         private readonly Stream _sourceStream;

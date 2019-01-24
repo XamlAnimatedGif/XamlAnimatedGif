@@ -2,14 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-#if WPF || SILVERLIGHT
 using System.Windows.Media.Animation;
-#elif WINRT
-using Windows.UI.Xaml.Media.Animation;
-#endif
-#if !NET40 && !SILVERLIGHT
 using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace XamlAnimatedGif
 {

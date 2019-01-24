@@ -2,9 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-#if WINRT
-using XamlAnimatedGif.Extensions;
-#endif
 
 namespace XamlAnimatedGif.Decoding
 {

@@ -2,25 +2,13 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using XamlAnimatedGif.Extensions;
-#if WPF || SILVERLIGHT
+using XamlAnimatedGif.Extensions; 
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-#elif WINRT
-using Windows.ApplicationModel;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Media;
-#endif
-#if SILVERLIGHT
-using System.Windows.Media;
-#endif
+using System.Windows.Media.Imaging; 
 
 namespace XamlAnimatedGif
 {
@@ -30,9 +18,7 @@ namespace XamlAnimatedGif
 
         #region SourceUri
 
-#if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
-#endif
         public static Uri GetSourceUri(Image image)
         {
             return (Uri)image.GetValue(SourceUriProperty);
@@ -56,9 +42,8 @@ namespace XamlAnimatedGif
 
         #region SourceStream
 
-#if WPF
+
         [AttachedPropertyBrowsableForType(typeof(Image))]
-#endif
         public static Stream GetSourceStream(DependencyObject obj)
         {
             return (Stream)obj.GetValue(SourceStreamProperty);
@@ -82,9 +67,7 @@ namespace XamlAnimatedGif
 
         #region RepeatBehavior
 
-#if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
-#endif
         public static RepeatBehavior GetRepeatBehavior(DependencyObject obj)
         {
             return (RepeatBehavior)obj.GetValue(RepeatBehaviorProperty);
@@ -108,9 +91,7 @@ namespace XamlAnimatedGif
 
         #region AutoStart
 
-#if WPF
         [AttachedPropertyBrowsableForType(typeof(Image))]
-#endif
         public static bool GetAutoStart(DependencyObject obj)
         {
             return (bool)obj.GetValue(AutoStartProperty);
@@ -131,8 +112,6 @@ namespace XamlAnimatedGif
         #endregion
 
         #region AnimateInDesignMode
-
-
         public static bool GetAnimateInDesignMode(DependencyObject obj)
         {
             return (bool)obj.GetValue(AnimateInDesignModeProperty);
@@ -177,7 +156,6 @@ namespace XamlAnimatedGif
 
         #region Error
 
-#if WPF
         public static readonly RoutedEvent ErrorEvent =
             EventManager.RegisterRoutedEvent(
                 "Error",
@@ -193,36 +171,24 @@ namespace XamlAnimatedGif
         public static void RemoveErrorHandler(DependencyObject d, AnimationErrorEventHandler handler)
         {
             (d as UIElement)?.RemoveHandler(ErrorEvent, handler);
-        }
-#elif WINRT || SILVERLIGHT
-        // WinRT doesn't support custom attached events, use a normal CLR event instead
-        public static event EventHandler<AnimationErrorEventArgs> Error;
-#endif
+        } 
 
         internal static void OnError(Image image, Exception exception, AnimationErrorKind kind)
         {
-#if WPF
             image.RaiseEvent(new AnimationErrorEventArgs(image, exception, kind));
-#elif WINRT || SILVERLIGHT
-            Error?.Invoke(image, new AnimationErrorEventArgs(image, exception, kind));
-#endif
         }
 
         private static void AnimatorError(object sender, AnimationErrorEventArgs e)
         {
-#if WPF
             var source = e.Source as UIElement;
             source?.RaiseEvent(e);
-#elif WINRT || SILVERLIGHT
-            Error?.Invoke(e.Source, e);
-#endif
         }
 
         #endregion
 
         #region DownloadProgress
 
-#if WPF
+
         public static readonly RoutedEvent DownloadProgressEvent =
             EventManager.RegisterRoutedEvent(
                 "DownloadProgress",
@@ -240,24 +206,19 @@ namespace XamlAnimatedGif
             (d as UIElement)?.RemoveHandler(DownloadProgressEvent, handler);
         }
 
-#elif WINRT || SILVERLIGHT
-        // WinRT doesn't support custom attached events, use a normal CLR event instead
-        public static event EventHandler<DownloadProgressEventArgs> DownloadProgress;
-#endif
+ 
 
         internal static void OnDownloadProgress(Image image, int downloadPercentage)
         {
-#if WPF
+
             image.RaiseEvent(new DownloadProgressEventArgs(image, downloadPercentage));
-#elif WINRT || SILVERLIGHT
-            DownloadProgress?.Invoke(image, new DownloadProgressEventArgs(downloadPercentage));
-#endif
+ 
         }
         #endregion
 
         #region Loaded
 
-#if WPF
+
         public static readonly RoutedEvent LoadedEvent =
             EventManager.RegisterRoutedEvent(
                 "Loaded",
@@ -274,25 +235,17 @@ namespace XamlAnimatedGif
         {
             (d as UIElement)?.RemoveHandler(LoadedEvent, handler);
         }
-#elif WINRT || SILVERLIGHT
-        // WinRT doesn't support custom attached events, use a normal CLR event instead
-        public static event EventHandler Loaded;
-#endif
 
         private static void OnLoaded(Image sender)
         {
-#if WPF
             sender.RaiseEvent(new RoutedEventArgs(LoadedEvent, sender));
-#elif WINRT || SILVERLIGHT
-            Loaded?.Invoke(sender, EventArgs.Empty);
-#endif
         }
 
         #endregion
 
         #region AnimationCompleted
 
-#if WPF
+
         public static readonly RoutedEvent AnimationCompletedEvent =
             EventManager.RegisterRoutedEvent(
                 "AnimationCompleted",
@@ -309,19 +262,13 @@ namespace XamlAnimatedGif
         {
             (d as UIElement)?.RemoveHandler(AnimationCompletedEvent, handler);
         }
-#elif WINRT || SILVERLIGHT
-        // WinRT doesn't support custom attached events, use a normal CLR event instead
-        public static event EventHandler<AnimationCompletedEventArgs> AnimationCompleted;
-#endif
 
         private static void AnimatorAnimationCompleted(object sender, AnimationCompletedEventArgs e)
         {
-#if WPF
+
             var element = e.Source as Image;
             element?.RaiseEvent(e);
-#elif WINRT || SILVERLIGHT
-            AnimationCompleted?.Invoke(e.Source, e);
-#endif
+
         }
 
         #endregion
@@ -450,11 +397,9 @@ namespace XamlAnimatedGif
 
         private static bool IsLoaded(FrameworkElement element)
         {
-#if WPF
+ 
             return element.IsLoaded;
-#elif WINRT || SILVERLIGHT
-            return VisualTreeHelper.GetParent(element) != null;
-#endif
+ 
         }
 
         private static Uri GetAbsoluteUri(Image image)
@@ -462,14 +407,12 @@ namespace XamlAnimatedGif
             var uri = GetSourceUri(image);
             if (uri == null)
                 return null;
-#if !SILVERLIGHT
+
             if (!uri.IsAbsoluteUri)
             {
-#if WPF
+
                 var baseUri = ((IUriContext)image).BaseUri;
-#elif WINRT
-                var baseUri = image.BaseUri;
-#endif
+
                 if (baseUri != null)
                 {
                     uri = new Uri(baseUri, uri);
@@ -479,7 +422,7 @@ namespace XamlAnimatedGif
                     throw new InvalidOperationException("Relative URI can't be resolved");
                 }
             }
-#endif
+
             return uri;
         }
 
@@ -567,13 +510,7 @@ namespace XamlAnimatedGif
         // ReSharper disable once UnusedParameter.Local (used in WPF)
         private static bool IsInDesignMode(DependencyObject obj)
         {
-#if WPF
             return DesignerProperties.GetIsInDesignMode(obj);
-#elif WINRT
-            return DesignMode.DesignModeEnabled;
-#elif SILVERLIGHT
-            return DesignerProperties.IsInDesignTool;
-#endif
         }
 
         private static async Task SetStaticImageAsync(Image image, Uri sourceUri)
@@ -607,15 +544,9 @@ namespace XamlAnimatedGif
         {
             stream.Seek(0, SeekOrigin.Begin);
             var bmp = new BitmapImage();
-#if WPF
             bmp.BeginInit();
             bmp.StreamSource = stream;
             bmp.EndInit();
-#elif WINRT
-            bmp.SetSource(stream.AsRandomAccessStream());
-#elif SILVERLIGHT
-            bmp.SetSource(stream);
-#endif
             image.Source = bmp;
         }
     }

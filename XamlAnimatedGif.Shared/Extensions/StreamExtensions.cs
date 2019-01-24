@@ -42,15 +42,10 @@ namespace XamlAnimatedGif.Extensions
 
         public static Stream AsBuffered(this Stream stream)
         {
-#if WPF
             var bs = stream as BufferedStream;
             if (bs != null)
                 return bs;
             return new BufferedStream(stream);
-#elif WINRT || SILVERLIGHT
-            // WinRT stream wrapper is already buffered
-            return stream;
-#endif
         }
 
         public static async Task CopyToAsync(this Stream source, Stream destination, IProgress<long> progress, int bufferSize = 81920, CancellationToken cancellationToken = default(CancellationToken))
