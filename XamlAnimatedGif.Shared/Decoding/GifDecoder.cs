@@ -413,7 +413,6 @@ namespace XamlAnimatedGif.Decoding
                         fixed (void* src = &_bitmapBackBuffer[0])
                         {
                             CopyMemory(targetPointer.ToPointer(), src, (uint)_backBufferBytes);
-
                         }
                         _hasNewFrame = false;
                     }

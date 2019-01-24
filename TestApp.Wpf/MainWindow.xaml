@@ -92,6 +92,10 @@
         </GroupBox>
         <GroupBox Header="Image">
             <Grid>
+                <ProgressBar VerticalAlignment="Center" Height="30" Margin="20"
+                             Visibility="{Binding IsDownloading, Converter={StaticResource boolToVis}}"
+                             Minimum="0" Maximum="100" Value="{Binding DownloadProgress}"
+                             IsIndeterminate="{Binding IsDownloadProgressIndeterminate}" />
                 <Image Name="img" Margin="5"
                        Stretch="None"
                        gif:AnimationBehavior.SourceUri="{Binding SelectedImage}"
@@ -101,10 +105,7 @@
                        gif:AnimationBehavior.Error="AnimationBehavior_OnError"
                        gif:AnimationBehavior.DownloadProgress="AnimationBehavior_OnDownloadProgress"
                        gif:AnimationBehavior.AnimationCompleted="AnimationBehavior_OnAnimationCompleted"/>
-                <ProgressBar VerticalAlignment="Center" Height="30" Margin="20"
-                             Visibility="{Binding IsDownloading, Converter={StaticResource boolToVis}}"
-                             Minimum="0" Maximum="100" Value="{Binding DownloadProgress}"
-                             IsIndeterminate="{Binding IsDownloadProgressIndeterminate}" />
+               
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top"
                         Visibility="{Binding Completed, Converter={StaticResource boolToVis}}">
                     <Label Content="Completed">

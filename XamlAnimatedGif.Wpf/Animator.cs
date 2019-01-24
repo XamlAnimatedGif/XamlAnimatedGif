@@ -27,6 +27,8 @@ namespace XamlAnimatedGif
         ////private readonly GifDataStream _metadata;
         //private readonly Dictionary<int, GifPalette> _palettes;
         private readonly WriteableBitmap _bitmap;
+        private readonly Int32Rect _int32RectDim;
+
         //private readonly int _stride;
         //private readonly byte[] _previousBackBuffer;
         //private readonly byte[] _indexStreamBuffer;
@@ -49,8 +51,10 @@ namespace XamlAnimatedGif
             //_stride = 4;//* ((desc.Width * 32 + 31) / 32);
             //_previousBackBuffer = new byte[desc.Height * _stride];
             //_indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
+            _int32RectDim = new Int32Rect(0, 0, _decoder.Header.Rect.Width, _decoder.Header.Rect.Height);
             _decoder.RenderFrame(0);
             TransferToTarget();
+
             _timingManager = CreateTimingManager(_decoder, RepeatBehavior.Forever);
 
         }
@@ -140,13 +144,10 @@ namespace XamlAnimatedGif
                 while (true)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var timing = _timingManager.NextAsync(cancellationToken);
                     _decoder.RenderFrame(CurrentFrameIndex);
-                    Thread.Sleep(30);
+                    Thread.Sleep(_decoder.Frames[CurrentFrameIndex].FrameDelay);
                     TransferToTarget();
-                    //if (!timing.Result)
-                    //    break;
-                    CurrentFrameIndex = (CurrentFrameIndex + 1) % FrameCount;
+                    CurrentFrameIndex = unchecked(CurrentFrameIndex + 1) % FrameCount;
                 }
             });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -202,7 +203,7 @@ namespace XamlAnimatedGif
 
         private TimingManager CreateTimingManager(GifDecoder metadata, RepeatBehavior repeatBehavior)
         {
-                        var actualRepeatBehavior = GetActualRepeatBehavior(metadata, repeatBehavior);
+            var actualRepeatBehavior = GetActualRepeatBehavior(metadata, repeatBehavior);
 
             var manager = new TimingManager(actualRepeatBehavior);
             foreach (var frame in metadata.Frames)
@@ -233,14 +234,17 @@ namespace XamlAnimatedGif
 
         #region Rendering
 
+
+
         void TransferToTarget()
         {
             Dispatcher.Invoke(() =>
             {
+                _bitmap.Lock();
+                _decoder.WriteBackBufToFb(_bitmap.BackBuffer);
+                _bitmap.AddDirtyRect(_int32RectDim);
+                _bitmap.Unlock();
 
-            _bitmap.Lock();
-            _decoder.WriteBackBufToFb(_bitmap.BackBuffer);
-            _bitmap.Unlock();
             });
         }
 
@@ -344,38 +348,39 @@ namespace XamlAnimatedGif
 
         public async void Rewind()
         {
-            //CurrentFrameIndex = 0;
-            //bool isStopped = _timingManager.IsPaused || _timingManager.IsComplete;
-            //_timingManager.Reset();
-            //if (isStopped)
-            //{
-            //    _timingManager.Pause();
-            //    _isStarted = false;
-            //    try
-            //    {
-            //        await RenderFrameAsync(0, CancellationToken.None);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        OnError(ex, AnimationErrorKind.Rendering);
-            //    }
-            //}
+            CurrentFrameIndex = 0;
+            bool isStopped = _timingManager.IsPaused || _timingManager.IsComplete;
+            _timingManager.Reset();
+            if (isStopped)
+            {
+                _timingManager.Pause();
+                _isStarted = false;
+                try
+                {
+                    _decoder.RenderFrame(0);
+                    TransferToTarget();
+                }
+                catch (Exception ex)
+                {
+                    OnError(ex, AnimationErrorKind.Rendering);
+                }
+            }
         }
 
         protected abstract object AnimationSource { get; }
 
         internal void OnRepeatBehaviorChanged()
         {
-            //if (_timingManager == null)
-            //    return;
+            if (_timingManager == null)
+                return;
 
-            //var newValue = GetSpecifiedRepeatBehavior();
-            //var newActualValue = GetActualRepeatBehavior(_metadata, newValue);
-            //if (_timingManager.RepeatBehavior == newActualValue)
-            //    return;
+            var newValue = GetSpecifiedRepeatBehavior();
+            var newActualValue = GetActualRepeatBehavior(_decoder, newValue);
+            if (_timingManager.RepeatBehavior == newActualValue)
+                return;
 
-            //_timingManager.RepeatBehavior = newActualValue;
-            //Rewind();
+            _timingManager.RepeatBehavior = newActualValue;
+            Rewind();
         }
     }
 }
