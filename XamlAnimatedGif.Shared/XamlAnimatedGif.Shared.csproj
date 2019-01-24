@@ -3,6 +3,7 @@
     <!-- Will add UWP TFM later -->
     <TargetFrameworks>net45</TargetFrameworks>
     <AssemblyName>XamlAnimatedGif</AssemblyName>
+    <LangVersion>latest</LangVersion>
     <AssemblyTitle>GIF Animation Library for XAML Platforms</AssemblyTitle>
   </PropertyGroup>
 
