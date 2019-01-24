@@ -52,7 +52,7 @@ namespace XamlAnimatedGif.Decoding
         private GifHeader _gifHeader;
         private GifRect _gifDimensions;
         private ulong _globalColorTable;
-        private readonly uint _backBufferBytes;
+        private readonly int _backBufferBytes;
         private GifColor[] _bitmapBackBuffer;
 
         private short[] _prefixBuf;
@@ -94,7 +94,7 @@ namespace XamlAnimatedGif.Decoding
             _suffixBuf = new byte[MaxStackSize];
             _pixelStack = new byte[MaxStackSize + 1];
 
-            _backBufferBytes = (uint)(pixelCount * Marshal.SizeOf(typeof(GifColor)));
+            _backBufferBytes = (pixelCount * Marshal.SizeOf(typeof(GifColor)));
         }
 
         public void Dispose()
@@ -231,7 +231,7 @@ namespace XamlAnimatedGif.Decoding
                 {
                     var indexColor = _frameIndexSpan.Span[indexOffset + i];
 
-                    if (targetOffset >= len | indexColor >= activeColorTable.Length) return;
+                    if (targetOffset >= len | indexColor >= activeColorTable.Length | activeColorTable == null) return;
 
                     if (!(hT & indexColor == tC))
                         _bitmapBackBuffer[targetOffset] = activeColorTable[indexColor];
@@ -407,11 +407,14 @@ namespace XamlAnimatedGif.Decoding
             _renderMutex.WaitOne();
             try
             {
-                if (_hasNewFrame)
+                if (_hasNewFrame & _bitmapBackBuffer != null)
                     unsafe
                     {
                         fixed (void* src = &_bitmapBackBuffer[0])
-                            CopyMemory(src, targetPointer.ToPointer(), _backBufferBytes);
+                        {
+                            CopyMemory(targetPointer.ToPointer(), src, (uint)_backBufferBytes);
+
+                        }
                         _hasNewFrame = false;
                     }
             }
@@ -481,8 +484,6 @@ namespace XamlAnimatedGif.Decoding
 
             if (n < nBytes)
                 throw new InvalidOperationException("Wrong color table bytes.");
-
-            Span<byte> rawHash = new byte[sizeof(ulong)];
 
             Hasher.ComputeHash(rawBufSpan, 0, nBytes);
 

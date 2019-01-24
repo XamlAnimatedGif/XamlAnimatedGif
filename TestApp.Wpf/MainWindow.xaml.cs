@@ -93,7 +93,8 @@ namespace TestApp.Wpf
         {
             if (_animator != null)
             {
-                sldPosition.Value = _animator.CurrentFrameIndex;
+                Dispatcher.Invoke(()=>
+                sldPosition.Value = _animator.CurrentFrameIndex);
             }
         }
 

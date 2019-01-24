@@ -49,7 +49,8 @@ namespace XamlAnimatedGif
             //_stride = 4;//* ((desc.Width * 32 + 31) / 32);
             //_previousBackBuffer = new byte[desc.Height * _stride];
             //_indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
-
+            _decoder.RenderFrame(0);
+            TransferToTarget();
             _timingManager = CreateTimingManager(_decoder, RepeatBehavior.Forever);
 
         }
@@ -132,17 +133,23 @@ namespace XamlAnimatedGif
         private int _frameIndex;
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-            while (true)
+
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Factory.StartNew(() =>
             {
-               // cancellationToken.ThrowIfCancellationRequested();
-                var timing = _timingManager.NextAsync(cancellationToken);
-                var rendering = new Task(() => _decoder.RenderFrame(CurrentFrameIndex));
-                await TaskEx.WhenAll(timing, rendering);
-                TransferToTarget();
-                if (!timing.Result)
-                    break;
-                CurrentFrameIndex = (CurrentFrameIndex + 1) % FrameCount;
-            }
+                while (true)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var timing = _timingManager.NextAsync(cancellationToken);
+                    _decoder.RenderFrame(CurrentFrameIndex);
+                    Thread.Sleep(30);
+                    TransferToTarget();
+                    //if (!timing.Result)
+                    //    break;
+                    CurrentFrameIndex = (CurrentFrameIndex + 1) % FrameCount;
+                }
+            });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         public void Pause()
@@ -228,9 +235,13 @@ namespace XamlAnimatedGif
 
         void TransferToTarget()
         {
+            Dispatcher.Invoke(() =>
+            {
+
             _bitmap.Lock();
             _decoder.WriteBackBufToFb(_bitmap.BackBuffer);
             _bitmap.Unlock();
+            });
         }
 
         private WriteableBitmap CreateBitmap()
