@@ -7,7 +7,7 @@ using XamlAnimatedGif.Decoding;
 
 namespace XamlAnimatedGif
 {
-    internal class ImageAnimator : Animator
+    internal class ImageAnimator : WpfAnimator
     {
         private readonly Image _image;
 

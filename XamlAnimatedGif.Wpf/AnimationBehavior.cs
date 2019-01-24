@@ -133,22 +133,22 @@ namespace XamlAnimatedGif
 
         #endregion
 
-        #region Animator
+        #region WpfAnimator
 
-        public static Animator GetAnimator(DependencyObject obj)
+        public static WpfAnimator GetAnimator(DependencyObject obj)
         {
-            return (Animator) obj.GetValue(AnimatorProperty);
+            return (WpfAnimator) obj.GetValue(WpfAnimatorProperty);
         }
 
-        private static void SetAnimator(DependencyObject obj, Animator value)
+        private static void SetWpfAnimator(DependencyObject obj, WpfAnimator value)
         {
-            obj.SetValue(AnimatorProperty, value);
+            obj.SetValue(WpfAnimatorProperty, value);
         }
 
-        public static readonly DependencyProperty AnimatorProperty =
+        public static readonly DependencyProperty WpfAnimatorProperty =
             DependencyProperty.RegisterAttached(
-                "Animator",
-                typeof (Animator),
+                "WpfAnimator",
+                typeof (WpfAnimator),
                 typeof (AnimationBehavior),
                 new PropertyMetadata(null));
 
@@ -178,7 +178,7 @@ namespace XamlAnimatedGif
             image.RaiseEvent(new AnimationErrorEventArgs(image, exception, kind));
         }
 
-        private static void AnimatorError(object sender, AnimationErrorEventArgs e)
+        private static void WpfAnimatorError(object sender, AnimationErrorEventArgs e)
         {
             var source = e.Source as UIElement;
             source?.RaiseEvent(e);
@@ -263,7 +263,7 @@ namespace XamlAnimatedGif
             (d as UIElement)?.RemoveHandler(AnimationCompletedEvent, handler);
         }
 
-        private static void AnimatorAnimationCompleted(object sender, AnimationCompletedEventArgs e)
+        private static void WpfAnimatorAnimationCompleted(object sender, AnimationCompletedEventArgs e)
         {
 
             var element = e.Source as Image;
@@ -357,7 +357,7 @@ namespace XamlAnimatedGif
             SetSeqNum(image, seqNum);
 
             image.Source = null;
-            ClearAnimatorCore(image);
+            ClearWpfAnimatorCore(image);
 
             try
             {
@@ -392,7 +392,7 @@ namespace XamlAnimatedGif
             var image = (Image) sender;
             image.Unloaded -= Image_Unloaded;
             image.Loaded += Image_Loaded;
-            ClearAnimatorCore(image);
+            ClearWpfAnimatorCore(image);
         }
 
         private static bool IsLoaded(FrameworkElement element)
@@ -434,14 +434,14 @@ namespace XamlAnimatedGif
             try
             {
                 var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
-                var animator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image);
+                var WpfAnimator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
-                    animator.Dispose();
+                    WpfAnimator.Dispose();
                     return;
                 }
-                await SetAnimatorCoreAsync(image, animator);
+                await SetWpfAnimatorCoreAsync(image, WpfAnimator);
                 OnLoaded(image);
             }
             catch (InvalidGifStreamException)
@@ -462,12 +462,12 @@ namespace XamlAnimatedGif
 
             try
             {
-                var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image);
-                await SetAnimatorCoreAsync(image, animator);
+                var WpfAnimator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image);
+                await SetWpfAnimatorCoreAsync(image, WpfAnimator);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
-                    animator.Dispose();
+                    WpfAnimator.Dispose();
                     return;
                 }
                 OnLoaded(image);
@@ -483,28 +483,28 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static async Task SetAnimatorCoreAsync(Image image, Animator animator)
+        private static async Task SetWpfAnimatorCoreAsync(Image image, WpfAnimator WpfAnimator)
         {
-            SetAnimator(image, animator);
-            animator.Error += AnimatorError;
-            animator.AnimationCompleted += AnimatorAnimationCompleted;
-            image.Source = animator.Bitmap;
+            SetWpfAnimator(image, WpfAnimator);
+            WpfAnimator.Error += WpfAnimatorError;
+            WpfAnimator.AnimationCompleted += WpfAnimatorAnimationCompleted;
+            image.Source = WpfAnimator.Bitmap;
             if (GetAutoStart(image))
-                animator.Play();
+                WpfAnimator.Play();
             else
-                await animator.ShowFirstFrameAsync();
+                await WpfAnimator.ShowFirstFrameAsync();
         }
 
-        private static void ClearAnimatorCore(Image image)
+        private static void ClearWpfAnimatorCore(Image image)
         {
-            var animator = GetAnimator(image);
-            if (animator == null)
+            var WpfAnimator = GetAnimator(image);
+            if (WpfAnimator == null)
                 return;
 
-            animator.AnimationCompleted -= AnimatorAnimationCompleted;
-            animator.Error -= AnimatorError;
-            animator.Dispose();
-            SetAnimator(image, null);
+            WpfAnimator.AnimationCompleted -= WpfAnimatorAnimationCompleted;
+            WpfAnimator.Error -= WpfAnimatorError;
+            WpfAnimator.Dispose();
+            SetWpfAnimator(image, null);
         }
 
         // ReSharper disable once UnusedParameter.Local (used in WPF)
@@ -517,7 +517,7 @@ namespace XamlAnimatedGif
         {
             try
             {
-                var loader = new UriLoader();
+                var loader = new WpfUriLoader();
                 var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
                 var stream = await loader.GetStreamFromUriAsync(sourceUri, progress);
                 SetStaticImageCore(image, stream);

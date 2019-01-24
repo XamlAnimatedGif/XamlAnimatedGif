@@ -79,6 +79,13 @@ namespace XamlAnimatedGif.Decoding
             ProcessHeaderData();
             ProcessFrameData();
 
+            if (Header.Iterations == -1)
+                Header.RepeatCount = new GifRepeatCount() { Count = 1 };
+            else if (Header.Iterations == 0)
+                Header.RepeatCount = new GifRepeatCount() { LoopForever = true };
+            else if (Header.Iterations > 0)
+                Header.RepeatCount = new GifRepeatCount() { Count = Header.Iterations };
+
             var pixelCount = _gifDimensions.TotalPixels;
 
             _hasFrameBackups = Frames
@@ -423,7 +430,6 @@ namespace XamlAnimatedGif.Decoding
             }
         }
 
-
         /// <summary>
         /// Processes GIF Header.
         /// </summary>
@@ -451,7 +457,7 @@ namespace XamlAnimatedGif.Decoding
 
             _gifHeader = new GifHeader()
             {
-                Rect = _gifDimensions,
+                Dimensions = _gifDimensions,
                 HasGlobalColorTable = _gctUsed,
                 GlobalColorTable = _globalColorTable,
                 GlobalColorTableSize = _gctSize,
@@ -461,13 +467,6 @@ namespace XamlAnimatedGif.Decoding
 
             ArrayPool<byte>.Shared.Return(tmpB);
         }
-
-        //public WriteableBitmap CreateBitmapForRender(Vector? dpi = null)
-        //{
-        //    var defDpi = dpi ?? new Vector(96, 96);
-        //    var pxSize = new PixelSize(_gifDimensions.Width, _gifDimensions.Height);
-        //    return new WriteableBitmap(pxSize, defDpi, PixelFormat.Bgra8888);
-        //}
 
         static MemoryStream memoryStream = new MemoryStream();
 

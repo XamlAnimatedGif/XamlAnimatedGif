@@ -6,15 +6,16 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using XamlAnimatedGif.Extensions;
 using TaskEx = System.Threading.Tasks.Task;
 
 
 namespace XamlAnimatedGif
 {
-    internal class UriLoader
+    public abstract class UriLoader
     {
+        public abstract Task<Stream> GetStreamFromUriCoreAsync(Uri uri);
+
         public Task<Stream> GetStreamFromUriAsync(Uri uri, IProgress<int> progress)
         {
             if (uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https"))
@@ -22,7 +23,7 @@ namespace XamlAnimatedGif
             return GetStreamFromUriCoreAsync(uri);
         }
 
-        private static async Task<Stream> GetNetworkStreamAsync(Uri uri, IProgress<int> progress)
+        public static async Task<Stream> GetNetworkStreamAsync(Uri uri, IProgress<int> progress)
         {
             string cacheFileName = GetCacheFileName(uri);
             var cacheStream = await OpenTempFileStreamAsync(cacheFileName);
@@ -34,7 +35,7 @@ namespace XamlAnimatedGif
             return await OpenTempFileStreamAsync(cacheFileName);
         }
 
-        private static async Task DownloadToCacheFileAsync(Uri uri, string fileName, IProgress<int> progress)
+        public static async Task DownloadToCacheFileAsync(Uri uri, string fileName, IProgress<int> progress)
         {
             try
             {
@@ -70,29 +71,7 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static Task<Stream> GetStreamFromUriCoreAsync(Uri uri)
-        {
-            if (uri.Scheme == PackUriHelper.UriSchemePack)
-            {
-                var sri = uri.Authority == "siteoforigin:,,,"
-                    ? Application.GetRemoteStream(uri)
-                    : Application.GetResourceStream(uri);
-
-                if (sri != null)
-                    return TaskEx.FromResult(sri.Stream);
-
-                throw new FileNotFoundException("Cannot find file with the specified URI");
-            }
-
-            if (uri.Scheme == Uri.UriSchemeFile)
-            {
-                return TaskEx.FromResult<Stream>(File.OpenRead(uri.LocalPath));
-            }
-
-            throw new NotSupportedException("Only pack:, file:, http: and https: URIs are supported");
-        }
-
-        private static Task<Stream> OpenTempFileStreamAsync(string fileName)
+        public static Task<Stream> OpenTempFileStreamAsync(string fileName)
         {
             string path = Path.Combine(Path.GetTempPath(), fileName);
             Stream stream = null;
@@ -106,7 +85,7 @@ namespace XamlAnimatedGif
             return TaskEx.FromResult(stream);
         }
 
-        private static Task<Stream> CreateTempFileStreamAsync(string fileName)
+        public static Task<Stream> CreateTempFileStreamAsync(string fileName)
         {
             string path = Path.Combine(Path.GetTempPath(), fileName);
             Stream stream = File.OpenWrite(path);
@@ -114,14 +93,14 @@ namespace XamlAnimatedGif
             return TaskEx.FromResult(stream);
         }
 
-        private static Task DeleteTempFileAsync(string fileName)
+        public static Task DeleteTempFileAsync(string fileName)
         {
             if (File.Exists(fileName))
                 File.Delete(fileName);
             return TaskEx.FromResult(fileName);
         }
 
-        private static string GetCacheFileName(Uri uri)
+        public static string GetCacheFileName(Uri uri)
         {
             using (var sha1 = SHA1.Create())
             {
@@ -131,7 +110,7 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static string ToHex(byte[] bytes)
+        public static string ToHex(byte[] bytes)
         {
             return bytes.Aggregate(
                 new StringBuilder(),

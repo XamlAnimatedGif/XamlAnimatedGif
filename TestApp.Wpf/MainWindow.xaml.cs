@@ -93,8 +93,7 @@ namespace TestApp.Wpf
         {
             if (_animator != null)
             {
-                Dispatcher.Invoke(()=>
-                sldPosition.Value = _animator.CurrentFrameIndex);
+                sldPosition.Value = _animator.CurrentFrameIndex;
             }
         }
 
@@ -234,7 +233,7 @@ namespace TestApp.Wpf
             handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private Animator _animator;
+        private WpfAnimator _animator;
 
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
@@ -289,12 +288,12 @@ namespace TestApp.Wpf
             new BasicTestsWindow().ShowDialog();
         }
 
-        private void AnimationBehavior_OnError(DependencyObject d, AnimationErrorEventArgs e)
+        private void AnimationBehavior_OnError(DependencyObject d, EventArgs e)
         {
-            if (e.Kind == AnimationErrorKind.Loading)
-                IsDownloading = false;
+            //if (e.Kind == AnimationErrorKind.Loading)
+            //    IsDownloading = false;
 
-            MessageBox.Show($"An error occurred ({e.Kind}): {e.Exception}");
+            //MessageBox.Show($"An error occurred ({e.Kind}): {e.Exception}");
         }
 
         private void btnRewind_Click(object sender, RoutedEventArgs e)

@@ -13,7 +13,8 @@ namespace XamlAnimatedGif.Decoding
         public ulong GlobalColorTable;
         public int BackgroundColorIndex;
         public long HeaderSize;
-        public int Iterations = 0;
-        public GifRect Rect;
+        internal int Iterations = -1;
+        public GifRepeatCount RepeatCount;
+        public GifRect Dimensions;
     }
 }
