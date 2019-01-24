@@ -11,7 +11,7 @@ namespace XamlAnimatedGif
     {
         private readonly Image _image;
 
-        public ImageAnimator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior, Image image) : base(sourceStream, sourceUri, metadata, repeatBehavior)
+        public ImageAnimator(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior, Image image) : base(sourceStream, sourceUri, repeatBehavior)
         {
             _image = image;
             OnRepeatBehaviorChanged(); // in case the value has changed during creation
@@ -26,14 +26,14 @@ namespace XamlAnimatedGif
             return CreateAsyncCore(
                 sourceUri,
                 progress,
-                (stream, metadata) => new ImageAnimator(stream, sourceUri, metadata, repeatBehavior, image));
+                (stream) => new ImageAnimator(stream, sourceUri, repeatBehavior, image));
         }
 
         public static Task<ImageAnimator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior, Image image)
         {
             return CreateAsyncCore(
                 sourceStream,
-                metadata => new ImageAnimator(sourceStream, null, metadata, repeatBehavior, image));
+                () => new ImageAnimator(sourceStream, null, repeatBehavior, image));
         }
     }
 }

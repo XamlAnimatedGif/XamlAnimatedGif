@@ -5,6 +5,7 @@
     <AssemblyName>XamlAnimatedGif</AssemblyName>
     <LangVersion>latest</LangVersion>
     <AssemblyTitle>GIF Animation Library for XAML Platforms</AssemblyTitle>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

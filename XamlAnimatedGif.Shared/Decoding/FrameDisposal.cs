@@ -1,4 +1,4 @@
-namespace AvaloniaGif.Decoding
+namespace XamlAnimatedGif.Decoding
 {
     public enum FrameDisposal
     {

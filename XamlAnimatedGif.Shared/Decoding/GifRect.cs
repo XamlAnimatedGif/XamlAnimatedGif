@@ -1,11 +1,12 @@
 namespace XamlAnimatedGif.Decoding
 {
-    public struct GifRect
+    public readonly struct GifRect
     {
-        public int X { get; }
+        public  int X { get; }
         public int Y { get; }
         public int Width { get; }
         public int Height { get; }
+        public int TotalPixels { get; }
 
         public GifRect(int x, int y, int width, int height)
         {
@@ -13,6 +14,7 @@ namespace XamlAnimatedGif.Decoding
             Y = y;
             Width = width;
             Height = height;
+            TotalPixels = width * height;
         }
     }
 }

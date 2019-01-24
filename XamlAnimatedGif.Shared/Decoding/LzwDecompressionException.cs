@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace AvaloniaGif.Decoding
+namespace XamlAnimatedGif.Decoding
 {
     [Serializable]
     internal class LzwDecompressionException : Exception

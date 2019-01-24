@@ -3,7 +3,7 @@
 
 using System;
 
-namespace AvaloniaGif.Caching
+namespace XamlAnimatedGif.Caching
 {
     /// <summary>
     /// Interface for a key-value cache.

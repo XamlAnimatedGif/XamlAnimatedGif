@@ -1,45 +1,88 @@
-﻿using System;
 using System.IO;
-using System.Threading;
+using System;
+using System.Buffers;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Threading;
+using XamlAnimatedGif.Decoding;
 
 namespace XamlAnimatedGif.Extensions
 {
+    [DebuggerStepThrough]
     internal static class StreamExtensions
     {
-        public static async Task ReadAllAsync(this Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default(CancellationToken))
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort SpanToShort(Span<byte> b)
+            => (ushort)(b[0] | (b[1] << 8));
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Skip(this Stream stream, long count)
         {
-            int totalRead = 0;
-            while (totalRead < count)
+            stream.Position += count;
+        }
+
+        /// <summary>
+        /// Read a Gif block from stream while advancing the position.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ReadBlock(this Stream stream, byte[] tempBuf)
+        {
+            stream.Read(tempBuf, 0, 1);
+
+            var blockLength = (int)tempBuf[0];
+
+            if (blockLength > 0)
+                stream.Read(tempBuf,0, blockLength);
+
+            // Guard against infinite loop.
+            if (stream.Position >= stream.Length)
+                throw new InvalidGifStreamException("Reach the end of the filestream without trailer block.");
+
+            return blockLength;
+        }
+
+        /// <summary>
+        /// Skips GIF blocks until it encounters an empty block.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SkipBlocks(this Stream stream, byte[] tempBuf)
+        { 
+            int blockLength;
+            do
             {
-                int n = await stream.ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken);
-                if (n == 0)
-                    throw new EndOfStreamException();
-                totalRead += n;
-            }
+                stream.Read(tempBuf, 0,1);
+                blockLength = (int)tempBuf[0];
+                stream.Position += blockLength;
+
+                // Guard against infinite loop.
+                if (stream.Position >= stream.Length)
+                    throw new InvalidGifStreamException("Reach the end of the filestream without trailer block.");
+
+            } while (blockLength > 0);
         }
 
-        public static void ReadAll(this Stream stream, byte[] buffer, int offset, int count)
+        /// <summary>
+        /// Read a <see cref="ushort"/> from stream by providing a temporary buffer.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort ReadUShortS(this Stream stream, byte[] tempBuf)
         {
-            int totalRead = 0;
-            while (totalRead < count)
-            {
-                int n = stream.Read(buffer, offset + totalRead, count - totalRead);
-                if (n == 0)
-                    throw new EndOfStreamException();
-                totalRead += n;
-            }
+            stream.Read(tempBuf, 0,2);
+            return SpanToShort(tempBuf);
         }
 
-        public static async Task<int> ReadByteAsync(this Stream stream, CancellationToken cancellationToken = default(CancellationToken))
+        /// <summary>
+        /// Read a <see cref="ushort"/> from stream by providing a temporary buffer.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte ReadByteS(this Stream stream, byte[] tempBuf)
         {
-            var buffer = new byte[1];
-            int n = await stream.ReadAsync(buffer, 0, 1, cancellationToken);
-            if (n == 0)
-                return -1;
-            return buffer[0];
+            stream.Read(tempBuf,0,1);
+            var finalVal = tempBuf[0];
+            return finalVal;
         }
-
         public static Stream AsBuffered(this Stream stream)
         {
             var bs = stream as BufferedStream;

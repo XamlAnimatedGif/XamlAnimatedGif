@@ -12,46 +12,52 @@ using System.Windows.Media.Imaging;
 using System.Runtime.InteropServices;
 
 using XamlAnimatedGif.Decoding;
-using XamlAnimatedGif.Decompression;
-using XamlAnimatedGif.Extensions;
 using TaskEx = System.Threading.Tasks.Task;
 
 namespace XamlAnimatedGif
-{ 
+{
     public abstract class Animator : DependencyObject, IDisposable
     {
         private readonly Stream _sourceStream;
         private readonly Uri _sourceUri;
         private readonly bool _isSourceStreamOwner;
-        private readonly GifDataStream _metadata;
-        private readonly Dictionary<int, GifPalette> _palettes;
+        private readonly GifDecoder _decoder;
+        internal BitmapSource Bitmap => _bitmap;
+
+        ////private readonly GifDataStream _metadata;
+        //private readonly Dictionary<int, GifPalette> _palettes;
         private readonly WriteableBitmap _bitmap;
-        private readonly int _stride;
-        private readonly byte[] _previousBackBuffer;
-        private readonly byte[] _indexStreamBuffer;
+        //private readonly int _stride;
+        //private readonly byte[] _previousBackBuffer;
+        //private readonly byte[] _indexStreamBuffer;
         private readonly TimingManager _timingManager;
 
         #region Constructor and factory methods
 
-        internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior)
+        internal Animator(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior)
         {
-            //_sourceStream = sourceStream;
-            //_sourceUri = sourceUri;
-            //_isSourceStreamOwner = sourceUri != null; // stream opened from URI, should close it
+            _sourceStream = sourceStream;
+            _sourceUri = sourceUri;
+            _isSourceStreamOwner = sourceUri != null; // stream opened from URI, should close it
+
+            _decoder = new GifDecoder(sourceStream);
+
             //_metadata = metadata;
             //_palettes = CreatePalettes(metadata);
-            //_bitmap = CreateBitmap(metadata);
+            _bitmap = CreateBitmap();
             //var desc = metadata.Header.LogicalScreenDescriptor;
             //_stride = 4;//* ((desc.Width * 32 + 31) / 32);
             //_previousBackBuffer = new byte[desc.Height * _stride];
             //_indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
-            //_timingManager = CreateTimingManager(metadata, repeatBehavior);
+
+            _timingManager = CreateTimingManager(_decoder, RepeatBehavior.Forever);
+
         }
 
         internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
             Uri sourceUri,
             IProgress<int> progress,
-            Func<Stream, GifDataStream, TAnimator> create)
+            Func<Stream, TAnimator> create)
             where TAnimator : Animator
         {
             var loader = new UriLoader();
@@ -59,7 +65,7 @@ namespace XamlAnimatedGif
             try
             {
                 // ReSharper disable once AccessToDisposedClosure
-                return await CreateAsyncCore(stream, metadata => create(stream, metadata));
+                return await CreateAsyncCore(stream, () => create(stream));
             }
             catch
             {
@@ -70,21 +76,20 @@ namespace XamlAnimatedGif
 
         internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
             Stream sourceStream,
-            Func<GifDataStream, TAnimator> create)
+            Func<TAnimator> create)
             where TAnimator : Animator
         {
             if (!sourceStream.CanSeek)
                 throw new ArgumentException("The stream is not seekable");
             sourceStream.Seek(0, SeekOrigin.Begin);
-            var metadata = await GifDataStream.ReadAsync(sourceStream);
-            return create(metadata);
+            return create();
         }
 
         #endregion
 
         #region Animation
 
-        public int FrameCount => _metadata.Frames.Count;
+        public int FrameCount => _decoder.Frames.Count;
 
         private bool _isStarted;
         private CancellationTokenSource _cancellationTokenSource;
@@ -129,10 +134,11 @@ namespace XamlAnimatedGif
         {
             while (true)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+               // cancellationToken.ThrowIfCancellationRequested();
                 var timing = _timingManager.NextAsync(cancellationToken);
-                var rendering = RenderFrameAsync(CurrentFrameIndex, cancellationToken);
+                var rendering = new Task(() => _decoder.RenderFrame(CurrentFrameIndex));
                 await TaskEx.WhenAll(timing, rendering);
+                TransferToTarget();
                 if (!timing.Result)
                     break;
                 CurrentFrameIndex = (CurrentFrameIndex + 1) % FrameCount;
@@ -187,25 +193,26 @@ namespace XamlAnimatedGif
             }
         }
 
-        private TimingManager CreateTimingManager(GifDataStream metadata, RepeatBehavior repeatBehavior)
+        private TimingManager CreateTimingManager(GifDecoder metadata, RepeatBehavior repeatBehavior)
         {
-            var actualRepeatBehavior = GetActualRepeatBehavior(metadata, repeatBehavior);
+                        var actualRepeatBehavior = GetActualRepeatBehavior(metadata, repeatBehavior);
 
             var manager = new TimingManager(actualRepeatBehavior);
             foreach (var frame in metadata.Frames)
             {
-                manager.Add(GetFrameDelay(frame));
+                manager.Add(frame.FrameDelay);
             }
 
             manager.Completed += TimingManagerCompleted;
             return manager;
         }
 
-        private RepeatBehavior GetActualRepeatBehavior(GifDataStream metadata, RepeatBehavior repeatBehavior)
+        private RepeatBehavior GetActualRepeatBehavior(GifDecoder metadata, RepeatBehavior repeatBehavior)
         {
-            return repeatBehavior == default(RepeatBehavior)
-                    ? GetRepeatBehaviorFromGif(metadata)
-                    : repeatBehavior;
+            //return repeatBehavior == default(RepeatBehavior)
+            //        ? metadata.Header.Iterations
+            //        : repeatBehavior;
+            return repeatBehavior;
         }
 
         protected abstract RepeatBehavior GetSpecifiedRepeatBehavior();
@@ -219,284 +226,47 @@ namespace XamlAnimatedGif
 
         #region Rendering
 
-        private static WriteableBitmap CreateBitmap(GifDataStream metadata)
+        void TransferToTarget()
         {
-            var desc = metadata.Header.LogicalScreenDescriptor;
- 
-           return new WriteableBitmap(desc.Dimensions.Width, desc.Dimensions.Height, 96, 96, PixelFormats.Bgra32, null);
- 
+            _bitmap.Lock();
+            _decoder.WriteBackBufToFb(_bitmap.BackBuffer);
+            _bitmap.Unlock();
         }
 
-        private static Dictionary<int, GifPalette> CreatePalettes(GifDataStream metadata)
+        private WriteableBitmap CreateBitmap()
         {
-            var palettes = new Dictionary<int, GifPalette>();
-            Color[] globalColorTable = null;
-            if (metadata.Header.LogicalScreenDescriptor.HasGlobalColorTable)
-            {
-                globalColorTable =
-                    metadata.GlobalColorTable
-                        .Select(gc => Color.FromArgb(0xFF, gc.R, gc.G, gc.B))
-                        .ToArray();
-            }
-
-            for (int i = 0; i < metadata.Frames.Count; i++)
-            {
-                var frame = metadata.Frames[i];
-                var colorTable = globalColorTable;
-                if (frame.Descriptor.HasLocalColorTable)
-                {
-                    colorTable =
-                        frame.LocalColorTable
-                            .Select(gc => Color.FromArgb(0xFF, gc.R, gc.G, gc.B))
-                            .ToArray();
-                }
-
-                int? transparencyIndex = null;
-                var gce = frame.GraphicControl;
-                if (gce != null && gce.HasTransparency)
-                {
-                    transparencyIndex = gce.TransparencyIndex;
-                }
-
-                palettes[i] = new GifPalette(transparencyIndex, colorTable);
-            }
-
-            return palettes;
+            var desc = _decoder.Header.Rect;
+            return new WriteableBitmap(desc.Width, desc.Height, 96, 96, PixelFormats.Bgra32, null);
         }
-
-        private static byte[] CreateIndexStreamBuffer(GifDataStream metadata, Stream stream)
-        {
-            // Find the size of the largest frame pixel data
-            // (ignoring the fact that we include the next frame's header)
-
-            long lastSize = stream.Length - metadata.Frames.Last().ImageData.CompressedDataStartOffset;
-            long maxSize = lastSize;
-            if (metadata.Frames.Count > 1)
-            {
-                var sizes = metadata.Frames.Zip(metadata.Frames.Skip(1),
-                    (f1, f2) => f2.ImageData.CompressedDataStartOffset - f1.ImageData.CompressedDataStartOffset);
-                maxSize = Math.Max(sizes.Max(), lastSize);
-            }
-            // Need 4 extra bytes so that BitReader doesn't need to check the size for every read
-            return new byte[maxSize + 4];
-        }
-
-        private int _previousFrameIndex;
-        private GifFrame _previousFrame;
-
-        private async Task RenderFrameAsync(int frameIndex, CancellationToken cancellationToken)
-        {
-            if (frameIndex < 0)
-                return;
-
-            var frame = _metadata.Frames[frameIndex];
-            var desc = frame.Descriptor;
-            var rect = GetFixedUpFrameRect(desc);
-            using (var indexStream = await GetIndexStreamAsync(frame, cancellationToken))
-            {
-                //using (_bitmap.LockInScope())
-                //{
-                //    if (frameIndex < _previousFrameIndex)
-                //        ClearArea(_metadata.Header.LogicalScreenDescriptor);
-                //    else
-                //        DisposePreviousFrame(frame);
-
-                //    int bufferLength = 4 * rect.Width;
-                //    byte[] indexBuffer = new byte[desc.Width];
-                //    byte[] lineBuffer = new byte[bufferLength];
-
-                //    var palette = _palettes[frameIndex];
-                //    int transparencyIndex = palette.TransparencyIndex ?? -1;
-
-                //    var rows = desc.Interlace
-                //        ? InterlacedRows(rect.Height)
-                //        : NormalRows(rect.Height);
-
-                //    foreach (int y in rows)
-                //    {
-                //        indexStream.ReadAll(indexBuffer, 0, desc.Width);
-
-                //        int offset = (desc.Top + y) * _stride + desc.Left * 4;
-
-                //        if (transparencyIndex >= 0)
-                //        {
-                //            CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
-                //        }
-
-                //        for (int x = 0; x < rect.Width; x++)
-                //        {
-                //            byte index = indexBuffer[x];
-                //            int i = 4 * x;
-                //            if (index != transparencyIndex)
-                //            {
-                //                WriteColor(lineBuffer, palette[index], i);
-                //            }
-                //        }
-                //        CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
-                //    }
-#if WPF
-                    _bitmap.AddDirtyRect(rect);
-#endif
-                //}
-#if WINRT || SILVERLIGHT
-                _bitmap.Invalidate();
-#endif
-                _previousFrame = frame;
-                _previousFrameIndex = frameIndex;
-            }
-        }
-
-        private static IEnumerable<int> NormalRows(int height)
-        {
-            return Enumerable.Range(0, height);
-        }
-
-        private static IEnumerable<int> InterlacedRows(int height)
-        {
-            /*
-             * 4 passes:
-             * Pass 1: rows 0, 8, 16, 24...
-             * Pass 2: rows 4, 12, 20, 28...
-             * Pass 3: rows 2, 6, 10, 14...
-             * Pass 4: rows 1, 3, 5, 7...
-             * */
-            var passes = new[]
-            {
-                new { Start = 0, Step = 8 },
-                new { Start = 4, Step = 8 },
-                new { Start = 2, Step = 4 },
-                new { Start = 1, Step = 2 }
-            };
-            foreach (var pass in passes)
-            {
-                int y = pass.Start;
-                while (y < height)
-                {
-                    yield return y;
-                    y += pass.Step;
-                }
-            }
-        }
-
-        private static void CopyToBitmap(byte[] buffer, WriteableBitmap bitmap, int offset, int length)
-        { 
-            Marshal.Copy(buffer, 0, bitmap.BackBuffer + offset, length);
- 
-        }
-
-        private static void CopyFromBitmap(byte[] buffer, WriteableBitmap bitmap, int offset, int length)
-        { 
-            Marshal.Copy(bitmap.BackBuffer + offset, buffer, 0, length);
-        }
-
-        private static void WriteColor(byte[] lineBuffer, Color color, int startIndex)
-        {
-            lineBuffer[startIndex] = color.B;
-            lineBuffer[startIndex + 1] = color.G;
-            lineBuffer[startIndex + 2] = color.R;
-            lineBuffer[startIndex + 3] = color.A;
-        }
-
-        private void DisposePreviousFrame(GifFrame currentFrame)
-        {
-            var pgce = _previousFrame?.GraphicControl;
-            if (pgce != null)
-            {
-                switch (pgce.DisposalMethod)
-                {
-                    case GifFrameDisposalMethod.None:
-                    case GifFrameDisposalMethod.DoNotDispose:
-                    {
-                        // Leave previous frame in place
-                        break;
-                    }
-                    case GifFrameDisposalMethod.RestoreBackground:
-                    {
-                        ClearArea(GetFixedUpFrameRect(_previousFrame.Descriptor));
-                        break;
-                    }
-                    case GifFrameDisposalMethod.RestorePrevious:
-                    {
-                        CopyToBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
-#if WPF
-                        var desc = _metadata.Header.LogicalScreenDescriptor;
-                        var rect = new Int32Rect(0, 0, desc.Width, desc.Height);
-                        _bitmap.AddDirtyRect(rect);
-#endif
-                        break;
-                    }
-                }
-            }
-
-            var gce = currentFrame.GraphicControl;
-            if (gce != null && gce.DisposalMethod == GifFrameDisposalMethod.RestorePrevious)
-            {
-                CopyFromBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
-            }
-        }
-
-        private void ClearArea(GifRect rect)
-        {
-            ClearArea(new Int32Rect(rect.X, rect.Y, rect.Width, rect.Height));
-        }
-
-        private void ClearArea(Int32Rect rect)
-        {
-            int bufferLength = 4 * rect.Width;
-            byte[] lineBuffer = new byte[bufferLength];
-            for (int y = 0; y < rect.Height; y++)
-            {
-                int offset = (rect.Y + y) * _stride + 4 * rect.X;
-                CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
-            }
-#if WPF
-            _bitmap.AddDirtyRect(new Int32Rect(rect.X, rect.Y, rect.Width, rect.Height));
-#endif
-        }
-
-        private async Task<Stream> GetIndexStreamAsync(GifFrame frame, CancellationToken cancellationToken)
-        {
-            var data = frame.ImageData;
-            cancellationToken.ThrowIfCancellationRequested();
-            _sourceStream.Seek(data.CompressedDataStartOffset, SeekOrigin.Begin);
-            using (var ms = new MemoryStream(_indexStreamBuffer))
-            {
-                await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, ms, cancellationToken).ConfigureAwait(false);
-            }
-            var lzwStream = new LzwDecompressStream(_indexStreamBuffer, data.LzwMinimumCodeSize);
-            return lzwStream;
-        }
-
-        internal BitmapSource Bitmap => _bitmap;
 
         #endregion
 
         #region Helper methods
 
-        private static TimeSpan GetFrameDelay(GifFrame frame)
-        {
-            var gce = frame.GraphicControl;
-            if (gce != null)
-            {
-                if (gce.Delay != 0)
-                    return TimeSpan.FromMilliseconds(gce.Delay);
-            }
-            return TimeSpan.FromMilliseconds(100);
-        }
+        //private static TimeSpan GetFrameDelay(GifFrame frame)
+        //{
+        //    var gce = frame.GraphicControl;
+        //    if (gce != null)
+        //    {
+        //        if (gce.Delay != 0)
+        //            return TimeSpan.FromMilliseconds(gce.Delay);
+        //    }
+        //    return TimeSpan.FromMilliseconds(100);
+        //}
 
-        private static RepeatBehavior GetRepeatBehaviorFromGif(GifDataStream metadata)
-        {
-            if (metadata.RepeatCount == 0)
-                return RepeatBehavior.Forever;
-            return new RepeatBehavior(metadata.RepeatCount);
-        }
+        //private static RepeatBehavior GetRepeatBehaviorFromGif(GifDataStream metadata)
+        //{
+        //    if (metadata.RepeatCount == 0)
+        //        return RepeatBehavior.Forever;
+        //    return new RepeatBehavior(metadata.RepeatCount);
+        //}
 
-        private Int32Rect GetFixedUpFrameRect(GifImageDescriptor desc)
-        {
-            int width = Math.Min(desc.Dimensions.Width, _bitmap.PixelWidth - desc.Dimensions.X);
-            int height = Math.Min(desc.Dimensions.Height, _bitmap.PixelHeight - desc.Dimensions.Y);
-            return new Int32Rect(desc.Dimensions.X, desc.Dimensions.Y, width, height);
-        }
+        //private Int32Rect GetFixedUpFrameRect(GifImageDescriptor desc)
+        //{
+        //    int width = Math.Min(desc.Dimensions.Width, _bitmap.PixelWidth - desc.Dimensions.X);
+        //    int height = Math.Min(desc.Dimensions.Height, _bitmap.PixelHeight - desc.Dimensions.Y);
+        //    return new Int32Rect(desc.Dimensions.X, desc.Dimensions.Y, width, height);
+        //}
 
         #endregion
 
@@ -526,6 +296,7 @@ namespace XamlAnimatedGif
                 {
                     try
                     {
+                        _decoder?.Dispose();
                         _sourceStream?.Dispose();
                     }
                     catch
@@ -545,26 +316,12 @@ namespace XamlAnimatedGif
             return "GIF: " + s;
         }
 
-        class GifPalette
-        {
-            private readonly Color[] _colors;
-
-            public GifPalette(int? transparencyIndex, Color[] colors)
-            {
-                TransparencyIndex = transparencyIndex;
-                _colors = colors;
-            }
-
-            public int? TransparencyIndex { get; }
-
-            public Color this[int i] => _colors[i];
-        }
-
         internal async Task ShowFirstFrameAsync()
         {
             try
             {
-                await RenderFrameAsync(0, CancellationToken.None);
+                _decoder.RenderFrame(0);
+                TransferToTarget();
                 CurrentFrameIndex = 0;
                 _timingManager.Pause();
             }
@@ -576,38 +333,38 @@ namespace XamlAnimatedGif
 
         public async void Rewind()
         {
-            CurrentFrameIndex = 0;
-            bool isStopped = _timingManager.IsPaused || _timingManager.IsComplete;
-            _timingManager.Reset();
-            if (isStopped)
-            {
-                _timingManager.Pause();
-                _isStarted = false;
-                try
-                {
-                    await RenderFrameAsync(0, CancellationToken.None);
-                }
-                catch (Exception ex)
-                {
-                    OnError(ex, AnimationErrorKind.Rendering);
-                }
-            }
+            //CurrentFrameIndex = 0;
+            //bool isStopped = _timingManager.IsPaused || _timingManager.IsComplete;
+            //_timingManager.Reset();
+            //if (isStopped)
+            //{
+            //    _timingManager.Pause();
+            //    _isStarted = false;
+            //    try
+            //    {
+            //        await RenderFrameAsync(0, CancellationToken.None);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        OnError(ex, AnimationErrorKind.Rendering);
+            //    }
+            //}
         }
 
         protected abstract object AnimationSource { get; }
 
         internal void OnRepeatBehaviorChanged()
         {
-            if (_timingManager == null)
-                return;
+            //if (_timingManager == null)
+            //    return;
 
-            var newValue = GetSpecifiedRepeatBehavior();
-            var newActualValue = GetActualRepeatBehavior(_metadata, newValue);
-            if (_timingManager.RepeatBehavior == newActualValue)
-                return;
+            //var newValue = GetSpecifiedRepeatBehavior();
+            //var newActualValue = GetActualRepeatBehavior(_metadata, newValue);
+            //if (_timingManager.RepeatBehavior == newActualValue)
+            //    return;
 
-            _timingManager.RepeatBehavior = newActualValue;
-            Rewind();
+            //_timingManager.RepeatBehavior = newActualValue;
+            //Rewind();
         }
     }
 }

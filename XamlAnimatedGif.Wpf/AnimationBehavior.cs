@@ -444,7 +444,7 @@ namespace XamlAnimatedGif
                 await SetAnimatorCoreAsync(image, animator);
                 OnLoaded(image);
             }
-            catch (InvalidSignatureException)
+            catch (InvalidGifStreamException)
             {
                 await SetStaticImageAsync(image, sourceUri);
                 OnLoaded(image);
@@ -472,7 +472,7 @@ namespace XamlAnimatedGif
                 }
                 OnLoaded(image);
             }
-            catch (InvalidSignatureException)
+            catch (InvalidGifStreamException)
             {
                 SetStaticImage(image, stream);
                 OnLoaded(image);

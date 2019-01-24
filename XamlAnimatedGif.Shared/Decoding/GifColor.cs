@@ -1,21 +1,21 @@
 using System.Runtime.InteropServices;
 
-namespace AvaloniaGif.Decoding
+namespace XamlAnimatedGif
 {
     [StructLayout(LayoutKind.Explicit)]
-    internal readonly struct GifColor
+    public readonly struct GifColor
     {
         [FieldOffset(3)]
-        public readonly byte a;
+        public readonly byte A;
 
         [FieldOffset(2)]
-        public readonly byte r;
+        public readonly byte R;
 
         [FieldOffset(1)]
-        public readonly byte g;
+        public readonly byte G;
 
         [FieldOffset(0)]
-        public readonly byte b;
+        public readonly byte B;
 
         /// <summary>
         /// A struct that represents a ARGB color and is aligned as
@@ -27,10 +27,10 @@ namespace AvaloniaGif.Decoding
         /// <param name="a">Alpha</param>
         public GifColor(byte r, byte g, byte b, byte? a = null)
         {
-            this.a = a ?? 255;
-            this.r = r;
-            this.g = g;
-            this.b = b;
+            this.A = a ?? 255;
+            this.R = r;
+            this.G = g;
+            this.B = b;
         }
     }
 }

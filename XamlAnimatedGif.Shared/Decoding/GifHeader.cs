@@ -1,39 +1,19 @@
-using System.IO;
-using System.Threading.Tasks;
+// Licensed under the MIT License.
+// Copyright (C) 2018 Jumar A. Macato, All Rights Reserved.
+
+using System;
+using System.Runtime.InteropServices;
 
 namespace XamlAnimatedGif.Decoding
 {
-    internal class GifHeader : GifBlock
+    public class GifHeader
     {
-        public string Signature { get; private set; }
-        public string Version { get; private set; }
-        public GifLogicalScreenDescriptor LogicalScreenDescriptor { get; private set; }
-
-        private GifHeader()
-        {
-        }
-
-        internal override GifBlockKind Kind
-        {
-            get { return GifBlockKind.Other; }
-        }
-
-        internal static async Task<GifHeader> ReadAsync(Stream stream)
-        {
-            var header = new GifHeader();
-            await header.ReadInternalAsync(stream).ConfigureAwait(false);
-            return header;
-        }
-
-        private async Task ReadInternalAsync(Stream stream)
-        {
-            Signature = await GifHelpers.ReadStringAsync(stream, 3).ConfigureAwait(false);
-            if (Signature != "GIF")
-                throw GifHelpers.InvalidSignatureException(Signature);
-            Version = await GifHelpers.ReadStringAsync(stream, 3).ConfigureAwait(false);
-            if (Version != "87a" && Version != "89a")
-                throw GifHelpers.UnsupportedVersionException(Version);
-            LogicalScreenDescriptor = await GifLogicalScreenDescriptor.ReadAsync(stream).ConfigureAwait(false);
-        }
+        public bool HasGlobalColorTable;
+        public int GlobalColorTableSize;
+        public ulong GlobalColorTable;
+        public int BackgroundColorIndex;
+        public long HeaderSize;
+        public int Iterations = 0;
+        public GifRect Rect;
     }
 }

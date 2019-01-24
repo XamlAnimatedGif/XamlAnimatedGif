@@ -38,7 +38,7 @@ using System.Security.Cryptography;
 using System.Runtime.CompilerServices;
 
 
-namespace AvaloniaGif.Caching
+namespace XamlAnimatedGif.Caching
 {
     //see details: https://github.com/Cyan4973/xxHash/blob/dev/doc/xxhash_spec.md
 

@@ -1,7 +1,7 @@
 /// This source file is derived from https://github.com/launchdarkly/dotnet-cache/
 /// Under the terms of Apache 2.0 License.
 
-namespace AvaloniaGif.Caching
+namespace XamlAnimatedGif.Caching
 {
     /// <summary>
     /// Methods for building caches.

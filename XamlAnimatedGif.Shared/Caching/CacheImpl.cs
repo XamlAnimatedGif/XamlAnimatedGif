@@ -7,7 +7,7 @@ using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AvaloniaGif.Caching
+namespace XamlAnimatedGif.Caching
 {
     /// <summary>
     /// A concurrent in-memory cache with optional read-through behavior, an optional TTL, and the

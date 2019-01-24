@@ -9,7 +9,7 @@ using XamlAnimatedGif;
 
 namespace TestApp.Wpf
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         public MainWindow()
         {
