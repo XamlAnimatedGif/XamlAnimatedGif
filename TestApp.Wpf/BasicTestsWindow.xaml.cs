@@ -8,8 +8,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 using XamlAnimatedGif;
-using XamlAnimatedGif.Decoding;
-using XamlAnimatedGif.Decompression;
 
 namespace TestApp.Wpf
 {
@@ -68,21 +66,21 @@ namespace TestApp.Wpf
         {
             using (var fileStream = File.OpenRead(path))
             {
-                var gif = await GifDataStream.ReadAsync(fileStream);
-                for (int i = 0; i < gif.Frames.Count; i++)
-                {
-                    var frame = gif.Frames[i];
-                    fileStream.Seek(frame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
-                    using (var ms = new MemoryStream())
-                    {
-                        await GifHelpers.CopyDataBlocksToStreamAsync(fileStream, ms);
-                        using (var lzwStream = new LzwDecompressStream(ms.GetBuffer(), frame.ImageData.LzwMinimumCodeSize))
-                        using (var indOutStream = File.OpenWrite($"{path}.{i}.ind"))
-                        {
-                            await lzwStream.CopyToAsync(indOutStream);
-                        }
-                    }
-                }
+                //var gif = await GifDataStream.ReadAsync(fileStream);
+                //for (int i = 0; i < gif.Frames.Count; i++)
+                //{
+                //    var frame = gif.Frames[i];
+                //    fileStream.Seek(frame.ImageData.CompressedDataStartOffset, SeekOrigin.Begin);
+                //    using (var ms = new MemoryStream())
+                //    {
+                //        await GifHelpers.CopyDataBlocksToStreamAsync(fileStream, ms);
+                //        using (var lzwStream = new LzwDecompressStream(ms.GetBuffer(), frame.ImageData.LzwMinimumCodeSize))
+                //        using (var indOutStream = File.OpenWrite($"{path}.{i}.ind"))
+                //        {
+                //            await lzwStream.CopyToAsync(indOutStream);
+                //        }
+                //    }
+                //}
             }
         }
 

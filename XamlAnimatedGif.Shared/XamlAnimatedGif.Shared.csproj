@@ -3,17 +3,13 @@
     <!-- Will add UWP TFM later -->
     <TargetFrameworks>net45</TargetFrameworks>
     <AssemblyName>XamlAnimatedGif</AssemblyName>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <AssemblyName>XamlAnimatedGif</AssemblyName>
     <AssemblyTitle>GIF Animation Library for XAML Platforms</AssemblyTitle>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.0" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.40" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.5.4" PrivateAssets="All" />
     <Reference Include="System.Net.Http" />
   </ItemGroup>
 

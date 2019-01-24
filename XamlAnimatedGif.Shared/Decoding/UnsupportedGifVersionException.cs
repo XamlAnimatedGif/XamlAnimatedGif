@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System; 
 
 namespace XamlAnimatedGif.Decoding
 {
@@ -7,13 +6,5 @@ namespace XamlAnimatedGif.Decoding
     {
         internal UnsupportedGifVersionException(string message) : base(message) { }
         internal UnsupportedGifVersionException(string message, Exception inner) : base(message, inner) { }
-
-        protected UnsupportedGifVersionException(
-            SerializationInfo info,
-            StreamingContext context)
-            : base(info, context)
-        {
-
-        }
     }
 }

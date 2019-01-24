@@ -5,13 +5,17 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AssemblyName>XamlAnimatedGif</AssemblyName>
+    <AssemblyName>XamlAnimatedGif.Wpf</AssemblyName>
     <AssemblyTitle>GIF Animation Library for XAML Platforms</AssemblyTitle>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../XamlAnimatedGif.Shared/XamlAnimatedGif.Shared.csproj" />
     <PackageReference Include="MSBuild.Sdk.Extras" Version="1.5.4" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 
   <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />

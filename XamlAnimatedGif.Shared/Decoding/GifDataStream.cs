@@ -13,9 +13,6 @@ namespace XamlAnimatedGif.Decoding
         public IList<GifExtension> Extensions { get; set; }
         public ushort RepeatCount { get; set; }
 
-        private GifDataStream()
-        {
-        }
 
         internal static async Task<GifDataStream> ReadAsync(Stream stream)
         {

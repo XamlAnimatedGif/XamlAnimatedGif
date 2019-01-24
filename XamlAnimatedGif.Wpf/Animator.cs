@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
 using XamlAnimatedGif.Extensions;
+using TaskEx = System.Threading.Tasks.Task;
 
 namespace XamlAnimatedGif
 { 
@@ -34,17 +35,17 @@ namespace XamlAnimatedGif
 
         internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior)
         {
-            _sourceStream = sourceStream;
-            _sourceUri = sourceUri;
-            _isSourceStreamOwner = sourceUri != null; // stream opened from URI, should close it
-            _metadata = metadata;
-            _palettes = CreatePalettes(metadata);
-            _bitmap = CreateBitmap(metadata);
-            var desc = metadata.Header.LogicalScreenDescriptor;
-            _stride = 4 * ((desc.Width * 32 + 31) / 32);
-            _previousBackBuffer = new byte[desc.Height * _stride];
-            _indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
-            _timingManager = CreateTimingManager(metadata, repeatBehavior);
+            //_sourceStream = sourceStream;
+            //_sourceUri = sourceUri;
+            //_isSourceStreamOwner = sourceUri != null; // stream opened from URI, should close it
+            //_metadata = metadata;
+            //_palettes = CreatePalettes(metadata);
+            //_bitmap = CreateBitmap(metadata);
+            //var desc = metadata.Header.LogicalScreenDescriptor;
+            //_stride = 4;//* ((desc.Width * 32 + 31) / 32);
+            //_previousBackBuffer = new byte[desc.Height * _stride];
+            //_indexStreamBuffer = CreateIndexStreamBuffer(metadata, _sourceStream);
+            //_timingManager = CreateTimingManager(metadata, repeatBehavior);
         }
 
         internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
@@ -221,14 +222,9 @@ namespace XamlAnimatedGif
         private static WriteableBitmap CreateBitmap(GifDataStream metadata)
         {
             var desc = metadata.Header.LogicalScreenDescriptor;
-#if WPF
-            var bitmap = new WriteableBitmap(desc.Width, desc.Height, 96, 96, PixelFormats.Bgra32, null);
-#elif WINRT || SILVERLIGHT
-            var bitmap = new WriteableBitmap(desc.Width, desc.Height);
-#else
-            #error Not implemented
-#endif
-            return bitmap;
+ 
+           return new WriteableBitmap(desc.Dimensions.Width, desc.Dimensions.Height, 96, 96, PixelFormats.Bgra32, null);
+ 
         }
 
         private static Dictionary<int, GifPalette> CreatePalettes(GifDataStream metadata)
@@ -298,50 +294,50 @@ namespace XamlAnimatedGif
             var rect = GetFixedUpFrameRect(desc);
             using (var indexStream = await GetIndexStreamAsync(frame, cancellationToken))
             {
-                using (_bitmap.LockInScope())
-                {
-                    if (frameIndex < _previousFrameIndex)
-                        ClearArea(_metadata.Header.LogicalScreenDescriptor);
-                    else
-                        DisposePreviousFrame(frame);
+                //using (_bitmap.LockInScope())
+                //{
+                //    if (frameIndex < _previousFrameIndex)
+                //        ClearArea(_metadata.Header.LogicalScreenDescriptor);
+                //    else
+                //        DisposePreviousFrame(frame);
 
-                    int bufferLength = 4 * rect.Width;
-                    byte[] indexBuffer = new byte[desc.Width];
-                    byte[] lineBuffer = new byte[bufferLength];
+                //    int bufferLength = 4 * rect.Width;
+                //    byte[] indexBuffer = new byte[desc.Width];
+                //    byte[] lineBuffer = new byte[bufferLength];
 
-                    var palette = _palettes[frameIndex];
-                    int transparencyIndex = palette.TransparencyIndex ?? -1;
+                //    var palette = _palettes[frameIndex];
+                //    int transparencyIndex = palette.TransparencyIndex ?? -1;
 
-                    var rows = desc.Interlace
-                        ? InterlacedRows(rect.Height)
-                        : NormalRows(rect.Height);
+                //    var rows = desc.Interlace
+                //        ? InterlacedRows(rect.Height)
+                //        : NormalRows(rect.Height);
 
-                    foreach (int y in rows)
-                    {
-                        indexStream.ReadAll(indexBuffer, 0, desc.Width);
+                //    foreach (int y in rows)
+                //    {
+                //        indexStream.ReadAll(indexBuffer, 0, desc.Width);
 
-                        int offset = (desc.Top + y) * _stride + desc.Left * 4;
+                //        int offset = (desc.Top + y) * _stride + desc.Left * 4;
 
-                        if (transparencyIndex >= 0)
-                        {
-                            CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
-                        }
+                //        if (transparencyIndex >= 0)
+                //        {
+                //            CopyFromBitmap(lineBuffer, _bitmap, offset, bufferLength);
+                //        }
 
-                        for (int x = 0; x < rect.Width; x++)
-                        {
-                            byte index = indexBuffer[x];
-                            int i = 4 * x;
-                            if (index != transparencyIndex)
-                            {
-                                WriteColor(lineBuffer, palette[index], i);
-                            }
-                        }
-                        CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
-                    }
+                //        for (int x = 0; x < rect.Width; x++)
+                //        {
+                //            byte index = indexBuffer[x];
+                //            int i = 4 * x;
+                //            if (index != transparencyIndex)
+                //            {
+                //                WriteColor(lineBuffer, palette[index], i);
+                //            }
+                //        }
+                //        CopyToBitmap(lineBuffer, _bitmap, offset, bufferLength);
+                //    }
 #if WPF
                     _bitmap.AddDirtyRect(rect);
 #endif
-                }
+                //}
 #if WINRT || SILVERLIGHT
                 _bitmap.Invalidate();
 #endif
@@ -383,29 +379,14 @@ namespace XamlAnimatedGif
         }
 
         private static void CopyToBitmap(byte[] buffer, WriteableBitmap bitmap, int offset, int length)
-        {
-#if WPF
+        { 
             Marshal.Copy(buffer, 0, bitmap.BackBuffer + offset, length);
-#elif WINRT
-            buffer.CopyTo(0, bitmap.PixelBuffer, (uint)offset, length);
-#elif SILVERLIGHT
-            Buffer.BlockCopy(buffer, 0, bitmap.Pixels, offset, length);
-#else
-            #error Not implemented
-#endif
+ 
         }
 
         private static void CopyFromBitmap(byte[] buffer, WriteableBitmap bitmap, int offset, int length)
-        {
-#if WPF
+        { 
             Marshal.Copy(bitmap.BackBuffer + offset, buffer, 0, length);
-#elif WINRT
-            bitmap.PixelBuffer.CopyTo((uint)offset, buffer, 0, length);
-#elif SILVERLIGHT
-            Buffer.BlockCopy(bitmap.Pixels, offset, buffer, 0, length);
-#else
-            #error Not implemented
-#endif
         }
 
         private static void WriteColor(byte[] lineBuffer, Color color, int startIndex)
@@ -454,9 +435,9 @@ namespace XamlAnimatedGif
             }
         }
 
-        private void ClearArea(IGifRect rect)
+        private void ClearArea(GifRect rect)
         {
-            ClearArea(new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+            ClearArea(new Int32Rect(rect.X, rect.Y, rect.Width, rect.Height));
         }
 
         private void ClearArea(Int32Rect rect)
@@ -512,9 +493,9 @@ namespace XamlAnimatedGif
 
         private Int32Rect GetFixedUpFrameRect(GifImageDescriptor desc)
         {
-            int width = Math.Min(desc.Width, _bitmap.PixelWidth - desc.Left);
-            int height = Math.Min(desc.Height, _bitmap.PixelHeight - desc.Top);
-            return new Int32Rect(desc.Left, desc.Top, width, height);
+            int width = Math.Min(desc.Dimensions.Width, _bitmap.PixelWidth - desc.Dimensions.X);
+            int height = Math.Min(desc.Dimensions.Height, _bitmap.PixelHeight - desc.Dimensions.Y);
+            return new Int32Rect(desc.Dimensions.X, desc.Dimensions.Y, width, height);
         }
 
         #endregion

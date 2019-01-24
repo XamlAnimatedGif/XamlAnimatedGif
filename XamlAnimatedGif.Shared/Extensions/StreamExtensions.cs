@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace XamlAnimatedGif.Extensions
 {
-    static class StreamExtensions
+    internal static class StreamExtensions
     {
         public static async Task ReadAllAsync(this Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default(CancellationToken))
         {

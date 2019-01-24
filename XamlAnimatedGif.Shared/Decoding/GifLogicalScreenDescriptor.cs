@@ -5,16 +5,15 @@ using XamlAnimatedGif.Extensions;
 
 namespace XamlAnimatedGif.Decoding
 {
-    internal class GifLogicalScreenDescriptor : IGifRect
+    internal class GifLogicalScreenDescriptor
     {
-        public int Width { get; private set; }
-        public int Height { get; private set; }
         public bool HasGlobalColorTable { get; private set; }
         public int ColorResolution { get; private set; }
         public bool IsGlobalColorTableSorted { get; private set; }
         public int GlobalColorTableSize { get; private set; }
         public int BackgroundColorIndex { get; private set; }
         public double PixelAspectRatio { get; private set; }
+        public GifRect Dimensions { get; private set; }
 
         internal static async Task<GifLogicalScreenDescriptor> ReadAsync(Stream stream)
         {
@@ -28,8 +27,10 @@ namespace XamlAnimatedGif.Decoding
             byte[] bytes = new byte[7];
             await stream.ReadAllAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
 
-            Width = BitConverter.ToUInt16(bytes, 0);
-            Height = BitConverter.ToUInt16(bytes, 2);
+            var width = BitConverter.ToUInt16(bytes, 0);
+            var height = BitConverter.ToUInt16(bytes, 2);
+            Dimensions = new GifRect(0, 0, width, height);
+
             byte packedFields = bytes[4];
             HasGlobalColorTable = (packedFields & 0x80) != 0;
             ColorResolution = ((packedFields & 0x70) >> 4) + 1;
@@ -41,15 +42,6 @@ namespace XamlAnimatedGif.Decoding
                     ? 0.0
                     : (15 + bytes[6]) / 64.0;
         }
-
-        int IGifRect.Left
-        {
-            get { return 0; }
-        }
-
-        int IGifRect.Top
-        {
-            get { return 0; }
-        }
+        
     }
 }

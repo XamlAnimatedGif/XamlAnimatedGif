@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WpfApp1": {
+      "commandName": "Executable",
+      "executablePath": "E:\\AvaloniaGif\\TestApp.Wpf\\bin\\Debug\\net45\\TestApp.Wpf.exe"
+    }
+  }
+}
