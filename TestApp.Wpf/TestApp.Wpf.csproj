@@ -12,6 +12,7 @@
     </Content>
     <ProjectReference Include="../XamlAnimatedGif.Wpf/XamlAnimatedGif.Wpf.csproj" />
     <PackageReference Include="MSBuild.Sdk.Extras" Version="1.5.4" PrivateAssets="All" />
+    <Reference Include="Microsoft.VisualBasic" />
   </ItemGroup>
 
   <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
