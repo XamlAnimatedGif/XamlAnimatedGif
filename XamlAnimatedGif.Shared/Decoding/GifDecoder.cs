@@ -44,7 +44,7 @@ namespace XamlAnimatedGif.Decoding
         private static readonly int MaxBits = 4097;
 
         private readonly Stream _fileStream;
-        private readonly Mutex _renderMutex = new Mutex();
+        private readonly object _lockObj;
         private readonly bool _hasFrameBackups;
 
         private int _gctSize, _bgIndex, _prevFrame;
@@ -75,6 +75,7 @@ namespace XamlAnimatedGif.Decoding
         public GifDecoder(Stream fileStream)
         {
             _fileStream = fileStream;
+            _lockObj = new object();
 
             ProcessHeaderData();
             ProcessFrameData();
@@ -106,19 +107,19 @@ namespace XamlAnimatedGif.Decoding
 
         public void Dispose()
         {
-            _renderMutex.WaitOne();
+            lock (_lockObj)
+            {
+                Frames.Clear();
 
-            Frames.Clear();
+                _bitmapBackBuffer = null;
+                _prefixBuf = null;
+                _suffixBuf = null;
+                _pixelStack = null;
+                _indexBuf = null;
+                _prevFrameIndexBuf = null;
 
-            _bitmapBackBuffer = null;
-            _prefixBuf = null;
-            _suffixBuf = null;
-            _pixelStack = null;
-            _indexBuf = null;
-            _prevFrameIndexBuf = null;
-
-            _fileStream?.Dispose();
-            _renderMutex.ReleaseMutex();
+                _fileStream?.Dispose();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -173,8 +174,7 @@ namespace XamlAnimatedGif.Decoding
 
         public void RenderFrame(int fIndex)
         {
-            _renderMutex.WaitOne();
-            try
+            lock (_lockObj)
             {
                 if (fIndex < 0 | fIndex >= Frames.Count)
                     return;
@@ -199,10 +199,6 @@ namespace XamlAnimatedGif.Decoding
                 _hasNewFrame = true;
 
                 ArrayPool<byte>.Shared.Return(tmpB);
-            }
-            finally
-            {
-                _renderMutex.ReleaseMutex();
             }
         }
 
@@ -411,10 +407,8 @@ namespace XamlAnimatedGif.Decoding
         /// </summary>
         public void WriteBackBufToFb(IntPtr targetPointer)
         {
-            _renderMutex.WaitOne();
-            try
-            {
-                if (_hasNewFrame & _bitmapBackBuffer != null)
+            if (_hasNewFrame & _bitmapBackBuffer != null)
+                lock (_lockObj)
                     unsafe
                     {
                         fixed (void* src = &_bitmapBackBuffer[0])
@@ -423,11 +417,6 @@ namespace XamlAnimatedGif.Decoding
                         }
                         _hasNewFrame = false;
                     }
-            }
-            finally
-            {
-                _renderMutex.ReleaseMutex();
-            }
         }
 
         /// <summary>
