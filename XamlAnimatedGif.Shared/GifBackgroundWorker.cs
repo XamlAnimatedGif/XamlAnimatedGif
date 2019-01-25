@@ -1,39 +1,35 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Collections.Generic;
 using XamlAnimatedGif.Decoding;
 
 namespace XamlAnimatedGif
 {
     internal sealed class GifBackgroundWorker
     {
+        private static readonly Stopwatch _timer = Stopwatch.StartNew();
         private GifDecoder _gifDecode;
-
-        private int _currentIndex = -1;
+        private int _currentIndex;
         private Task _bgThread;
-
         private State _state;
-
-        private readonly Mutex _stateMutex = new Mutex();
-        private readonly ConcurrentQueue<Command> _cmdQueue = new ConcurrentQueue<Command>();
+        private readonly object _lockObj;
+        private readonly Queue<Command> _cmdQueue;
         private volatile bool _shouldStop;
         private int _iterationCount;
-
-        private static readonly Stopwatch _timer = Stopwatch.StartNew();
-
-        private GifRepeatBehavior _repeatBehavior = new GifRepeatBehavior() { LoopForever = true };
+        private GifRepeatBehavior _repeatBehavior;
 
         public GifRepeatBehavior RepeatCount
         {
             get => _repeatBehavior;
             set
             {
-                _stateMutex.WaitOne();
-                ResetPlayVars();
-                _repeatBehavior = value;
-                _stateMutex.ReleaseMutex();
+                lock (_lockObj)
+                {
+                    ResetPlayVars();
+                    _repeatBehavior = value;
+                }
             }
         }
 
@@ -65,21 +61,29 @@ namespace XamlAnimatedGif
         public GifBackgroundWorker(GifDecoder gifDecode)
         {
             _gifDecode = gifDecode;
+            _lockObj = new object();
+            _repeatBehavior = new GifRepeatBehavior() { LoopForever = true };
+            _cmdQueue = new Queue<Command>();
+
+            ResetPlayVars();
+
             _bgThread = Task.Factory.StartNew(MainLoop, CancellationToken.None, TaskCreationOptions.LongRunning,
                 TaskScheduler.Current);
         }
 
         public void SendCommand(Command cmd)
         {
-            _cmdQueue.Enqueue(cmd);
+            lock (_lockObj)
+                _cmdQueue.Enqueue(cmd);
         }
 
         public State GetState()
         {
-            _stateMutex.WaitOne();
-            var ret = _state;
-            _stateMutex.ReleaseMutex();
-            return ret;
+            lock (_lockObj)
+            {
+                var ret = _state;
+                return ret;
+            }
         }
 
         private void MainLoop()
@@ -92,77 +96,90 @@ namespace XamlAnimatedGif
                     break;
                 }
 
-                _stateMutex.WaitOne();
-                if (_cmdQueue.TryDequeue(out var cmd))
-                    switch (cmd)
+                CheckCommands();
+                DoStates();
+            }
+        }
+
+        private void DoStates()
+        {
+            switch (_state)
+            {
+                case State.Null:
+                case State.Paused:
+                    Thread.Sleep(60);
+                    break;
+                case State.Start:
+                    ShowFirstFrame();
+                    SetState(State.Running);
+                    break;
+                case State.Running:
+                    WaitAndRenderNext();
+                    break;
+                case State.Complete:
+                    ResetPlayVars();
+                    Thread.Sleep(60);
+                    break;
+            }
+        }
+
+        private void CheckCommands()
+        {
+            Command cmd;
+
+            lock (_lockObj)
+            {
+                if (_cmdQueue.Count <= 0) return;
+                cmd = _cmdQueue.Dequeue();
+            }
+
+            switch (cmd)
+            {
+                case Command.Dispose:
+                    DoDispose();
+                    break;
+                case Command.Play:
+                    switch (_state)
                     {
-                        case Command.Dispose:
-                            DoDispose();
+                        case State.Null:
+                            _state = State.Start;
                             break;
-                        case Command.Play:
-                            switch (_state)
-                            {
-                                case State.Null:
-                                    _state = State.Start;
-                                    break;
-                                case State.Paused:
-                                    _state = State.Running;
-                                    break;
-                                case State.Complete:
-                                    ResetPlayVars();
-                                    _state = State.Start;
-                                    break;
-                            }
+                        case State.Paused:
+                            _state = State.Running;
                             break;
-                        case Command.Pause:
-                            switch (_state)
-                            {
-                                case State.Running:
-                                    _state = State.Paused;
-                                    break;
-                            }
-                            break;
-                        case Command.Reset:
-                            switch (_state)
-                            {
-                                case State.Paused:
-                                case State.Complete:
-                                case State.Running:
-                                    ResetPlayVars();
-                                    ShowFirstFrame();
-                                    break;
-                            }
+                        case State.Complete:
+                            ResetPlayVars();
+                            _state = State.Start;
                             break;
                     }
-                _stateMutex.ReleaseMutex();
-
-
-                switch (_state)
-                {
-                    case State.Null:
-                    case State.Paused:
-                        Thread.Sleep(60);
-                        break;
-                    case State.Start:
-                        ShowFirstFrame();
-                        SetState(State.Running);
-                        break;
-                    case State.Running:
-                        WaitAndRenderNext();
-                        break;
-                    case State.Complete:
-                        ResetPlayVars();
-                        Thread.Sleep(60);
-                        break;
-                }
+                    break;
+                case Command.Pause:
+                    switch (_state)
+                    {
+                        case State.Running:
+                            _state = State.Paused;
+                            break;
+                    }
+                    break;
+                case Command.Reset:
+                    switch (_state)
+                    {
+                        case State.Paused:
+                        case State.Complete:
+                        case State.Running:
+                            ResetPlayVars();
+                            ShowFirstFrame();
+                            break;
+                    }
+                    break;
             }
+
         }
 
         private void SetState(State state)
         {
-            _stateMutex.WaitOne();
-            _state = state;
-            _stateMutex.ReleaseMutex();
+            lock (_lockObj)
+                _state = state;
         }
 
         private void DoDispose()
