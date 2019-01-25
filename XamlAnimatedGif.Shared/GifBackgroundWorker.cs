@@ -125,8 +125,11 @@ namespace XamlAnimatedGif
                         case Command.Reset:
                             switch (_state)
                             {
+                                case State.Paused:
+                                case State.Complete:
                                 case State.Running:
-                                    _state = State.Paused;
+                                    ResetPlayVars();
+                                    ShowFirstFrame();
                                     break;
                             }
                             break;

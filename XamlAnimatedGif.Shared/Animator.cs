@@ -133,38 +133,12 @@ namespace XamlAnimatedGif
 
         public void ShowFirstFrameAsync()
         {
-            //try
-            //{
-            //    _decoder.RenderFrame(0);
-            //    CurrentFrameIndex = 0;
-            //    _bgWorker.SendCommand(GifBackgroundWorker.Command.Pause);
-            //}
-            //catch (Exception ex)
-            //{
-            //    OnError(ex, AnimationErrorKind.Rendering);
-            //}
             _decoder.RenderFrame(0);
         }
 
         public async void Rewind()
         {
-            //CurrentFrameIndex = 0;
-            //var state = _bgWorker.GetState();
-            //bool isStopped = state == GifBackgroundWorker.State.Paused || state == GifBackgroundWorker.State.Complete;
-            //_bgWorker.SendCommand(GifBackgroundWorker.Command.Reset);
-            //if (isStopped)
-            //{
-            //    _bgWorker.SendCommand(GifBackgroundWorker.Command.Pause);
-            //    _isStarted = false;
-            //    try
-            //    {
-            //        _decoder.RenderFrame(0);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        OnError(ex, AnimationErrorKind.Rendering);
-            //    }
-            //}
+            _bgWorker?.SendCommand(GifBackgroundWorker.Command.Reset);
         }
 
         public GifRepeatBehavior RepeatBehavior

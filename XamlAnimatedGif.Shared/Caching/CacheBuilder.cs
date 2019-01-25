@@ -11,7 +11,7 @@ namespace XamlAnimatedGif.Caching
     /// <typeparam name="K">the key type</typeparam>
     /// <typeparam name="V">the value type</typeparam>
     /// <see cref="Caches.KeyValue{K, V}"/>
-    public class CacheBuilder<K, V> : CacheBuilderBase<CacheBuilder<K, V>>
+    internal class CacheBuilder<K, V> : CacheBuilderBase<CacheBuilder<K, V>>
     {
         internal Func<K, V> LoaderFn { get; private set; }
         internal int? InitialCapacity { get; private set; }

@@ -1,6 +1,6 @@
 namespace XamlAnimatedGif.Decoding
 {
-    public enum BlockTypes
+    internal enum BlockTypes
     {
         EMPTY = 0,
         EXTENSION = 0x21,

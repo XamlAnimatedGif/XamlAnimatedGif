@@ -10,7 +10,7 @@ namespace XamlAnimatedGif.Caching
     /// </summary>
     /// <typeparam name="K">the key type</typeparam>
     /// <typeparam name="V">the value type</typeparam>
-    public interface ICache<K, V> : IDisposable
+    internal interface ICache<K, V> : IDisposable
     {
         /// <summary>
         /// Returns true if the cache can provide a value for the given key.

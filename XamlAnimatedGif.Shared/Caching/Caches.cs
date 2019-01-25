@@ -6,7 +6,7 @@ namespace XamlAnimatedGif.Caching
     /// <summary>
     /// Methods for building caches.
     /// </summary>
-    public abstract class Caches
+    internal abstract class Caches
     {
         /// <summary>
         /// Starts constructing a key-value cache.

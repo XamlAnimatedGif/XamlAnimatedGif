@@ -9,7 +9,7 @@ namespace XamlAnimatedGif.Caching
     /// Basic builder methods common to all caches.
     /// </summary>
     /// <typeparam name="B">the specific builder subclass</typeparam>
-    public class CacheBuilderBase<B> where B : CacheBuilderBase<B>
+    internal class CacheBuilderBase<B> where B : CacheBuilderBase<B>
     {
         internal TimeSpan? Expiration { get; private set; }
         internal TimeSpan? PurgeInterval { get; private set; }
