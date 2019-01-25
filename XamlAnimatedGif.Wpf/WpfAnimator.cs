@@ -38,7 +38,7 @@ namespace XamlAnimatedGif
 
         private void CompositionTarget_Rendering(object sender, EventArgs e)
         {
-            if (_core.Decoder != null & _core.Decoder._hasNewFrame & _bitmap != null)
+            if (_core.Decoder != null & _core.NewFrameAvailable & _bitmap != null)
             {
                 _bitmap.Lock();
                 _core.Decoder.WriteBackBufToFb(_bitmap.BackBuffer);
@@ -120,12 +120,19 @@ namespace XamlAnimatedGif
 
         public int CurrentFrameIndex => _core.CurrentFrameIndex;
 
-        private RepeatBehavior GetActualRepeatBehavior(GifDecoder metadata, RepeatBehavior repeatBehavior)
+        private GifRepeatBehavior GetActualRepeatBehavior(GifDecoder decoder, RepeatBehavior repeatBehavior)
         {
-            //return repeatBehavior == default(RepeatBehavior)
-            //        ? metadata.Header.Iterations
-            //        : repeatBehavior;
-            return repeatBehavior;
+            return repeatBehavior == default(RepeatBehavior)
+            ? decoder.Header.RepeatCount
+            : ConvertGifRepeatCount(repeatBehavior);
+        }
+
+        private GifRepeatBehavior ConvertGifRepeatCount(RepeatBehavior repeatCount)
+        {
+            if (repeatCount == RepeatBehavior.Forever)
+                return new GifRepeatBehavior() { LoopForever = true };
+            else
+                return new GifRepeatBehavior() { Count = (int)repeatCount.Count };
         }
 
         protected abstract RepeatBehavior GetSpecifiedRepeatBehavior();
@@ -134,46 +141,14 @@ namespace XamlAnimatedGif
         {
             OnAnimationCompleted();
         }
-
         #endregion
 
         #region Rendering
-
-
         private WriteableBitmap CreateBitmap()
         {
             var desc = _core.Decoder.Header.Dimensions;
             return new WriteableBitmap(desc.Width, desc.Height, 96, 96, PixelFormats.Bgra32, null);
         }
-
-        #endregion
-
-        #region Helper methods
-
-        //private static TimeSpan GetFrameDelay(GifFrame frame)
-        //{
-        //    var gce = frame.GraphicControl;
-        //    if (gce != null)
-        //    {
-        //        if (gce.Delay != 0)
-        //            return TimeSpan.FromMilliseconds(gce.Delay);
-        //    }
-        //    return TimeSpan.FromMilliseconds(100);
-        //}
-
-        //private static RepeatBehavior GetRepeatBehaviorFromGif(GifDataStream metadata)
-        //{
-        //    if (metadata.RepeatCount == 0)
-        //        return RepeatBehavior.Forever;
-        //    return new RepeatBehavior(metadata.RepeatCount);
-        //}
-
-        //private Int32Rect GetFixedUpFrameRect(GifImageDescriptor desc)
-        //{
-        //    int width = Math.Min(desc.Dimensions.Width, _bitmap.PixelWidth - desc.Dimensions.X);
-        //    int height = Math.Min(desc.Dimensions.Height, _bitmap.PixelHeight - desc.Dimensions.Y);
-        //    return new Int32Rect(desc.Dimensions.X, desc.Dimensions.Y, width, height);
-        //}
 
         #endregion
 
@@ -209,7 +184,7 @@ namespace XamlAnimatedGif
 
         internal async Task ShowFirstFrameAsync()
         {
-            await _core.ShowFirstFrameAsync();
+            _core.ShowFirstFrameAsync();
         }
 
         public async void Rewind()
@@ -221,16 +196,16 @@ namespace XamlAnimatedGif
 
         internal void OnRepeatBehaviorChanged()
         {
-            //if (_timingManager == null)
-            //    return;
+            if (_core == null) return;
 
-            //var newValue = GetSpecifiedRepeatBehavior();
-            //var newActualValue = GetActualRepeatBehavior(_decoder, newValue);
-            //if (_timingManager.RepeatBehavior == newActualValue)
-            //    return;
+            var newValue = GetSpecifiedRepeatBehavior();
+            var newActualValue = GetActualRepeatBehavior(_core.Decoder, newValue);
+            if (_core.RepeatBehavior == newActualValue)
+                return;
 
-            //_timingManager.RepeatBehavior = newActualValue;
-            //Rewind();
+            _core.RepeatBehavior = newActualValue;
+
+            Rewind();
         }
     }
 }

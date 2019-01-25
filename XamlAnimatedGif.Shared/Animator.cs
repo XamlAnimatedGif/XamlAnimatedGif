@@ -16,6 +16,7 @@ namespace XamlAnimatedGif
         private readonly GifDecoder _decoder;
 
         public GifDecoder Decoder => _decoder;
+        public bool NewFrameAvailable => _decoder._hasNewFrame;
 
         #region Constructor and factory methods
 
@@ -28,7 +29,7 @@ namespace XamlAnimatedGif
             _decoder = new GifDecoder(sourceStream);
             _bgWorker = new GifBackgroundWorker(_decoder);
             _bgWorker.RepeatCount = _decoder.Header.RepeatCount;
-            _bgWorker.SendCommand(GifBackgroundWorker.Command.Start);
+            _bgWorker.SendCommand(GifBackgroundWorker.Command.Play);
         }
         
         #endregion
@@ -41,43 +42,13 @@ namespace XamlAnimatedGif
 
         public async void Play()
         {
-            try
-            {
-                if (_bgWorker.GetState() == GifBackgroundWorker.State.Complete)
-                {
-                    _bgWorker.SendCommand(GifBackgroundWorker.Command.Reset);
-                    _isStarted = false;
-                }
-
-                if (!_isStarted)
-                {
-                    _isStarted = true;
-                    if (_bgWorker.GetState() == GifBackgroundWorker.State.Paused)
-                        _bgWorker.SendCommand(GifBackgroundWorker.Command.Resume);
-                }
-                else if (_bgWorker.GetState() == GifBackgroundWorker.State.Paused)
-                    _bgWorker.SendCommand(GifBackgroundWorker.Command.Resume);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception ex)
-            {
-                // ignore errors that might occur during Dispose
-                if (!_disposing)
-                    OnError(ex, AnimationErrorKind.Rendering);
-            }
+            _bgWorker.SendCommand(GifBackgroundWorker.Command.Play);
         }
-
-        private int _frameIndex;
-        private async Task RunAsync(CancellationToken cancellationToken)
-        {
-
-        }
+        
 
         public void Pause()
         {
-
+            _bgWorker.SendCommand(GifBackgroundWorker.Command.Pause);
         }
 
         public bool IsPaused => (_bgWorker.GetState() == GifBackgroundWorker.State.Paused);
@@ -86,9 +57,7 @@ namespace XamlAnimatedGif
         {
             get
             {
-                if (_isStarted)
-                    return (_bgWorker.GetState() == GifBackgroundWorker.State.Complete);
-                return false;
+               return (_bgWorker.GetState() == GifBackgroundWorker.State.Complete);
             }
         }
 
@@ -106,12 +75,11 @@ namespace XamlAnimatedGif
             Error?.Invoke(this, new AnimationErrorEventArgs(this, ex, kind));
         }
 
-        public int CurrentFrameIndex
+        public int CurrentFrameIndex 
         {
-            get { return _frameIndex; }
+            get { return 0; }
             internal set
             {
-                _frameIndex = value;
                 OnCurrentFrameChanged();
             }
         }
@@ -138,7 +106,7 @@ namespace XamlAnimatedGif
             if (!_disposed)
             {
                 _disposing = true;
-                _bgWorker?.SendCommand(GifBackgroundWorker.Command.Stop);
+                _bgWorker?.SendCommand(GifBackgroundWorker.Command.Dispose);
                 if (_isSourceStreamOwner)
                 {
                     try
@@ -163,7 +131,7 @@ namespace XamlAnimatedGif
             return "GIF: " + s;
         }
 
-        internal async Task ShowFirstFrameAsync()
+        public void ShowFirstFrameAsync()
         {
             //try
             //{
@@ -175,41 +143,34 @@ namespace XamlAnimatedGif
             //{
             //    OnError(ex, AnimationErrorKind.Rendering);
             //}
+            _decoder.RenderFrame(0);
         }
 
         public async void Rewind()
         {
-            CurrentFrameIndex = 0;
-            var state = _bgWorker.GetState();
-            bool isStopped = state == GifBackgroundWorker.State.Paused || state == GifBackgroundWorker.State.Complete;
-            _bgWorker.SendCommand(GifBackgroundWorker.Command.Reset);
-            if (isStopped)
-            {
-                _bgWorker.SendCommand(GifBackgroundWorker.Command.Pause);
-                _isStarted = false;
-                try
-                {
-                    _decoder.RenderFrame(0);
-                }
-                catch (Exception ex)
-                {
-                    OnError(ex, AnimationErrorKind.Rendering);
-                }
-            }
+            //CurrentFrameIndex = 0;
+            //var state = _bgWorker.GetState();
+            //bool isStopped = state == GifBackgroundWorker.State.Paused || state == GifBackgroundWorker.State.Complete;
+            //_bgWorker.SendCommand(GifBackgroundWorker.Command.Reset);
+            //if (isStopped)
+            //{
+            //    _bgWorker.SendCommand(GifBackgroundWorker.Command.Pause);
+            //    _isStarted = false;
+            //    try
+            //    {
+            //        _decoder.RenderFrame(0);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        OnError(ex, AnimationErrorKind.Rendering);
+            //    }
+            //}
         }
 
-        internal void OnRepeatBehaviorChanged()
+        public GifRepeatBehavior RepeatBehavior
         {
-            //if (_timingManager == null)
-            //    return;
-
-            //var newValue = GetSpecifiedRepeatBehavior();
-            //var newActualValue = GetActualRepeatBehavior(_decoder, newValue);
-            //if (_timingManager.RepeatBehavior == newActualValue)
-            //    return;
-
-            //_timingManager.RepeatBehavior = newActualValue;
-            //Rewind();
+            get => _bgWorker.RepeatCount;
+            set => _bgWorker.RepeatCount = value;
         }
     }
 }

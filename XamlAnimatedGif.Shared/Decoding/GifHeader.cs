@@ -14,7 +14,7 @@ namespace XamlAnimatedGif.Decoding
         public int BackgroundColorIndex;
         public long HeaderSize;
         internal int Iterations = -1;
-        public GifRepeatCount RepeatCount;
+        public GifRepeatBehavior RepeatCount;
         public GifRect Dimensions;
     }
 }

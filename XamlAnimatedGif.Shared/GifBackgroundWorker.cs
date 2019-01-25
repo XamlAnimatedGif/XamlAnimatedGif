@@ -12,30 +12,44 @@ namespace XamlAnimatedGif
         private GifDecoder _gifDecode;
 
         private int _currentIndex = -1;
-        private readonly int _frameCount;
         private Task _bgThread;
 
-        private State _state = State.Null;
+        private State _state;
+
         private readonly Mutex _stateMutex = new Mutex();
         private readonly ConcurrentQueue<Command> _cmdQueue = new ConcurrentQueue<Command>();
         private volatile bool _shouldStop;
-        private static readonly Stopwatch _timer = Stopwatch.StartNew();
         private int _iterationCount;
-        private GifRepeatCount _repeatCount = new GifRepeatCount() { LoopForever = true };
-        public GifRepeatCount RepeatCount
+
+        private static readonly Stopwatch _timer = Stopwatch.StartNew();
+
+        private GifRepeatBehavior _repeatBehavior = new GifRepeatBehavior() { LoopForever = true };
+
+        public GifRepeatBehavior RepeatCount
         {
-            get => _repeatCount;
-            set => _repeatCount = value;
+            get => _repeatBehavior;
+            set
+            {
+                _stateMutex.WaitOne();
+                ResetPlayVars();
+                _repeatBehavior = value;
+                _stateMutex.ReleaseMutex();
+            }
+        }
+
+        private void ResetPlayVars()
+        {
+            _iterationCount = 0;
+            _currentIndex = -1;
         }
 
         public enum Command
         {
             Null,
-            Start,
+            Play,
             Pause,
-            Resume,
-            Stop,
-            Reset
+            Reset,
+            Dispose
         }
 
         public enum State
@@ -44,8 +58,8 @@ namespace XamlAnimatedGif
             Start,
             Running,
             Paused,
-            Stop,
-            Complete
+            Complete,
+            Dispose
         }
 
         public GifBackgroundWorker(GifDecoder gifDecode)
@@ -74,48 +88,58 @@ namespace XamlAnimatedGif
             {
                 if (_shouldStop)
                 {
-                    DoStop();
+                    DoDispose();
                     break;
                 }
 
+                _stateMutex.WaitOne();
                 if (_cmdQueue.TryDequeue(out var cmd))
                     switch (cmd)
                     {
-                        case Command.Stop:
-                            DoStop();
+                        case Command.Dispose:
+                            DoDispose();
                             break;
-
-                        case Command.Start:
-                            SetState(State.Start);
-                            break;
-
-                        case Command.Pause:
-                            if (GetState() == State.Running)
-                                SetState(State.Paused);
-                            break;
-
-                        case Command.Resume:
-                            if (GetState() == State.Paused)
-                                SetState(State.Running);
-                            break;
-
-                        case Command.Reset:
-                            if (GetState() == State.Running || GetState() == State.Complete)
+                        case Command.Play:
+                            switch (_state)
                             {
-                                _currentIndex = 0;
-                                SetState(State.Paused);
+                                case State.Null:
+                                    _state = State.Start;
+                                    break;
+                                case State.Paused:
+                                    _state = State.Running;
+                                    break;
+                                case State.Complete:
+                                    ResetPlayVars();
+                                    _state = State.Start;
+                                    break;
+                            }
+                            break;
+                        case Command.Pause:
+                            switch (_state)
+                            {
+                                case State.Running:
+                                    _state = State.Paused;
+                                    break;
+                            }
+                            break;
+                        case Command.Reset:
+                            switch (_state)
+                            {
+                                case State.Running:
+                                    _state = State.Paused;
+                                    break;
                             }
                             break;
                     }
+                _stateMutex.ReleaseMutex();
 
-                if (_state == State.Null)
-                {
-                    Thread.Sleep(2);
-                    continue;
-                }
 
                 switch (_state)
                 {
+                    case State.Null:
+                    case State.Paused:
+                        Thread.Sleep(60);
+                        break;
                     case State.Start:
                         ShowFirstFrame();
                         SetState(State.Running);
@@ -124,8 +148,8 @@ namespace XamlAnimatedGif
                         WaitAndRenderNext();
                         break;
                     case State.Complete:
-                    case State.Paused:
-                        Thread.Sleep(30);
+                        ResetPlayVars();
+                        Thread.Sleep(60);
                         break;
                 }
             }
@@ -138,18 +162,16 @@ namespace XamlAnimatedGif
             _stateMutex.ReleaseMutex();
         }
 
-        private void DoStop()
+        private void DoDispose()
         {
-            SetState(State.Stop);
+            SetState(State.Dispose);
             _shouldStop = true;
             _gifDecode.Dispose();
         }
 
         private void ShowFirstFrame()
         {
-            if (GetState() == State.Stop)
-                return;
-
+            if (_shouldStop) return;
             _gifDecode.RenderFrame(0);
         }
 
@@ -180,7 +202,7 @@ namespace XamlAnimatedGif
 
         ~GifBackgroundWorker()
         {
-            DoStop();
+            DoDispose();
         }
     }
 }

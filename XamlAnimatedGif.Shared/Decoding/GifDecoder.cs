@@ -80,11 +80,11 @@ namespace XamlAnimatedGif.Decoding
             ProcessFrameData();
 
             if (Header.Iterations == -1)
-                Header.RepeatCount = new GifRepeatCount() { Count = 1 };
+                Header.RepeatCount = new GifRepeatBehavior() { Count = 1 };
             else if (Header.Iterations == 0)
-                Header.RepeatCount = new GifRepeatCount() { LoopForever = true };
+                Header.RepeatCount = new GifRepeatBehavior() { LoopForever = true };
             else if (Header.Iterations > 0)
-                Header.RepeatCount = new GifRepeatCount() { Count = Header.Iterations };
+                Header.RepeatCount = new GifRepeatBehavior() { Count = Header.Iterations };
 
             var pixelCount = _gifDimensions.TotalPixels;
 

@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 namespace XamlAnimatedGif.Decoding
 {
     [Serializable]
-    internal class LzwDecompressionException : Exception
+    public class LzwDecompressionException : Exception
     {
         public LzwDecompressionException()
         {

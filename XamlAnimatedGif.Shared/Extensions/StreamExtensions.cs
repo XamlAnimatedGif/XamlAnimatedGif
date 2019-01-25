@@ -83,13 +83,7 @@ namespace XamlAnimatedGif.Extensions
             var finalVal = tempBuf[0];
             return finalVal;
         }
-        public static Stream AsBuffered(this Stream stream)
-        {
-            var bs = stream as BufferedStream;
-            if (bs != null)
-                return bs;
-            return new BufferedStream(stream);
-        }
+
 
         public static async Task CopyToAsync(this Stream source, Stream destination, IProgress<long> progress, int bufferSize = 81920, CancellationToken cancellationToken = default(CancellationToken))
         {

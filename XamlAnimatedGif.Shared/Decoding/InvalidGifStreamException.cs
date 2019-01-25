@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 namespace XamlAnimatedGif.Decoding
 {
     [Serializable]
-    internal class InvalidGifStreamException : Exception
+    public class InvalidGifStreamException : Exception
     {
         public InvalidGifStreamException()
         {
