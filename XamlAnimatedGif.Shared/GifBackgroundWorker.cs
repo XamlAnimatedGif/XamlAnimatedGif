@@ -90,25 +90,17 @@ namespace XamlAnimatedGif
 
         private void InternalSeek(int value, bool isManual)
         {
-            //_gifDecoder.ClearImage();
+            int lowerBound = 0;
 
-            //var queriedFrames = _gifDecoder
-            //                  .Frames
-            //                  .TakeWhile((x, i) => i <= value)
-            //                  .Where((p, i) => p.FrameDisposalMethod != FrameDisposal.Restore)
-            //                  .Select((x, i) => i);
+            // Skip already rendered frames if the seek position is above the previous frame index.
+            if(isManual & value > _currentIndex)
+                lowerBound = _currentIndex;
 
-            //foreach (var frameIndex in queriedFrames)
-            //{
-            //    _gifDecoder.RenderFrame(frameIndex);
-            //}
-
-            //_gifDecoder.RenderFrame(value);
-
-            for (int fI = 0; fI <= value; fI++)
+            for (int fI = lowerBound; fI <= value; fI++)
             {
                 var targetFrame = _gifDecoder.Frames[fI];
 
+                // Ignore frames with restore disposal method except the current one.
                 if (fI != value & targetFrame.FrameDisposalMethod == FrameDisposal.Restore)
                     continue;
 
@@ -263,13 +255,6 @@ namespace XamlAnimatedGif
 
         private void WaitAndRenderNext()
         {
-            //if (_hasSeeked)
-            //{
-            //    InternalSeek(_currentIndex, false);
-            //    _hasSeeked = false;
-            //    return;
-            //}
-
             if (!RepeatCount.LoopForever & _iterationCount > RepeatCount.Count)
             {
                 _state = State.Complete;
