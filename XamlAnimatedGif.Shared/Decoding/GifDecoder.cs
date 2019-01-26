@@ -11,11 +11,10 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Text;
+
 using XamlAnimatedGif.Caching;
 using static XamlAnimatedGif.Extensions.StreamExtensions;
 
@@ -49,6 +48,7 @@ namespace XamlAnimatedGif.Decoding
 
         private int _gctSize, _bgIndex, _prevFrame;
         private bool _gctUsed;
+
         private GifHeader _gifHeader;
         private GifRect _gifDimensions;
         private ulong _globalColorTable;
@@ -65,7 +65,7 @@ namespace XamlAnimatedGif.Decoding
         public GifHeader Header => _gifHeader;
         public List<GifFrame> Frames = new List<GifFrame>();
 
-        private static ICache<ulong, GifColor[]> colorCache
+        internal static ICache<ulong, GifColor[]> GlobalColorTableCache
             = Caches.KeyValue<ulong, GifColor[]>()
                 .WithBackgroundPurge(TimeSpan.FromSeconds(30))
                 .WithExpiration(TimeSpan.FromSeconds(10))
@@ -90,7 +90,7 @@ namespace XamlAnimatedGif.Decoding
             var pixelCount = _gifDimensions.TotalPixels;
 
             _hasFrameBackups = Frames
-                .Any(f => f.FrameDisposalMethod == FrameDisposal.DISPOSAL_METHOD_RESTORE);
+                .Any(f => f.FrameDisposalMethod == FrameDisposal.Restore);
 
             _bitmapBackBuffer = new GifColor[pixelCount];
             _indexBuf = new byte[pixelCount];
@@ -172,6 +172,12 @@ namespace XamlAnimatedGif.Decoding
                 RowAction(i);
         };
 
+
+        internal void ClearImage()
+        {
+            ClearArea(_gifDimensions);
+        }
+
         public void RenderFrame(int fIndex)
         {
             lock (_lockObj)
@@ -180,7 +186,7 @@ namespace XamlAnimatedGif.Decoding
                     return;
 
                 if (fIndex == 0)
-                    ClearArea(_gifDimensions);
+                    ClearImage();
 
                 var tmpB = ArrayPool<byte>.Shared.Rent(MaxTempBuf);
 
@@ -206,7 +212,7 @@ namespace XamlAnimatedGif.Decoding
         private void DrawFrame(GifFrame curFrame, Memory<byte> _frameIndexSpan)
         {
             var activeColorTableHash = curFrame.IsLocalColorTableUsed ? curFrame.LocalColorTableCacheID : _globalColorTable;
-            var activeColorTable = colorCache.Get(activeColorTableHash);
+            var activeColorTable = GlobalColorTableCache.Get(activeColorTableHash);
 
             var cX = curFrame.Dimensions.X;
             var cY = curFrame.Dimensions.Y;
@@ -251,10 +257,10 @@ namespace XamlAnimatedGif.Decoding
 
             switch (prevFrame.FrameDisposalMethod)
             {
-                case FrameDisposal.DISPOSAL_METHOD_BACKGROUND:
+                case FrameDisposal.Background:
                     ClearArea(prevFrame.Dimensions);
                     break;
-                case FrameDisposal.DISPOSAL_METHOD_RESTORE:
+                case FrameDisposal.Restore:
                     if (_hasFrameBackups)
                         DrawFrame(prevFrame, _prevFrameIndexBuf);
                     break;
@@ -398,7 +404,6 @@ namespace XamlAnimatedGif.Decoding
             while (pixelIndex < totalPixels)
                 indexSpan[pixelIndex++] = 0; // clear missing pixels
 
-
             void ThrowException() => throw new LzwDecompressionException();
         }
 
@@ -448,7 +453,7 @@ namespace XamlAnimatedGif.Decoding
             {
                 Dimensions = _gifDimensions,
                 HasGlobalColorTable = _gctUsed,
-                GlobalColorTable = _globalColorTable,
+                GlobalColorTableCacheID = _globalColorTable,
                 GlobalColorTableSize = _gctSize,
                 BackgroundColorIndex = _bgIndex,
                 HeaderSize = _fileStream.Position
@@ -486,7 +491,7 @@ namespace XamlAnimatedGif.Decoding
                 targ[i++] = new GifColor(r, g, b);
             }
 
-            colorCache.Set(tableHash, targ);
+            GlobalColorTableCache.Set(tableHash, targ);
 
             return tableHash;
         }
@@ -616,7 +621,7 @@ namespace XamlAnimatedGif.Decoding
 
                     currentFrame.FrameDisposalMethod = (FrameDisposal)((packed & 0x1c) >> 2);
 
-                    if (currentFrame.FrameDisposalMethod != FrameDisposal.DISPOSAL_METHOD_RESTORE)
+                    if (currentFrame.FrameDisposalMethod != FrameDisposal.Restore)
                         currentFrame.ShouldBackup = true;
 
                     currentFrame.HasTransparency = (packed & 1) != 0;

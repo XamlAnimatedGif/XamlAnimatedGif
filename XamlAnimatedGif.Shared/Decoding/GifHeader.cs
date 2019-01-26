@@ -10,7 +10,7 @@ namespace XamlAnimatedGif.Decoding
     {
         public bool HasGlobalColorTable;
         public int GlobalColorTableSize;
-        public ulong GlobalColorTable;
+        public ulong GlobalColorTableCacheID;
         public int BackgroundColorIndex;
         public long HeaderSize;
         internal int Iterations = -1;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks; 
+using System.Threading.Tasks;
 using XamlAnimatedGif.Decoding;
 
 namespace XamlAnimatedGif
@@ -12,15 +12,15 @@ namespace XamlAnimatedGif
         private readonly Uri _sourceUri;
         private readonly bool _isSourceStreamOwner;
         private readonly GifBackgroundWorker _bgWorker;
-        private readonly UriLoader _uriLoader;
         private readonly GifDecoder _decoder;
 
         public GifDecoder Decoder => _decoder;
         public bool NewFrameAvailable => _decoder._hasNewFrame;
 
+
         #region Constructor and factory methods
 
-        public Animator(Stream sourceStream, Uri sourceUri)
+        public Animator(Stream sourceStream, Uri sourceUri, Action CurrentFrameChanged)
         {
             _sourceStream = sourceStream;
             _sourceUri = sourceUri;
@@ -30,21 +30,18 @@ namespace XamlAnimatedGif
             _bgWorker = new GifBackgroundWorker(_decoder);
             _bgWorker.RepeatCount = _decoder.Header.RepeatCount;
             _bgWorker.SendCommand(GifBackgroundWorker.Command.Play);
+            _bgWorker.CurrentFrameChanged = CurrentFrameChanged;
         }
-        
+
         #endregion
 
         #region Animation
-
-        private bool _isStarted;
-
-        private CancellationTokenSource _cancellationTokenSource;
 
         public async void Play()
         {
             _bgWorker.SendCommand(GifBackgroundWorker.Command.Play);
         }
-        
+
 
         public void Pause()
         {
@@ -57,35 +54,18 @@ namespace XamlAnimatedGif
         {
             get
             {
-               return (_bgWorker.GetState() == GifBackgroundWorker.State.Complete);
+                return (_bgWorker.GetState() == GifBackgroundWorker.State.Complete);
             }
         }
 
-        public event EventHandler CurrentFrameChanged;
-
-        protected virtual void OnCurrentFrameChanged()
+        public int CurrentFrameIndex
         {
-            CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
-        }
-        
-        public event EventHandler<AnimationErrorEventArgs> Error;
-
-        protected virtual void OnError(Exception ex, AnimationErrorKind kind)
-        {
-            Error?.Invoke(this, new AnimationErrorEventArgs(this, ex, kind));
-        }
-
-        public int CurrentFrameIndex 
-        {
-            get { return 0; }
-            internal set
-            {
-                OnCurrentFrameChanged();
-            }
+            get => _bgWorker.CurrentFrameIndex;
+            set => _bgWorker.CurrentFrameIndex = value;
         }
 
         #endregion
-        
+
         #region Finalizer and Dispose
 
         ~Animator()
@@ -138,7 +118,7 @@ namespace XamlAnimatedGif
 
         public async void Rewind()
         {
-            _bgWorker?.SendCommand(GifBackgroundWorker.Command.Reset);
+            _bgWorker.CurrentFrameIndex = 0;
         }
 
         public GifRepeatBehavior RepeatBehavior

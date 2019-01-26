@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -15,18 +14,17 @@ namespace XamlAnimatedGif
         private static readonly WpfUriLoader _uriLoader = new WpfUriLoader();
         private readonly Animator _core;
 
-        internal BitmapSource Bitmap => _bitmap;
-
         private readonly WriteableBitmap _bitmap;
         private readonly Int32Rect _int32RectDim;
 
+        internal BitmapSource Bitmap => _bitmap;
 
         #region Constructor and factory methods
 
         internal WpfAnimator(Stream sourceStream, Uri sourceUri, RepeatBehavior repeatBehavior)
         {
 
-            _core = new Animator(sourceStream, sourceUri);
+            _core = new Animator(sourceStream, sourceUri, OnCurrentFrameChanged);
 
             _bitmap = CreateBitmap();
 
@@ -34,6 +32,12 @@ namespace XamlAnimatedGif
             _int32RectDim = new Int32Rect(0, 0, header.Dimensions.Width, header.Dimensions.Height);
 
             CompositionTarget.Rendering += CompositionTarget_Rendering;
+        }
+
+        private void OnCurrentFrameChanged()
+        {
+            Dispatcher.Invoke(() => CurrentFrameChanged.Invoke(this, null));
+           
         }
 
         private void CompositionTarget_Rendering(object sender, EventArgs e)
@@ -82,7 +86,23 @@ namespace XamlAnimatedGif
         #region Animation
 
         public int FrameCount => _core.Decoder.Frames.Count;
+        public bool IsPaused => _core.IsPaused;
+        public bool IsComplete => _core.IsComplete;
+        public int CurrentFrameIndex
+        {
+            get => _core.CurrentFrameIndex;
+            set
+            {
+                _core.CurrentFrameIndex = value;
+            }
+        }
 
+        public event EventHandler CurrentFrameChanged;
+
+        public event EventHandler<AnimationCompletedEventArgs> AnimationCompleted;
+
+        public event EventHandler<AnimationErrorEventArgs> Error;
+ 
         public async void Play()
         {
             _core.Play();
@@ -93,38 +113,11 @@ namespace XamlAnimatedGif
             _core.Pause();
         }
 
-        public bool IsPaused => _core.IsPaused;
-
-        public bool IsComplete => _core.IsComplete;
-
-        public event EventHandler CurrentFrameChanged;
-
-        protected virtual void OnCurrentFrameChanged()
-        {
-            CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        public event EventHandler<AnimationCompletedEventArgs> AnimationCompleted;
-
-        protected virtual void OnAnimationCompleted()
-        {
-            AnimationCompleted?.Invoke(this, new AnimationCompletedEventArgs(AnimationSource));
-        }
-
-        public event EventHandler<AnimationErrorEventArgs> Error;
-
-        protected virtual void OnError(Exception ex, AnimationErrorKind kind)
-        {
-            Error?.Invoke(this, new AnimationErrorEventArgs(AnimationSource, ex, kind));
-        }
-
-        public int CurrentFrameIndex => _core.CurrentFrameIndex;
-
         private GifRepeatBehavior GetActualRepeatBehavior(GifDecoder decoder, RepeatBehavior repeatBehavior)
         {
             return repeatBehavior == default(RepeatBehavior)
-            ? decoder.Header.RepeatCount
-            : ConvertGifRepeatCount(repeatBehavior);
+                                    ? decoder.Header.RepeatCount
+                                    : ConvertGifRepeatCount(repeatBehavior);
         }
 
         private GifRepeatBehavior ConvertGifRepeatCount(RepeatBehavior repeatCount)
@@ -136,11 +129,6 @@ namespace XamlAnimatedGif
         }
 
         protected abstract RepeatBehavior GetSpecifiedRepeatBehavior();
-
-        private void TimingManagerCompleted(object sender, EventArgs e)
-        {
-            OnAnimationCompleted();
-        }
         #endregion
 
         #region Rendering
@@ -165,13 +153,14 @@ namespace XamlAnimatedGif
             GC.SuppressFinalize(this);
         }
 
-        private volatile bool _disposing;
         private bool _disposed;
+
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
             {
                 _core?.Dispose();
+                _disposed = true;
             }
         }
 

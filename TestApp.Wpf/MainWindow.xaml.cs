@@ -250,14 +250,12 @@ namespace TestApp.Wpf
 
         private void sldPosition_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            // Not supported (yet?)
-
-            //if (_animator != null)
-            //{
-            //    var currentFrame = _animator.CurrentFrameIndex;
-            //    if (currentFrame >= 0 && currentFrame != (int)sldPosition.Value)
-            //        _animator.GotoFrame((int)sldPosition.Value);
-            //}
+            if (_animator != null)
+            {
+                var currentFrame = _animator.CurrentFrameIndex;
+                if (currentFrame >= 0 && currentFrame != (int)sldPosition.Value)
+                    _animator.CurrentFrameIndex = (int)sldPosition.Value;
+            }
         }
 
         private void SetPlayPauseEnabled(bool isPaused)
@@ -288,12 +286,12 @@ namespace TestApp.Wpf
             new BasicTestsWindow().ShowDialog();
         }
 
-        private void AnimationBehavior_OnError(DependencyObject d, EventArgs e)
+        private void AnimationBehavior_OnError(DependencyObject d, AnimationErrorEventArgs e)
         {
-            //if (e.Kind == AnimationErrorKind.Loading)
-            //    IsDownloading = false;
+            if (e.Kind == AnimationErrorKind.Loading)
+                IsDownloading = false;
 
-            //MessageBox.Show($"An error occurred ({e.Kind}): {e.Exception}");
+            MessageBox.Show($"An error occurred ({e.Kind}): {e.Exception}");
         }
 
         private void btnRewind_Click(object sender, RoutedEventArgs e)

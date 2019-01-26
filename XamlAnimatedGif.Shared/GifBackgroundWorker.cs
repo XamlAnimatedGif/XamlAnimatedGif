@@ -4,22 +4,24 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections.Generic;
 using XamlAnimatedGif.Decoding;
+using System.Linq;
 
 namespace XamlAnimatedGif
 {
     internal sealed class GifBackgroundWorker
     {
         private static readonly Stopwatch _timer = Stopwatch.StartNew();
-        private GifDecoder _gifDecode;
-        private int _currentIndex;
+        private GifDecoder _gifDecoder;
+
         private Task _bgThread;
         private State _state;
         private readonly object _lockObj;
         private readonly Queue<Command> _cmdQueue;
+        private readonly List<ulong> _colorTableIDList;
         private volatile bool _shouldStop;
         private int _iterationCount;
-        private GifRepeatBehavior _repeatBehavior;
 
+        private GifRepeatBehavior _repeatBehavior;
         public GifRepeatBehavior RepeatCount
         {
             get => _repeatBehavior;
@@ -33,10 +35,26 @@ namespace XamlAnimatedGif
             }
         }
 
+
+        public Action CurrentFrameChanged;
+        private int _currentIndex;
+        private volatile bool _hasSeeked;
+
+        public int CurrentFrameIndex
+        {
+            get => _currentIndex;
+            set
+            {
+                if (value != _currentIndex)
+                    lock (_lockObj)
+                        InternalSeek(value, true);
+            }
+        }
+
         private void ResetPlayVars()
         {
             _iterationCount = 0;
-            _currentIndex = -1;
+            CurrentFrameIndex = -1;
         }
 
         public enum Command
@@ -44,7 +62,6 @@ namespace XamlAnimatedGif
             Null,
             Play,
             Pause,
-            Reset,
             Dispose
         }
 
@@ -58,12 +75,76 @@ namespace XamlAnimatedGif
             Dispose
         }
 
+
+        private void RefreshColorTableCache()
+        {
+            foreach (var cacheID in _colorTableIDList)
+                GifDecoder.GlobalColorTableCache.TryGetValue(cacheID, out var _);
+        }
+
+        internal void Seek(int value)
+        {
+            lock (_lockObj)
+                InternalSeek(value, true);
+        }
+
+        private void InternalSeek(int value, bool isManual)
+        {
+            //_gifDecoder.ClearImage();
+
+            //var queriedFrames = _gifDecoder
+            //                  .Frames
+            //                  .TakeWhile((x, i) => i <= value)
+            //                  .Where((p, i) => p.FrameDisposalMethod != FrameDisposal.Restore)
+            //                  .Select((x, i) => i);
+
+            //foreach (var frameIndex in queriedFrames)
+            //{
+            //    _gifDecoder.RenderFrame(frameIndex);
+            //}
+
+            //_gifDecoder.RenderFrame(value);
+
+            for (int fI = 0; fI <= value; fI++)
+            {
+                var targetFrame = _gifDecoder.Frames[fI];
+
+                if (fI != value & targetFrame.FrameDisposalMethod == FrameDisposal.Restore)
+                    continue;
+
+                _gifDecoder.RenderFrame(fI);
+            }
+
+            _currentIndex = value;
+
+            if (isManual)
+            {
+                if (_state == State.Complete)
+                {
+                    _state = State.Paused;
+                    _iterationCount = 0;
+                }
+
+                _hasSeeked = true;
+
+                CurrentFrameChanged?.Invoke();
+            }
+        }
+
         public GifBackgroundWorker(GifDecoder gifDecode)
         {
-            _gifDecode = gifDecode;
+            _gifDecoder = gifDecode;
             _lockObj = new object();
             _repeatBehavior = new GifRepeatBehavior() { LoopForever = true };
             _cmdQueue = new Queue<Command>();
+
+            _colorTableIDList = _gifDecoder.Frames
+                                          .Where(p => p.IsLocalColorTableUsed)
+                                          .Select(p => p.LocalColorTableCacheID)
+                                          .ToList();
+
+            if (_gifDecoder.Header.HasGlobalColorTable)
+                _colorTableIDList.Add(_gifDecoder.Header.GlobalColorTableCacheID);
 
             ResetPlayVars();
 
@@ -106,18 +187,20 @@ namespace XamlAnimatedGif
             switch (_state)
             {
                 case State.Null:
+                    Thread.Sleep(40);
+                    break;
                 case State.Paused:
+                    RefreshColorTableCache();
                     Thread.Sleep(60);
                     break;
                 case State.Start:
-                    ShowFirstFrame();
-                    SetState(State.Running);
+                    _state = State.Running;
                     break;
                 case State.Running:
                     WaitAndRenderNext();
                     break;
                 case State.Complete:
-                    ResetPlayVars();
+                    RefreshColorTableCache();
                     Thread.Sleep(60);
                     break;
             }
@@ -161,54 +244,47 @@ namespace XamlAnimatedGif
                             break;
                     }
                     break;
-                case Command.Reset:
-                    switch (_state)
-                    {
-                        case State.Paused:
-                        case State.Complete:
-                        case State.Running:
-                            ResetPlayVars();
-                            ShowFirstFrame();
-                            break;
-                    }
-                    break;
             }
 
         }
 
-        private void SetState(State state)
-        {
-            lock (_lockObj)
-                _state = state;
-        }
-
         private void DoDispose()
         {
-            SetState(State.Dispose);
+            _state = State.Dispose;
             _shouldStop = true;
-            _gifDecode.Dispose();
+            _gifDecoder.Dispose();
         }
 
         private void ShowFirstFrame()
         {
             if (_shouldStop) return;
-            _gifDecode.RenderFrame(0);
+            _gifDecoder.RenderFrame(0);
         }
 
         private void WaitAndRenderNext()
         {
+            //if (_hasSeeked)
+            //{
+            //    InternalSeek(_currentIndex, false);
+            //    _hasSeeked = false;
+            //    return;
+            //}
+
             if (!RepeatCount.LoopForever & _iterationCount > RepeatCount.Count)
             {
-                SetState(State.Complete);
+                _state = State.Complete;
                 return;
             }
 
-            _currentIndex = (_currentIndex + 1) % _gifDecode.Frames.Count;
-            var targetDelay = _gifDecode.Frames[_currentIndex].FrameDelay;
+            _currentIndex = (_currentIndex + 1) % _gifDecoder.Frames.Count;
+
+            CurrentFrameChanged?.Invoke();
+
+            var targetDelay = _gifDecoder.Frames[_currentIndex].FrameDelay;
 
             var t1 = _timer.Elapsed;
 
-            _gifDecode.RenderFrame(_currentIndex);
+            _gifDecoder.RenderFrame(_currentIndex);
 
             var t2 = _timer.Elapsed;
             var delta = t2 - t1;
