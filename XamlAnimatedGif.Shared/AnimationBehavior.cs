@@ -445,6 +445,11 @@ namespace XamlAnimatedGif
             var image = (Image) sender;
             image.Unloaded -= Image_Unloaded;
             image.Loaded += Image_Loaded;
+
+            int seqNum = GetSeqNum(image) + 1;
+            SetSeqNum(image, seqNum);
+
+            image.Source = null;
             ClearAnimatorCore(image);
         }
 
@@ -498,6 +503,7 @@ namespace XamlAnimatedGif
                     animator.Dispose();
                     return;
                 }
+
                 await SetAnimatorCoreAsync(image, animator);
                 OnLoaded(image);
             }
@@ -520,13 +526,14 @@ namespace XamlAnimatedGif
             try
             {
                 var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image);
-                await SetAnimatorCoreAsync(image, animator);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
                     animator.Dispose();
                     return;
                 }
+
+                await SetAnimatorCoreAsync(image, animator);
                 OnLoaded(image);
             }
             catch (InvalidSignatureException)
