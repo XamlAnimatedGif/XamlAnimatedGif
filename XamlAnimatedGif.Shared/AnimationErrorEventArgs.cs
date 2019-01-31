@@ -7,8 +7,8 @@ namespace XamlAnimatedGif
 
     public class AnimationErrorEventArgs : RoutedEventArgs
     {
-        public AnimationErrorEventArgs(object source, Exception exception, AnimationErrorKind kind)
-            : base(null, source)
+        public AnimationErrorEventArgs(RoutedEvent e, object source, Exception exception, AnimationErrorKind kind)
+            : base(e, source)
         {
             Exception = exception;
             Kind = kind;

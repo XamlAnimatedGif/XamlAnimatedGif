@@ -6,8 +6,8 @@ namespace XamlAnimatedGif
 
     public class AnimationCompletedEventArgs : RoutedEventArgs
     {
-        public AnimationCompletedEventArgs(object source)
-            : base(null, source)
+        public AnimationCompletedEventArgs(RoutedEvent e, object source)
+            : base(e, source)
         {
 
         }

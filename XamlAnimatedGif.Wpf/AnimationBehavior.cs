@@ -175,7 +175,7 @@ namespace XamlAnimatedGif
 
         internal static void OnError(Image image, Exception exception, AnimationErrorKind kind)
         {
-            image.RaiseEvent(new AnimationErrorEventArgs(image, exception, kind));
+            image.RaiseEvent(new AnimationErrorEventArgs(ErrorEvent,image, exception, kind));
         }
 
         private static void WpfAnimatorError(object sender, AnimationErrorEventArgs e)
@@ -446,8 +446,14 @@ namespace XamlAnimatedGif
             }
             catch (InvalidGifStreamException)
             {
-                await SetStaticImageAsync(image, sourceUri);
-                OnLoaded(image);
+                try
+                {
+                    await SetStaticImageAsync(image, sourceUri);
+                    OnLoaded(image);
+                } catch (Exception ex)
+                {
+                    OnError(image, ex, AnimationErrorKind.Loading);
+                }
             }
             catch(Exception ex)
             {

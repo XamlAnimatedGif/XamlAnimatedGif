@@ -14,9 +14,9 @@ namespace XamlAnimatedGif
         private GifDecoder _gifDecoder;
 
         private Task _bgThread;
-        private State _state;
+        private BgWorkerState _state;
         private readonly object _lockObj;
-        private readonly Queue<Command> _cmdQueue;
+        private readonly Queue<BgWorkerCommand> _cmdQueue;
         private readonly List<ulong> _colorTableIDList;
         private volatile bool _shouldStop;
         private int _iterationCount;
@@ -29,16 +29,16 @@ namespace XamlAnimatedGif
             {
                 lock (_lockObj)
                 {
+                    InternalSeek(0, true);
                     ResetPlayVars();
+                    _state = BgWorkerState.Paused;
                     _repeatBehavior = value;
                 }
             }
         }
 
-
         public Action CurrentFrameChanged;
         private int _currentIndex;
-        private volatile bool _hasSeeked;
 
         public int CurrentFrameIndex
         {
@@ -57,35 +57,10 @@ namespace XamlAnimatedGif
             CurrentFrameIndex = -1;
         }
 
-        public enum Command
-        {
-            Null,
-            Play,
-            Pause,
-            Dispose
-        }
-
-        public enum State
-        {
-            Null,
-            Start,
-            Running,
-            Paused,
-            Complete,
-            Dispose
-        }
-
-
         private void RefreshColorTableCache()
         {
             foreach (var cacheID in _colorTableIDList)
                 GifDecoder.GlobalColorTableCache.TryGetValue(cacheID, out var _);
-        }
-
-        internal void Seek(int value)
-        {
-            lock (_lockObj)
-                InternalSeek(value, true);
         }
 
         private void InternalSeek(int value, bool isManual)
@@ -93,8 +68,18 @@ namespace XamlAnimatedGif
             int lowerBound = 0;
 
             // Skip already rendered frames if the seek position is above the previous frame index.
-            if(isManual & value > _currentIndex)
+            if (isManual & value > _currentIndex)
+            {
+                // Only render the new seeked frame if the delta
+                // seek position is just 1 frame.
+                if (value - _currentIndex == 1)
+                {
+                    _gifDecoder.RenderFrame(value);
+                    SetIndexVal(value, isManual);
+                    return;
+                }
                 lowerBound = _currentIndex;
+            }
 
             for (int fI = lowerBound; fI <= value; fI++)
             {
@@ -107,17 +92,20 @@ namespace XamlAnimatedGif
                 _gifDecoder.RenderFrame(fI);
             }
 
+            SetIndexVal(value, isManual);
+        }
+
+        private void SetIndexVal(int value, bool isManual)
+        {
             _currentIndex = value;
 
             if (isManual)
             {
-                if (_state == State.Complete)
+                if (_state == BgWorkerState.Complete)
                 {
-                    _state = State.Paused;
+                    _state = BgWorkerState.Paused;
                     _iterationCount = 0;
                 }
-
-                _hasSeeked = true;
 
                 CurrentFrameChanged?.Invoke();
             }
@@ -128,8 +116,10 @@ namespace XamlAnimatedGif
             _gifDecoder = gifDecode;
             _lockObj = new object();
             _repeatBehavior = new GifRepeatBehavior() { LoopForever = true };
-            _cmdQueue = new Queue<Command>();
+            _cmdQueue = new Queue<BgWorkerCommand>();
 
+            // Save the color table cache ID's to refresh them on cache while
+            // the image is either stopped/paused.
             _colorTableIDList = _gifDecoder.Frames
                                           .Where(p => p.IsLocalColorTableUsed)
                                           .Select(p => p.LocalColorTableCacheID)
@@ -144,13 +134,13 @@ namespace XamlAnimatedGif
                 TaskScheduler.Current);
         }
 
-        public void SendCommand(Command cmd)
+        public void SendCommand(BgWorkerCommand cmd)
         {
             lock (_lockObj)
                 _cmdQueue.Enqueue(cmd);
         }
 
-        public State GetState()
+        public BgWorkerState GetState()
         {
             lock (_lockObj)
             {
@@ -178,20 +168,20 @@ namespace XamlAnimatedGif
         {
             switch (_state)
             {
-                case State.Null:
+                case BgWorkerState.Null:
                     Thread.Sleep(40);
                     break;
-                case State.Paused:
+                case BgWorkerState.Paused:
                     RefreshColorTableCache();
                     Thread.Sleep(60);
                     break;
-                case State.Start:
-                    _state = State.Running;
+                case BgWorkerState.Start:
+                    _state = BgWorkerState.Running;
                     break;
-                case State.Running:
+                case BgWorkerState.Running:
                     WaitAndRenderNext();
                     break;
-                case State.Complete:
+                case BgWorkerState.Complete:
                     RefreshColorTableCache();
                     Thread.Sleep(60);
                     break;
@@ -200,7 +190,7 @@ namespace XamlAnimatedGif
 
         private void CheckCommands()
         {
-            Command cmd;
+            BgWorkerCommand cmd;
 
             lock (_lockObj)
             {
@@ -210,29 +200,29 @@ namespace XamlAnimatedGif
 
             switch (cmd)
             {
-                case Command.Dispose:
+                case BgWorkerCommand.Dispose:
                     DoDispose();
                     break;
-                case Command.Play:
+                case BgWorkerCommand.Play:
                     switch (_state)
                     {
-                        case State.Null:
-                            _state = State.Start;
+                        case BgWorkerState.Null:
+                            _state = BgWorkerState.Start;
                             break;
-                        case State.Paused:
-                            _state = State.Running;
+                        case BgWorkerState.Paused:
+                            _state = BgWorkerState.Running;
                             break;
-                        case State.Complete:
+                        case BgWorkerState.Complete:
                             ResetPlayVars();
-                            _state = State.Start;
+                            _state = BgWorkerState.Start;
                             break;
                     }
                     break;
-                case Command.Pause:
+                case BgWorkerCommand.Pause:
                     switch (_state)
                     {
-                        case State.Running:
-                            _state = State.Paused;
+                        case BgWorkerState.Running:
+                            _state = BgWorkerState.Paused;
                             break;
                     }
                     break;
@@ -242,7 +232,7 @@ namespace XamlAnimatedGif
 
         private void DoDispose()
         {
-            _state = State.Dispose;
+            _state = BgWorkerState.Dispose;
             _shouldStop = true;
             _gifDecoder.Dispose();
         }
@@ -257,7 +247,7 @@ namespace XamlAnimatedGif
         {
             if (!RepeatCount.LoopForever & _iterationCount > RepeatCount.Count)
             {
-                _state = State.Complete;
+                _state = BgWorkerState.Complete;
                 return;
             }
 

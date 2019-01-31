@@ -29,7 +29,7 @@ namespace XamlAnimatedGif
             _decoder = new GifDecoder(sourceStream);
             _bgWorker = new GifBackgroundWorker(_decoder);
             _bgWorker.RepeatCount = _decoder.Header.RepeatCount;
-            _bgWorker.SendCommand(GifBackgroundWorker.Command.Play);
+            _bgWorker.SendCommand(BgWorkerCommand.Play);
             _bgWorker.CurrentFrameChanged = CurrentFrameChanged;
         }
 
@@ -39,22 +39,22 @@ namespace XamlAnimatedGif
 
         public async void Play()
         {
-            _bgWorker.SendCommand(GifBackgroundWorker.Command.Play);
+            _bgWorker.SendCommand(BgWorkerCommand.Play);
         }
 
 
         public void Pause()
         {
-            _bgWorker.SendCommand(GifBackgroundWorker.Command.Pause);
+            _bgWorker.SendCommand(BgWorkerCommand.Pause);
         }
 
-        public bool IsPaused => (_bgWorker.GetState() == GifBackgroundWorker.State.Paused);
+        public bool IsPaused => (_bgWorker.GetState() == BgWorkerState.Paused);
 
         public bool IsComplete
         {
             get
             {
-                return (_bgWorker.GetState() == GifBackgroundWorker.State.Complete);
+                return (_bgWorker.GetState() == BgWorkerState.Complete);
             }
         }
 
@@ -86,7 +86,7 @@ namespace XamlAnimatedGif
             if (!_disposed)
             {
                 _disposing = true;
-                _bgWorker?.SendCommand(GifBackgroundWorker.Command.Dispose);
+                _bgWorker?.SendCommand(BgWorkerCommand.Dispose);
                 if (_isSourceStreamOwner)
                 {
                     try

@@ -36,7 +36,7 @@ namespace XamlAnimatedGif
 
         private void OnCurrentFrameChanged()
         {
-            Dispatcher.Invoke(() => CurrentFrameChanged.Invoke(this, null));
+            Dispatcher.Invoke(() => CurrentFrameChanged?.Invoke(this, null));
            
         }
 
