@@ -84,6 +84,7 @@ Task("Restore")
     .Does(() =>
 {
     NuGetRestore(solutionFile);
+    DotNetCoreRestore(".", new DotNetCoreRestoreSettings {});
 });
 
 // Builds the solution
