@@ -40,7 +40,7 @@ var nugetTargets = new[]
         Files = new[]
         {
             $"{projectName}.Shared/bin/{configuration}/{projectName}.dll",
-            $"{projectName}.Shared/bin/{configuration}/{projectName}.pdb"
+            $"{projectName}.Shared/bin/{configuration}/{projectName}.pdb",
             $"{projectName}.Wpf/bin/{configuration}/{projectName}.dll",
             $"{projectName}.Wpf/bin/{configuration}/{projectName}.pdb"
         }
