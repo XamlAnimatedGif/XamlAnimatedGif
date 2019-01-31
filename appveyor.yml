@@ -1,0 +1,8 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+nuget:
+  disable_publish_on_pr: true
+build_script:
+- ps: .\build.ps1 -Target Pack
+artifacts:
+- path: NuGet/Release/XamlAnimatedGif.*.nupkg

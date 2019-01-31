@@ -18,10 +18,8 @@ var solutionFile = $"./{projectName}.sln";
 // Projects in the solution
 var projects = new[]
 {
+    new { Name = $"{projectName}.Shared", MSBuildPlatform = MSBuildPlatform.Automatic },
     new { Name = $"{projectName}.Wpf", MSBuildPlatform = MSBuildPlatform.Automatic },
-    new { Name = $"{projectName}.Wpf.4.0", MSBuildPlatform = MSBuildPlatform.Automatic },
-    new { Name = $"{projectName}.WinRT", MSBuildPlatform = MSBuildPlatform.Automatic },
-    new { Name = $"{projectName}.Silverlight", MSBuildPlatform = MSBuildPlatform.x86 }
 };
 var projectDirsToClean = new[] { "bin", "obj", "AppPackages" };
 
@@ -41,37 +39,12 @@ var nugetTargets = new[]
         Name = "net45",
         Files = new[]
         {
+            $"{projectName}.Shared/bin/{configuration}/{projectName}.dll",
+            $"{projectName}.Shared/bin/{configuration}/{projectName}.pdb"
             $"{projectName}.Wpf/bin/{configuration}/{projectName}.dll",
             $"{projectName}.Wpf/bin/{configuration}/{projectName}.pdb"
         }
-    },
-    new
-    {
-        Name = "net40",
-        Files = new[]
-        {
-            $"{projectName}.Wpf.4.0/bin/{configuration}/{projectName}.dll",
-            $"{projectName}.Wpf.4.0/bin/{configuration}/{projectName}.pdb"
-        }
-    },
-    new
-    {
-        Name = "portable-win81+wpa81",
-        Files = new[]
-        {
-            $"{projectName}.WinRT/bin/{configuration}/{projectName}.dll",
-            $"{projectName}.WinRT/bin/{configuration}/{projectName}.pdb"
-        }
-    },
-    new
-    {
-        Name = "sl5",
-        Files = new[]
-        {
-            $"{projectName}.Silverlight/bin/{configuration}/{projectName}.dll",
-            $"{projectName}.Silverlight/bin/{configuration}/{projectName}.pdb"
-        }
-    },
+    }
 };
 
 //////////////////////
