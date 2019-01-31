@@ -476,8 +476,6 @@ namespace XamlAnimatedGif
                     WpfAnimator.Dispose();
                     return;
                 }
-
-                await SetAnimatorCoreAsync(image, animator);
                 OnLoaded(image);
             }
             catch (InvalidGifStreamException)
