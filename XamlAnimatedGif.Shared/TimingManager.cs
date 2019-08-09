@@ -127,9 +127,7 @@ namespace XamlAnimatedGif
             var tcs = _pauseCompletionSource;
             if (tcs != null)
             {
-                if (cancellationToken.CanBeCanceled)
-                    cancellationToken.Register(() => tcs.TrySetCanceled());
-                return tcs.Task;
+                return tcs.Task.WithCancellationToken(cancellationToken);
             }
             return _completedTask;
         }
