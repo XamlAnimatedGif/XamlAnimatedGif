@@ -402,6 +402,8 @@ namespace XamlAnimatedGif
             }
             else
             {
+                // Unsubscribe before subscribing, to avoid multiple subscriptions
+                image.Loaded -= Image_Loaded;
                 image.Loaded += Image_Loaded;
                 return;
             }
@@ -444,6 +446,9 @@ namespace XamlAnimatedGif
         {
             var image = (Image) sender;
             image.Unloaded -= Image_Unloaded;
+
+            // Unsubscribe before subscribing, to avoid multiple subscriptions
+            image.Loaded -= Image_Loaded;
             image.Loaded += Image_Loaded;
 
             int seqNum = GetSeqNum(image) + 1;
