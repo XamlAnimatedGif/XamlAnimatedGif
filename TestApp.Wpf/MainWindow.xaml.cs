@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media.Animation;
 using Microsoft.VisualBasic;
@@ -49,22 +50,22 @@ namespace TestApp.Wpf
         private ObservableCollection<string> _images;
         public ObservableCollection<string> Images
         {
-            get { return _images; }
+            get => _images;
             set
             {
                 _images = value;
-                OnPropertyChanged("Images");
+                OnPropertyChanged();
             }
         }
 
         private string _selectedImage;
         public string SelectedImage
         {
-            get { return _selectedImage; }
+            get => _selectedImage;
             set
             {
                 _selectedImage = value;
-                OnPropertyChanged("SelectedImage");
+                OnPropertyChanged();
                 Completed = false;
             }
         }
@@ -107,13 +108,13 @@ namespace TestApp.Wpf
         private bool _useDefaultRepeatBehavior = true;
         public bool UseDefaultRepeatBehavior
         {
-            get { return _useDefaultRepeatBehavior; }
+            get => _useDefaultRepeatBehavior;
             set
             {
                 _useDefaultRepeatBehavior = value;
-                OnPropertyChanged("UseDefaultRepeatBehavior");
+                OnPropertyChanged();
                 if (value)
-                    RepeatBehavior = default(RepeatBehavior);
+                    RepeatBehavior = default;
             }
         }
 
@@ -121,11 +122,11 @@ namespace TestApp.Wpf
         private bool _repeatForever;
         public bool RepeatForever
         {
-            get { return _repeatForever; }
+            get => _repeatForever;
             set
             {
                 _repeatForever = value;
-                OnPropertyChanged("RepeatForever");
+                OnPropertyChanged();
                 if (value)
                     RepeatBehavior = RepeatBehavior.Forever;
             }
@@ -135,11 +136,11 @@ namespace TestApp.Wpf
         private bool _useSpecificRepeatCount;
         public bool UseSpecificRepeatCount
         {
-            get { return _useSpecificRepeatCount; }
+            get => _useSpecificRepeatCount;
             set
             {
                 _useSpecificRepeatCount = value;
-                OnPropertyChanged("UseSpecificRepeatCount");
+                OnPropertyChanged();
                 if (value)
                     RepeatBehavior = new RepeatBehavior(RepeatCount);
             }
@@ -148,11 +149,11 @@ namespace TestApp.Wpf
         private int _repeatCount = 3;
         public int RepeatCount
         {
-            get { return _repeatCount; }
+            get => _repeatCount;
             set
             {
                 _repeatCount = value;
-                OnPropertyChanged("RepeatCount");
+                OnPropertyChanged();
                 if (UseSpecificRepeatCount)
                     RepeatBehavior = new RepeatBehavior(value);
             }
@@ -161,22 +162,22 @@ namespace TestApp.Wpf
         private bool _completed;
         public bool Completed
         {
-            get { return _completed; }
+            get => _completed;
             set
             {
                 _completed = value;
-                OnPropertyChanged("Completed");
+                OnPropertyChanged();
             }
         }
 
         private RepeatBehavior _repeatBehavior;
         public RepeatBehavior RepeatBehavior
         {
-            get { return _repeatBehavior; }
+            get => _repeatBehavior;
             set
             {
                 _repeatBehavior = value;
-                OnPropertyChanged("RepeatBehavior");
+                OnPropertyChanged();
                 Completed = false;
             }
         }
@@ -184,53 +185,52 @@ namespace TestApp.Wpf
         private bool _autoStart = true;
         public bool AutoStart
         {
-            get { return _autoStart; }
+            get => _autoStart;
             set
             {
                 _autoStart = value;
-                OnPropertyChanged("AutoStart");
+                OnPropertyChanged();
             }
         }
 
         private bool _isDownloading;
         public bool IsDownloading
         {
-            get { return _isDownloading; }
+            get => _isDownloading;
             set
             {
                 _isDownloading = value;
-                OnPropertyChanged("IsDownloading");
+                OnPropertyChanged();
             }
         }
 
         private int _downloadProgress;
         public int DownloadProgress
         {
-            get { return _downloadProgress; }
+            get => _downloadProgress;
             set
             {
                 _downloadProgress = value;
-                OnPropertyChanged("DownloadProgress");
+                OnPropertyChanged();
             }
         }
 
         private bool _isDownloadProgressIndeterminate;
         public bool IsDownloadProgressIndeterminate
         {
-            get { return _isDownloadProgressIndeterminate; }
+            get => _isDownloadProgressIndeterminate;
             set
             {
                 _isDownloadProgressIndeterminate = value;
-                OnPropertyChanged("IsDownloadProgressIndeterminate");
+                OnPropertyChanged();
             }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged(string propertyName)
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private Animator _animator;
