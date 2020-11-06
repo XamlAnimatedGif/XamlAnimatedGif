@@ -10,6 +10,10 @@ namespace XamlAnimatedGif.Decoding
     {
         internal const int ExtensionLabel = 0xF9;
 
+        // Browsers use a minimum delay of 10, which cuts off huge loads on CPU
+        // and render glitched gifs relatively normal.
+        internal const int MinDelay = 10;
+
         public int BlockSize { get; private set; }
         public GifFrameDisposalMethod DisposalMethod { get; private set; }
         public bool UserInput { get; private set; }
@@ -47,7 +51,8 @@ namespace XamlAnimatedGif.Decoding
             DisposalMethod = (GifFrameDisposalMethod) ((packedFields & 0x1C) >> 2);
             UserInput = (packedFields & 0x02) != 0;
             HasTransparency = (packedFields & 0x01) != 0;
-            Delay = BitConverter.ToUInt16(bytes, 2) * 10; // milliseconds
+            ushort rawDelay = BitConverter.ToUInt16(bytes, 2);
+            Delay = (rawDelay < 2 ? MinDelay : rawDelay) * 10; // milliseconds
             TransparencyIndex = bytes[4];
         }
     }
