@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <ProjectGuid>{28DEECB2-8B07-4C1C-BDFA-669746FADD75}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <AssemblyTitle>TestApp.WpfCore</AssemblyTitle>
+    <Product>TestApp.WpfCore</Product>
+    <Copyright>Copyright ©  2014</Copyright>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Images\bomb-once.gif" />
+    <Resource Include="Images\bomb.gif" />
+    <Resource Include="Images\earth.gif" />
+    <Resource Include="Images\monster.gif" />
+    <Resource Include="Images\partialfirstframe.gif" />
+    <Resource Include="Images\radar.gif" />
+    <Resource Include="Images\pause.png" />
+    <Resource Include="Images\play.png" />
+    <Resource Include="Images\nonanimated.gif" />
+    <Resource Include="Images\newton-cradle.gif" />
+    <Resource Include="Images\not-a-gif.png" />
+    <Resource Include="Images\optimized-full-code-table.gif" />
+    <Resource Include="Images\rewind.png" />
+    <Resource Include="Images\corrupt-frame-size.gif" />
+    <Content Include="Images\siteoforigin.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <ProjectReference Include="..\XamlAnimatedGif.WpfCore\XamlAnimatedGif.WpfCore.csproj" />
+    <Resource Include="Images\working.gif" />
+  </ItemGroup>
+</Project>

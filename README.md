@@ -22,7 +22,7 @@ This is a reboot of my [WpfAnimatedGif](https://github.com/thomaslevesque/WpfAni
 
 - Support for all recent XAML platforms, not just WPF
 
-  The WpfAnimatedGif library relied heavily on WPF-specific imaging features, which made it pretty much impossible to adapt to other platforms. XamlAnimatedGif, on the other hand, implements its own GIF decoding (metadata parsing and LZW decompression), which works on any XAML platform, and has as little dependency as possible on platform-specific types. The library currently works on WPF (.NET 4.x), Silverlight 5, Windows 8.1, Windows Phone 8.1 and Universal Windows Platform (Windows 10).
+  The WpfAnimatedGif library relied heavily on WPF-specific imaging features, which made it pretty much impossible to adapt to other platforms. XamlAnimatedGif, on the other hand, implements its own GIF decoding (metadata parsing and LZW decompression), which works on any XAML platform, and has as little dependency as possible on platform-specific types. The library currently works on WPF (.NET 4.x, .NET Core 3.1), Silverlight 5, Windows 8.1, Windows Phone 8.1 and Universal Windows Platform (Windows 10).
 
 - Resource efficiency
 

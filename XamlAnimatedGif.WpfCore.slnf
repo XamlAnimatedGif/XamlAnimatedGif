@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "XamlAnimatedGif.sln",
+    "projects": [
+      "TestApp.WpfCore\\TestApp.WpfCore.csproj",
+      "XamlAnimatedGif.Shared\\XamlAnimatedGif.Shared.shproj",
+      "XamlAnimatedGif.WpfCore\\XamlAnimatedGif.WpfCore.csproj"
+    ]
+  }
+}

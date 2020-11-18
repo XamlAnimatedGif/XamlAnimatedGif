@@ -21,7 +21,8 @@ var projects = new[]
     new { Name = $"{projectName}.Wpf", MSBuildPlatform = MSBuildPlatform.Automatic },
     new { Name = $"{projectName}.Wpf.4.0", MSBuildPlatform = MSBuildPlatform.Automatic },
     new { Name = $"{projectName}.WinRT", MSBuildPlatform = MSBuildPlatform.Automatic },
-    new { Name = $"{projectName}.Silverlight", MSBuildPlatform = MSBuildPlatform.x86 }
+    new { Name = $"{projectName}.Silverlight", MSBuildPlatform = MSBuildPlatform.x86 },
+    new { Name = $"{projectName}.WpfCore", MSBuildPlatform = MSBuildPlatform.Automatic }
 };
 var projectDirsToClean = new[] { "bin", "obj", "AppPackages" };
 
@@ -72,6 +73,15 @@ var nugetTargets = new[]
             $"{projectName}.Silverlight/bin/{configuration}/{projectName}.pdb"
         }
     },
+    new
+    {
+        Name = "netcoreapp3.1",
+        Files = new[]
+        {
+            $"{projectName}.WpfCore/bin/{configuration}/{projectName}.dll",
+            $"{projectName}.WpfCore/bin/{configuration}/{projectName}.pdb"
+        }
+    }
 };
 
 //////////////////////

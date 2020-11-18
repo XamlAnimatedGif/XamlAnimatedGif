@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <ProjectGuid>{E6B52F9D-9314-48FE-9B16-081E9DB80BA0}</ProjectGuid>
+    <RootNamespace>XamlAnimatedGif</RootNamespace>
+    <AssemblyName>XamlAnimatedGif</AssemblyName>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyTitle>XamlAnimatedGif</AssemblyTitle>
+    <Company>Thomas Levesque</Company>
+    <Product>XamlAnimatedGif.Wpf</Product>
+    <Copyright>Copyright © Thomas Levesque 2014</Copyright>
+    <UseWPF>True</UseWPF>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <DefineConstants>TRACE;DEBUG;WPF</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineConstants>TRACE;WPF</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <Import Project="..\XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems" Label="Shared" Condition="Exists('..\XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems')" />
+</Project>

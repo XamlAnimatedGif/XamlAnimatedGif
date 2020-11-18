@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30330.147
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlAnimatedGif.Wpf", "XamlAnimatedGif.Wpf\XamlAnimatedGif.Wpf.csproj", "{5ECDD8E1-E176-4D9F-9278-17A313A16CB2}"
 EndProject
@@ -60,16 +60,21 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "TestApp.Silverlight.Web", "
 		ProjOutputReferences = "{AC67FFFC-7348-4225-8A71-EE40BB8C861C}|ClientBin|false;"
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApp.WpfCore", "TestApp.WpfCore\TestApp.WpfCore.csproj", "{28DEECB2-8B07-4C1C-BDFA-669746FADD75}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlAnimatedGif.WpfCore", "XamlAnimatedGif.WpfCore\XamlAnimatedGif.WpfCore.csproj", "{E6B52F9D-9314-48FE-9B16-081E9DB80BA0}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{afd68338-7468-4bba-a936-52066fa0f226}*SharedItemsImports = 4
-		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{5ecdd8e1-e176-4d9f-9278-17a313a16cb2}*SharedItemsImports = 4
-		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{7aefa46b-4fcb-4c1b-a55f-9ab6170b5454}*SharedItemsImports = 4
-		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{df7135a1-2026-4529-b880-230892fdcdbb}*SharedItemsImports = 4
-		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{609621a0-e20d-40c9-826a-665e3006b6be}*SharedItemsImports = 13
-		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{5f7f48d6-94e4-4580-8fc4-d70c45dbf6b1}*SharedItemsImports = 4
-		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{d408eebd-d9f1-41fb-9161-546f5bc0dad4}*SharedItemsImports = 13
 		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{46f409f0-ef0d-4f0d-b05e-f4f22e944683}*SharedItemsImports = 4
+		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{5ecdd8e1-e176-4d9f-9278-17a313a16cb2}*SharedItemsImports = 4
+		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{5f7f48d6-94e4-4580-8fc4-d70c45dbf6b1}*SharedItemsImports = 4
+		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{609621a0-e20d-40c9-826a-665e3006b6be}*SharedItemsImports = 13
+		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{7aefa46b-4fcb-4c1b-a55f-9ab6170b5454}*SharedItemsImports = 4
+		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{afd68338-7468-4bba-a936-52066fa0f226}*SharedItemsImports = 4
+		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{d408eebd-d9f1-41fb-9161-546f5bc0dad4}*SharedItemsImports = 13
+		TestApp.WinRT\TestApp.WinRT.Shared\TestApp.WinRT.Shared.projitems*{df7135a1-2026-4529-b880-230892fdcdbb}*SharedItemsImports = 4
+		XamlAnimatedGif.Shared\XamlAnimatedGif.Shared.projitems*{e6b52f9d-9314-48fe-9b16-081e9db80ba0}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -116,6 +121,14 @@ Global
 		{D848B57F-389D-480D-B1A8-59BB4C5301B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D848B57F-389D-480D-B1A8-59BB4C5301B3}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{D848B57F-389D-480D-B1A8-59BB4C5301B3}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{28DEECB2-8B07-4C1C-BDFA-669746FADD75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28DEECB2-8B07-4C1C-BDFA-669746FADD75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28DEECB2-8B07-4C1C-BDFA-669746FADD75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28DEECB2-8B07-4C1C-BDFA-669746FADD75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6B52F9D-9314-48FE-9B16-081E9DB80BA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6B52F9D-9314-48FE-9B16-081E9DB80BA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6B52F9D-9314-48FE-9B16-081E9DB80BA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6B52F9D-9314-48FE-9B16-081E9DB80BA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -134,5 +147,10 @@ Global
 		{629CDA11-3FAD-4433-B0D7-D905D4A2A579} = {38553433-1849-4E69-A035-23766901DF10}
 		{AC67FFFC-7348-4225-8A71-EE40BB8C861C} = {629CDA11-3FAD-4433-B0D7-D905D4A2A579}
 		{D848B57F-389D-480D-B1A8-59BB4C5301B3} = {629CDA11-3FAD-4433-B0D7-D905D4A2A579}
+		{28DEECB2-8B07-4C1C-BDFA-669746FADD75} = {38553433-1849-4E69-A035-23766901DF10}
+		{E6B52F9D-9314-48FE-9B16-081E9DB80BA0} = {FABDEB81-7CD3-4AC6-8163-C4A45EE5F919}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {68AE2391-F72C-477A-A1FC-BDEE64B5F9A0}
 	EndGlobalSection
 EndGlobal
