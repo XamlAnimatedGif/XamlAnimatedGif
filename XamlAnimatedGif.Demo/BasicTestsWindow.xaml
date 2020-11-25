@@ -1,0 +1,12 @@
+﻿<Window x:Class="XamlAnimatedGif.Demo.BasicTestsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BasicTestsWindow" Height="350" Width="525">
+    <StackPanel>
+        <TextBox Name="txtFileName" />
+        <Button Name="btnBrowse" Content="Browse..." Click="BtnBrowse_OnClick" />
+        <Button Name="btnTestLzw" Content="Test LZW decompression" Click="BtnTestLzw_OnClick" />
+        <Button Name="btnTestStream" Content="Using stream" Click="BtnTestStream_OnClick" />
+        <Button Name="btnTestBrush" Content="Brush" Click="BtnTestBrush_OnClick" />
+    </StackPanel>
+</Window>
