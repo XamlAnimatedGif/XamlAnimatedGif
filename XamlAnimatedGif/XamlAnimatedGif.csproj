@@ -5,6 +5,19 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <PropertyGroup Label="Package properties">
+    <Title>XAML Animated GIF</Title>
+    <Description>A simple library to display animated GIF images in WPF applications</Description>
+    <Authors>Thomas Levesque</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/XamlAnimatedGif/XamlAnimatedGif</PackageProjectUrl>
+    <PackageTags>wpf;xaml;animated;gif</PackageTags>
+    <PackageReleaseNotes>https://github.com/XamlAnimatedGif/XamlAnimatedGif/releases</PackageReleaseNotes>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <PackageIcon>assets/xamlanimatedgif.png</PackageIcon>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
     <DefineConstants>$(DefineConstants);LACKS_STREAM_MEMORY_OVERLOADS</DefineConstants>
   </PropertyGroup>
@@ -26,6 +39,10 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="XamlAnimatedGif.Demo" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../assets/XamlAnimatedGif-128.png" Pack="True" PackagePath="assets/xamlanimatedgif.png" />
   </ItemGroup>
 
 </Project>

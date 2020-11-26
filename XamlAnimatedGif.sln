@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlAnimatedGif", "XamlAnim
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlAnimatedGif.Demo", "XamlAnimatedGif.Demo\XamlAnimatedGif.Demo.csproj", "{073B4B02-4FE4-4ADB-AF5E-4EE8887099CB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DD0F7957-DC9A-4B52-ACD5-4B9B3C0C5C18}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{DD0F7957-DC9A-4B52-ACD5-4B9B3C0C5C18}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		build.cmd = build.cmd
@@ -19,6 +19,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{B141FDE9-98D7-4441-A093-ED4C105D9160}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "build", "tools\build\build.csproj", "{AD1D3F14-3717-40B2-A402-34E4093212C2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{9F6C8FAA-95D0-4F8C-8ABF-78DA3F3757D3}"
+	ProjectSection(SolutionItems) = preProject
+		assets\XamlAnimatedGif-128.png = assets\XamlAnimatedGif-128.png
+		assets\XamlAnimatedGif-420.png = assets\XamlAnimatedGif-420.png
+		assets\XamlAnimatedGif.nuspec = assets\XamlAnimatedGif.nuspec
+		assets\XamlAnimatedGif.pdn = assets\XamlAnimatedGif.pdn
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
