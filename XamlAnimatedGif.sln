@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{DD0F7957-DC9A-4B52-ACD5-4B9B3C0C5C18}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		appveyor.yml = appveyor.yml
 		build.cmd = build.cmd
 		Directory.Build.props = Directory.Build.props
 		LICENSE.txt = LICENSE.txt
