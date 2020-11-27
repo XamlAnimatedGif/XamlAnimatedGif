@@ -1,6 +1,6 @@
 # XamlAnimatedGif
 
-[![NuGet version](https://img.shields.io/nuget/v/XamlAnimatedGif.svg?logo=nuget)](https://www.nuget.org/packages/XamlAnimatedGif)
+[![NuGet version](https://img.shields.io/nuget/vpre/XamlAnimatedGif.svg?logo=nuget)](https://www.nuget.org/packages/XamlAnimatedGif)
 [![AppVeyor build](https://img.shields.io/appveyor/ci/thomaslevesque/xamlanimatedgif.svg?logo=appveyor&logoColor=cccccc)](https://ci.appveyor.com/project/thomaslevesque/xamlanimatedgif)
 
 A library to display animated GIF images in WPF applications on .NET Framework 4.5, .NET Core 3.1 and .NET 5.0.
