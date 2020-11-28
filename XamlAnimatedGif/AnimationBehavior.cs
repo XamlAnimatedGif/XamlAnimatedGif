@@ -239,6 +239,32 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region AnimationStarted
+
+        public static readonly RoutedEvent AnimationStartedEvent =
+            EventManager.RegisterRoutedEvent(
+                "AnimationStarted",
+                RoutingStrategy.Bubble,
+                typeof(AnimationStartedEventHandler),
+                typeof(AnimationBehavior));
+
+        public static void AddAnimationStartedHandler(DependencyObject d, AnimationStartedEventHandler handler)
+        {
+            (d as UIElement)?.AddHandler(AnimationStartedEvent, handler);
+        }
+
+        public static void RemoveAnimationStartedHandler(DependencyObject d, AnimationStartedEventHandler handler)
+        {
+            (d as UIElement)?.RemoveHandler(AnimationStartedEvent, handler);
+        }
+
+        private static void AnimatorAnimationStarted(object sender, AnimationStartedEventArgs e)
+        {
+            (e.Source as Image)?.RaiseEvent(e);
+        }
+
+        #endregion
+
         #region AnimationCompleted
 
         public static readonly RoutedEvent AnimationCompletedEvent =
@@ -260,8 +286,7 @@ namespace XamlAnimatedGif
 
         private static void AnimatorAnimationCompleted(object sender, AnimationCompletedEventArgs e)
         {
-            var element = e.Source as Image;
-            element?.RaiseEvent(e);
+            (e.Source as Image)?.RaiseEvent(e);
         }
 
         #endregion
@@ -434,8 +459,9 @@ namespace XamlAnimatedGif
                     return;
                 }
 
-                await SetAnimatorCoreAsync(image, animator);
+                SetAnimatorCore(image, animator);
                 OnLoaded(image);
+                await StartAsync(image, animator);
             }
             catch (InvalidSignatureException)
             {
@@ -463,8 +489,9 @@ namespace XamlAnimatedGif
                     return;
                 }
 
-                await SetAnimatorCoreAsync(image, animator);
+                SetAnimatorCore(image, animator);
                 OnLoaded(image);
+                await StartAsync(image, animator);
             }
             catch (InvalidSignatureException)
             {
@@ -477,12 +504,17 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static async Task SetAnimatorCoreAsync(Image image, Animator animator)
+        private static void SetAnimatorCore(Image image, Animator animator)
         {
             SetAnimator(image, animator);
             animator.Error += AnimatorError;
+            animator.AnimationStarted += AnimatorAnimationStarted;
             animator.AnimationCompleted += AnimatorAnimationCompleted;
             image.Source = animator.Bitmap;
+        }
+
+        private static async Task StartAsync(Image image, Animator animator)
+        {
             if (GetAutoStart(image))
                 animator.Play();
             else
@@ -496,6 +528,7 @@ namespace XamlAnimatedGif
                 return;
 
             animator.AnimationCompleted -= AnimatorAnimationCompleted;
+            animator.AnimationStarted -= AnimatorAnimationStarted;
             animator.Error -= AnimatorError;
             animator.Dispose();
             SetAnimator(image, null);

@@ -100,6 +100,7 @@ namespace XamlAnimatedGif
                     _cancellationTokenSource?.Dispose();
                     _cancellationTokenSource = new CancellationTokenSource();
                     _isStarted = true;
+                    OnAnimationStarted();
                     if (_timingManager.IsPaused)
                         _timingManager.Resume();
                     await RunAsync(_cancellationTokenSource.Token);
@@ -157,6 +158,13 @@ namespace XamlAnimatedGif
         protected virtual void OnCurrentFrameChanged()
         {
             CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public event EventHandler<AnimationStartedEventArgs> AnimationStarted;
+
+        protected virtual void OnAnimationStarted()
+        {
+            AnimationStarted?.Invoke(this, new AnimationStartedEventArgs(AnimationSource));
         }
 
         public event EventHandler<AnimationCompletedEventArgs> AnimationCompleted;
