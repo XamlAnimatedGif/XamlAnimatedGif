@@ -89,6 +89,11 @@
                 <Button Name="btnRewind" ToolTip="Rewind" Click="btnRewind_Click" Margin="5" IsEnabled="False" DockPanel.Dock="Right">
                     <Image Source="/Images/rewind.png" Stretch="None" />
                 </Button>
+                <TextBlock DockPanel.Dock="Bottom" Margin="5,0">
+                    <Run>Last run: </Run>
+                    <Run Text="{Binding LastRunTime, Mode=OneWay}" />
+                </TextBlock>
+
                 <Slider Name="sldPosition"
                         TickFrequency="1" TickPlacement="BottomRight"
                         Minimum="0" Maximum="9" ValueChanged="sldPosition_ValueChanged" VerticalAlignment="Center" Margin="10" />
@@ -105,6 +110,7 @@
                        gif:AnimationBehavior.Loaded="AnimationBehavior_OnLoaded"
                        gif:AnimationBehavior.Error="AnimationBehavior_OnError"
                        gif:AnimationBehavior.DownloadProgress="AnimationBehavior_OnDownloadProgress"
+                       gif:AnimationBehavior.AnimationStarted="AnimationBehavior_OnAnimationStarted"
                        gif:AnimationBehavior.AnimationCompleted="AnimationBehavior_OnAnimationCompleted"/>
                 <ProgressBar VerticalAlignment="Center" Height="30" Margin="20"
                              Visibility="{Binding IsDownloading, Converter={StaticResource boolToVis}}"

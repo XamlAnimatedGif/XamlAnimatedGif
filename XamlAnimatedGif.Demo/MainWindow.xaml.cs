@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media.Animation;
 using Microsoft.Win32;
-using XamlAnimatedGif;
 
 namespace XamlAnimatedGif.Demo
 {
@@ -64,11 +64,24 @@ namespace XamlAnimatedGif.Demo
             get => _selectedImage;
             set
             {
+                ClearStopwatch();
                 _selectedImage = value;
                 OnPropertyChanged();
                 Completed = false;
             }
         }
+
+        private TimeSpan? _lastRunTime;
+        public TimeSpan? LastRunTime
+        {
+            get => _lastRunTime;
+            set
+            {
+                _lastRunTime = value;
+                OnPropertyChanged(nameof(LastRunTime));
+            }
+        }
+
 
         private void AnimationBehavior_OnLoaded(object sender, RoutedEventArgs e)
         {
@@ -90,16 +103,52 @@ namespace XamlAnimatedGif.Demo
             }
         }
 
+        private Stopwatch _stopwatch;
         private void CurrentFrameChanged(object sender, EventArgs e)
         {
             if (_animator != null)
             {
+                if (_animator.CurrentFrameIndex == 0)
+                {
+                    StopStopwatch();
+                    if (!_animator.IsPaused && !_animator.IsComplete)
+                        StartStopwatch();
+                }
+
                 sldPosition.Value = _animator.CurrentFrameIndex;
             }
         }
 
-        private void AnimationBehavior_OnAnimationCompleted(object sender, AnimationCompletedEventArgs e)
+        private void StartStopwatch()
         {
+            _stopwatch ??= new Stopwatch();;
+            _stopwatch.Restart();
+        }
+
+        private void PauseStopwatch() => _stopwatch.Stop();
+
+        private void ResumeStopwatch() => _stopwatch?.Start();
+
+        private void StopStopwatch()
+        {
+            _stopwatch?.Stop();
+            LastRunTime = _stopwatch?.Elapsed;
+        }
+
+        private void ClearStopwatch()
+        {
+            _stopwatch?.Stop();
+            LastRunTime = null;
+        }
+
+        private void AnimationBehavior_OnAnimationStarted(DependencyObject d, AnimationStartedEventArgs e)
+        {
+            StartStopwatch();
+        }
+
+        private void AnimationBehavior_OnAnimationCompleted(DependencyObject sender, AnimationCompletedEventArgs e)
+        {
+            StopStopwatch();
             Completed = true;
             if (_animator != null)
                 SetPlayPauseEnabled(_animator.IsPaused || _animator.IsComplete);
@@ -237,12 +286,14 @@ namespace XamlAnimatedGif.Demo
 
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
+            PauseStopwatch();
             _animator?.Pause();
             SetPlayPauseEnabled(true);
         }
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
+            ResumeStopwatch();
             _animator?.Play();
             Completed = false;
             SetPlayPauseEnabled(false);
