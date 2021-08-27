@@ -44,7 +44,7 @@ namespace XamlAnimatedGif.Decoding
             }
             ImageData = await GifImageData.ReadAsync(stream).ConfigureAwait(false);
             Extensions = controlExtensions.ToList().AsReadOnly();
-            GraphicControl = Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
+            GraphicControl = Extensions.OfType<GifGraphicControlExtension>().LastOrDefault();
         }
     }
 }
