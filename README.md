@@ -74,6 +74,8 @@ You will need Visual Studio 2019 v16.8 or higher and the .NET 5.0 SDK.
 
 To build from the command line, run `build.cmd`.
 
+Note: the library's version number is determined by [MinVer](https://github.com/adamralph/minver) based on Git history and tags. A consequence of this is that if you build the project outside a Git repository (e.g. if you just download sources), you'll get a version number of 0.0.0.0. So, in order to build with the correct version number, make sure you're in a Git clone of the project, and that your clone has the tags from the upstream project (`git fetch upstream --tags`, assuming your remote for the upstream project is named `upstream`).
+
 
 ## How to contribute
 
