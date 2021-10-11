@@ -44,6 +44,7 @@ namespace XamlAnimatedGif
         #region SourceStream
 
         [AttachedPropertyBrowsableForType(typeof(Image))]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public static Stream GetSourceStream(DependencyObject obj)
         {
             return (Stream)obj.GetValue(SourceStreamProperty);
@@ -137,6 +138,7 @@ namespace XamlAnimatedGif
 
         #region Animator
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public static Animator GetAnimator(DependencyObject obj)
         {
             return (Animator) obj.GetValue(AnimatorProperty);
