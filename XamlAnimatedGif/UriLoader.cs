@@ -27,11 +27,11 @@ namespace XamlAnimatedGif
             if (cacheStream == null)
             {
                 await DownloadToCacheFileAsync(uri, cacheFileName, progress);
+                cacheStream = await OpenTempFileStreamAsync(cacheFileName);
             }
             progress.Report(100);
-            return await OpenTempFileStreamAsync(cacheFileName);
+            return cacheStream;
         }
-
         private static async Task DownloadToCacheFileAsync(Uri uri, string fileName, IProgress<int> progress)
         {
             try
