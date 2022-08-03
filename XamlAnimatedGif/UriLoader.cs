@@ -59,7 +59,7 @@ namespace XamlAnimatedGif
             }
             catch
             {
-                await DeleteTempFileAsync(fileName);
+                DeleteTempFile(fileName);
                 throw;
             }
         }
@@ -108,11 +108,11 @@ namespace XamlAnimatedGif
             return Task.FromResult(stream);
         }
 
-        private static Task DeleteTempFileAsync(string fileName)
+        private static void DeleteTempFile(string fileName)
         {
-            if (File.Exists(fileName))
-                File.Delete(fileName);
-            return Task.FromResult(fileName);
+            string path = Path.Combine(Path.GetTempPath(), fileName);
+            if (File.Exists(path))
+                File.Delete(path);
         }
 
         private static string GetCacheFileName(Uri uri)
