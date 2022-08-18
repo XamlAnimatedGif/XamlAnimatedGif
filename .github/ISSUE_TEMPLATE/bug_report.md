@@ -20,7 +20,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Please complete the following information:**
-- Application type: WPF 4.0 / WPF 4.5+ / Silverlight / Windows Store app / Universal Windows Platform
+- .NET version: 
 - Operating system version:
 - If you're having issues with a specific GIF file, please attach or link the file
 
