@@ -101,12 +101,14 @@ namespace XamlAnimatedGif
         private TaskCompletionSource<int> _pauseCompletionSource;
         public void Pause()
         {
+            if (IsPaused) return; // Make this a no-op.
             IsPaused = true;
             _pauseCompletionSource = new TaskCompletionSource<int>();
         }
 
         public void Resume()
         {
+            if (!IsPaused) return; // Make this a no-op.
             var tcs = _pauseCompletionSource;
             tcs?.TrySetResult(0);
             _pauseCompletionSource = null;
