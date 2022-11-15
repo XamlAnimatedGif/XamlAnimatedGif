@@ -9,7 +9,7 @@ namespace XamlAnimatedGif
 {
     public class BrushAnimator : Animator
     {
-        private BrushAnimator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior) : base(sourceStream, sourceUri, metadata, repeatBehavior)
+        private BrushAnimator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior, bool cacheFrameDataInMemory) : base(sourceStream, sourceUri, metadata, repeatBehavior, cacheFrameDataInMemory)
         {
             Brush = new ImageBrush {ImageSource = Bitmap};
             RepeatBehavior = _repeatBehavior;
@@ -32,19 +32,19 @@ namespace XamlAnimatedGif
             }
         }
 
-        public static Task<BrushAnimator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior, IProgress<int> progress = null)
+        public static Task<BrushAnimator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior, bool cacheFrameDataInMemory, IProgress<int> progress = null)
         {
             return CreateAsyncCore(
                 sourceUri,
                 progress,
-                (stream, metadata) => new BrushAnimator(stream, sourceUri, metadata, repeatBehavior));
+                (stream, metadata) => new BrushAnimator(stream, sourceUri, metadata, repeatBehavior, cacheFrameDataInMemory));
         }
 
-        public static Task<BrushAnimator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior)
+        public static Task<BrushAnimator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior, bool cacheFrameDataInMemory)
         {
             return CreateAsyncCore(
                 sourceStream,
-                metadata => new BrushAnimator(sourceStream, null, metadata, repeatBehavior));
+                metadata => new BrushAnimator(sourceStream, null, metadata, repeatBehavior, cacheFrameDataInMemory));
         }
     }
 }

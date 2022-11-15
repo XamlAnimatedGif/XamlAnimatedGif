@@ -90,6 +90,26 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region CacheFramesInMemory
+        public static void SetCacheFramesInMemory(DependencyObject element, bool value)
+        {
+            element.SetValue(CacheFramesInMemoryProperty, value);
+        }
+
+        [AttachedPropertyBrowsableForType(typeof(Image))]
+        public static bool GetCacheFramesInMemory(DependencyObject element)
+        {
+            return (bool)element.GetValue(CacheFramesInMemoryProperty);
+        }
+
+        public static readonly DependencyProperty CacheFramesInMemoryProperty = 
+            DependencyProperty.RegisterAttached(
+            "CacheFramesInMemory", 
+            typeof(bool), 
+            typeof(AnimationBehavior), 
+            new PropertyMetadata(false));
+        #endregion
+
         #region AutoStart
 
         [AttachedPropertyBrowsableForType(typeof(Image))]
@@ -384,14 +404,14 @@ namespace XamlAnimatedGif
                 var stream = GetSourceStream(image);
                 if (stream != null)
                 {
-                    InitAnimationAsync(image, stream.AsBuffered(), GetRepeatBehavior(image), seqNum);
+                    InitAnimationAsync(image, stream.AsBuffered(), GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image));
                     return;
                 }
 
                 var uri = GetAbsoluteUri(image);
                 if (uri != null)
                 {
-                    InitAnimationAsync(image, uri, GetRepeatBehavior(image), seqNum);
+                    InitAnimationAsync(image, uri, GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image));
                 }
             }
             catch (Exception ex)
@@ -445,7 +465,7 @@ namespace XamlAnimatedGif
             return uri;
         }
 
-        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior, int seqNum)
+        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory)
         {
             if (!CheckDesignMode(image, sourceUri, null))
                 return;
@@ -453,7 +473,7 @@ namespace XamlAnimatedGif
             try
             {
                 var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
-                var animator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image);
+                var animator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image, cacheFrameDataInMemory);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
@@ -476,14 +496,14 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior, int seqNum)
+        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory)
         {
             if (!CheckDesignMode(image, null, stream))
                 return;
 
             try
             {
-                var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image);
+                var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image, cacheFrameDataInMemory);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
