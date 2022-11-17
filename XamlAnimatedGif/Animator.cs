@@ -27,13 +27,13 @@ namespace XamlAnimatedGif
         private readonly byte[] _previousBackBuffer;
         private readonly byte[] _indexStreamBuffer;
         private readonly TimingManager _timingManager;
-        
         private readonly bool _cacheFrameDataInMemory;
-        private Dictionary<int, byte[][]> _cachedFrameBytes = new Dictionary<int, byte[][]>();
-        private Task _loadFramesDataTask;
+        private readonly byte[][][] _cachedFrameBytes;
+        private readonly Task _loadFramesDataTask;
         #region Constructor and factory methods
 
-        internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior, bool cacheFrameDataInMemory)
+        internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior,
+            bool cacheFrameDataInMemory)
         {
             _sourceStream = sourceStream;
             _sourceUri = sourceUri;
@@ -49,40 +49,41 @@ namespace XamlAnimatedGif
 
             _cacheFrameDataInMemory = cacheFrameDataInMemory;
 
-            if (!_cacheFrameDataInMemory)
-                return;
+            if (cacheFrameDataInMemory)
+            {
+                _cachedFrameBytes = new byte[_metadata.Frames.Count][][];
+                _loadFramesDataTask = Task.Run(LoadFrames, CancellationToken.None);
+            }
+        }
 
-            var frameDescs = new GifImageDescriptor[_metadata.Frames.Count];
-            var frameRows = new IEnumerable<int>[_metadata.Frames.Count];
+        private void LoadFrames()
+        {
+            var biggestFrameSize = 0L;
             for (var frameIndex = 0; frameIndex < _metadata.Frames.Count; frameIndex++)
             {
-                var currentFrame = _metadata.Frames[frameIndex];
-                var frameDesc = currentFrame.Descriptor;
-                var currentRect = GetFixedUpFrameRect(frameDesc);
-                var currentFrameRows = frameDesc.Interlace
-                    ? InterlacedRows(currentRect.Height)
-                    : NormalRows(currentRect.Height);
-                
-                frameDescs[frameIndex] = frameDesc;
-                frameRows[frameIndex] = currentFrameRows.ToArray();
+                var startPosition = _metadata.Frames[frameIndex].ImageData.CompressedDataStartOffset;
+                var endPosition = _metadata.Frames.Count == frameIndex + 1
+                    ? _sourceStream.Length
+                    : _metadata.Frames[frameIndex + 1].ImageData.CompressedDataStartOffset - 1;
+                var size = endPosition - startPosition;
+                biggestFrameSize = Math.Max(size, biggestFrameSize);
             }
-            _loadFramesDataTask = Task.Run(() =>
+
+            byte[] indexCompressedBytes = new byte[biggestFrameSize];
+            for (var frameIndex = 0; frameIndex < _metadata.Frames.Count; frameIndex++)
             {
-                for (var frameIndex = 0; frameIndex < _metadata.Frames.Count; frameIndex++)
+                var frame = _metadata.Frames[frameIndex];
+                var frameDesc = _metadata.Frames[frameIndex].Descriptor;
+                GetIndexBytesAsync(frameIndex, indexCompressedBytes, CancellationToken.None).Wait();
+                using var indexDecompressedStream =
+                    new LzwDecompressStream(indexCompressedBytes, frame.ImageData.LzwMinimumCodeSize);
+                _cachedFrameBytes[frameIndex] = new byte[frame.Descriptor.Height][];
+                for (var row = 0; row < frame.Descriptor.Height; row++)
                 {
-                    var frame = _metadata.Frames[frameIndex];
-                    var frameDesc = frameDescs[frameIndex];
-                    var rows = frameRows[frameIndex];
-                    var indexCompressedBytes = GetIndexBytesAsync(frameIndex, CancellationToken.None).Result;
-                    using var indexDecompressedStream = new LzwDecompressStream(indexCompressedBytes, frame.ImageData.LzwMinimumCodeSize);
-                    _cachedFrameBytes[frameIndex] = rows.Select((r, i) =>
-                    {
-                        var rowBytes = new byte[frameDesc.Width];
-                        indexDecompressedStream.ReadAll(rowBytes, 0, frameDesc.Width);
-                        return rowBytes;
-                    }).ToArray();
+                    _cachedFrameBytes[frameIndex][row] = new byte[frameDesc.Width];
+                    indexDecompressedStream.ReadAll(_cachedFrameBytes[frameIndex][row], 0, frameDesc.Width);
                 }
-            }, CancellationToken.None);
+            }
         }
 
         internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
@@ -337,25 +338,13 @@ namespace XamlAnimatedGif
             var frame = _metadata.Frames[frameIndex];
             var desc = frame.Descriptor;
             var rect = GetFixedUpFrameRect(desc);
-            var rows = desc.Interlace
-                ? InterlacedRows(rect.Height)
-                : NormalRows(rect.Height);
 
             Stream indexStream = null;
             if (!_cacheFrameDataInMemory)
             {
                 indexStream = await GetIndexStreamAsync(frame, cancellationToken);
             }
-
-            byte[][] indexDecompressedBytes = null;
-            if (_cacheFrameDataInMemory)
-            {
-                if (!_cachedFrameBytes.TryGetValue(frameIndex, out indexDecompressedBytes))
-                {
-                    return;
-                }
-            }
-
+            await using (indexStream);
             using (_bitmap.LockInScope())
             {
                 if (frameIndex < _previousFrameIndex)
@@ -370,11 +359,19 @@ namespace XamlAnimatedGif
                 var palette = _palettes[frameIndex];
                 int transparencyIndex = palette.TransparencyIndex ?? -1;
 
+                var rows = desc.Interlace
+                    ? InterlacedRows(rect.Height)
+                    : NormalRows(rect.Height);
+
                 foreach (int y in rows)
                 {
                     if (!_cacheFrameDataInMemory)
                     {
                         indexStream.ReadAll(indexBuffer, 0, desc.Width);
+                    }
+                    else
+                    {
+                        indexBuffer = _cachedFrameBytes[frameIndex][y];
                     }
 
                     int offset = (desc.Top + y) * _stride + desc.Left * 4;
@@ -386,7 +383,7 @@ namespace XamlAnimatedGif
 
                     for (int x = 0; x < rect.Width; x++)
                     {
-                        byte index = _cacheFrameDataInMemory ? indexDecompressedBytes[y][x] : indexBuffer[x];
+                        byte index = indexBuffer[x];
                         int i = 4 * x;
                         if (index != transparencyIndex)
                         {
@@ -519,17 +516,15 @@ namespace XamlAnimatedGif
             return lzwStream;
         }
 
-        private async Task<byte[]> GetIndexBytesAsync(int frameIndex, CancellationToken cancellationToken)
+        private async Task GetIndexBytesAsync(int frameIndex, byte[] buffer,  CancellationToken cancellationToken)
         {
             var startPosition = _metadata.Frames[frameIndex].ImageData.CompressedDataStartOffset;
             var endPosition = _metadata.Frames.Count == frameIndex + 1 ? _sourceStream.Length : _metadata.Frames[frameIndex + 1].ImageData.CompressedDataStartOffset - 1;
 
             cancellationToken.ThrowIfCancellationRequested();
             _sourceStream.Seek(startPosition, SeekOrigin.Begin);
-            byte[] result = new byte[endPosition - startPosition];
-            using var memoryStream = new MemoryStream(result);
+            using var memoryStream = new MemoryStream(buffer);
             await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, memoryStream, cancellationToken).ConfigureAwait(false);
-            return result;
         }
 
         internal BitmapSource Bitmap => _bitmap;

@@ -32,7 +32,12 @@ namespace XamlAnimatedGif
             }
         }
 
-        public static Task<BrushAnimator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior, bool cacheFrameDataInMemory = false, IProgress<int> progress = null)
+        public static Task<BrushAnimator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior, IProgress<int> progress = null)
+        {
+            return CreateAsync(sourceUri, repeatBehavior, false, progress);
+        }
+
+        public static Task<BrushAnimator> CreateAsync(Uri sourceUri, RepeatBehavior repeatBehavior, bool cacheFrameDataInMemory, IProgress<int> progress = null)
         {
             return CreateAsyncCore(
                 sourceUri,
@@ -40,7 +45,12 @@ namespace XamlAnimatedGif
                 (stream, metadata) => new BrushAnimator(stream, sourceUri, metadata, repeatBehavior, cacheFrameDataInMemory));
         }
 
-        public static Task<BrushAnimator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior, bool cacheFrameDataInMemory = false)
+        public static Task<BrushAnimator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior)
+        {
+            return CreateAsync(sourceStream, repeatBehavior, false);
+        }
+
+        public static Task<BrushAnimator> CreateAsync(Stream sourceStream, RepeatBehavior repeatBehavior, bool cacheFrameDataInMemory)
         {
             return CreateAsyncCore(
                 sourceStream,
