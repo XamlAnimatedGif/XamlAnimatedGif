@@ -344,7 +344,7 @@ namespace XamlAnimatedGif
             {
                 indexStream = await GetIndexStreamAsync(frame, cancellationToken);
             }
-            await using (indexStream);
+            using (indexStream);
             using (_bitmap.LockInScope())
             {
                 if (frameIndex < _previousFrameIndex)
