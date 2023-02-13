@@ -68,6 +68,7 @@
                     <RadioButton Margin="5" Content="Specific count" IsChecked="{Binding UseSpecificRepeatCount}" />
                     <TextBox Margin="5" Text="{Binding RepeatCount}" Width="20" />
                     <CheckBox Margin="5" Content="Auto start" IsChecked="{Binding AutoStart}" />
+                    <CheckBox Margin="5" Content="Cache frames in memory" IsChecked="{Binding CacheFramesInMemory}" />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right">
@@ -107,6 +108,7 @@
                        gif:AnimationBehavior.SourceUri="{Binding SelectedImage}"
                        gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}"
                        gif:AnimationBehavior.AutoStart="{Binding AutoStart}"
+                       gif:AnimationBehavior.CacheFramesInMemory="{Binding CacheFramesInMemory}"
                        gif:AnimationBehavior.Loaded="AnimationBehavior_OnLoaded"
                        gif:AnimationBehavior.Error="AnimationBehavior_OnError"
                        gif:AnimationBehavior.DownloadProgress="AnimationBehavior_OnDownloadProgress"

@@ -242,6 +242,18 @@ namespace XamlAnimatedGif.Demo
             }
         }
 
+        private bool _cacheFramesInMemory;
+
+        public bool CacheFramesInMemory
+        {
+            get => _cacheFramesInMemory;
+            set
+            {
+                _cacheFramesInMemory = value;
+                OnPropertyChanged();
+            }
+        }
+
         private bool _isDownloading;
         public bool IsDownloading
         {

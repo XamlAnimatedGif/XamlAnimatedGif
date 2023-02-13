@@ -81,7 +81,7 @@ namespace XamlAnimatedGif
                 for (var row = 0; row < frame.Descriptor.Height; row++)
                 {
                     _cachedFrameBytes[frameIndex][row] = new byte[frameDesc.Width];
-                    indexDecompressedStream.ReadAll(_cachedFrameBytes[frameIndex][row], 0, frameDesc.Width);
+                    await indexDecompressedStream.ReadAllAsync(_cachedFrameBytes[frameIndex][row], 0, frameDesc.Width);
                 }
             }
         }
@@ -226,8 +226,8 @@ namespace XamlAnimatedGif
 
         public int CurrentFrameIndex
         {
-            get { return _frameIndex; }
-            internal set
+            get => _frameIndex;
+            private set
             {
                 _frameIndex = value;
                 OnCurrentFrameChanged();
@@ -299,7 +299,7 @@ namespace XamlAnimatedGif
 
                 int? transparencyIndex = null;
                 var gce = frame.GraphicControl;
-                if (gce != null && gce.HasTransparency)
+                if (gce is {HasTransparency: true})
                 {
                     transparencyIndex = gce.TransparencyIndex;
                 }
@@ -344,7 +344,7 @@ namespace XamlAnimatedGif
             {
                 indexStream = await GetIndexStreamAsync(frame, cancellationToken);
             }
-            using (indexStream);
+            using (indexStream)
             using (_bitmap.LockInScope())
             {
                 if (frameIndex < _previousFrameIndex)
@@ -367,7 +367,7 @@ namespace XamlAnimatedGif
                 {
                     if (!_cacheFrameDataInMemory)
                     {
-                        indexStream.ReadAll(indexBuffer, 0, desc.Width);
+                        await indexStream.ReadAllAsync(indexBuffer, 0, desc.Width, cancellationToken);
                     }
                     else
                     {
@@ -479,7 +479,7 @@ namespace XamlAnimatedGif
             }
 
             var gce = currentFrame.GraphicControl;
-            if (gce != null && gce.DisposalMethod == GifFrameDisposalMethod.RestorePrevious)
+            if (gce is {DisposalMethod: GifFrameDisposalMethod.RestorePrevious})
             {
                 CopyFromBitmap(_previousBackBuffer, _bitmap, 0, _previousBackBuffer.Length);
             }
@@ -519,7 +519,6 @@ namespace XamlAnimatedGif
         private async Task GetIndexBytesAsync(int frameIndex, byte[] buffer)
         {
             var startPosition = _metadata.Frames[frameIndex].ImageData.CompressedDataStartOffset;
-            var endPosition = _metadata.Frames.Count == frameIndex + 1 ? _sourceStream.Length : _metadata.Frames[frameIndex + 1].ImageData.CompressedDataStartOffset - 1;
 
             _sourceStream.Seek(startPosition, SeekOrigin.Begin);
             using var memoryStream = new MemoryStream(buffer);
