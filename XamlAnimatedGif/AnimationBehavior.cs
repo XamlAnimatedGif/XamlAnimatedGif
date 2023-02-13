@@ -567,7 +567,7 @@ namespace XamlAnimatedGif
             try
             {
                 var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
-                var stream = await UriLoader.GetStreamFromUriAsync(sourceUri, progress);
+                using var stream = await UriLoader.GetStreamFromUriAsync(sourceUri, progress);
                 SetStaticImageCore(image, stream);
             }
             catch (Exception ex)
@@ -593,6 +593,7 @@ namespace XamlAnimatedGif
             stream.Seek(0, SeekOrigin.Begin);
             var bmp = new BitmapImage();
             bmp.BeginInit();
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
             bmp.StreamSource = stream;
             bmp.EndInit();
             image.Source = bmp;
