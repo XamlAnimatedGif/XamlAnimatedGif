@@ -91,6 +91,7 @@ namespace XamlAnimatedGif
         #endregion
 
         #region CacheFramesInMemory
+
         public static void SetCacheFramesInMemory(DependencyObject element, bool value)
         {
             element.SetValue(CacheFramesInMemoryProperty, value);
@@ -107,7 +108,8 @@ namespace XamlAnimatedGif
             "CacheFramesInMemory", 
             typeof(bool), 
             typeof(AnimationBehavior), 
-            new PropertyMetadata(false));
+            new PropertyMetadata(false, SourceChanged));
+
         #endregion
 
         #region AutoStart
