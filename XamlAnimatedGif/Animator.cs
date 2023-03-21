@@ -17,6 +17,7 @@ namespace XamlAnimatedGif
 {
     public abstract class Animator : DependencyObject, IDisposable
     {
+        private static readonly Task CompletedTask = Task.FromResult(0);
         private readonly Stream _sourceStream;
         private readonly Uri _sourceUri;
         private readonly bool _isSourceStreamOwner;
@@ -428,10 +429,10 @@ namespace XamlAnimatedGif
 		private Task GetWaitLoadSingleFrameTask()
 		{
 			if (_frameLoadedEvent == null)
-				return Task.CompletedTask; // avoiding lock statement if loading frames completed
+				return CompletedTask; // avoiding lock statement if loading frames completed
 			lock (_lockObject)
 			{
-				return _frameLoadedEvent.Task ?? Task.CompletedTask;
+				return _frameLoadedEvent.Task ?? CompletedTask;
 			}
 		}
         private static IEnumerable<int> NormalRows(int height)
