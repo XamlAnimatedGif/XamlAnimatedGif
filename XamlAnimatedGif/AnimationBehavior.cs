@@ -9,7 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-
+using System.Threading;
 
 namespace XamlAnimatedGif
 {
@@ -401,19 +401,21 @@ namespace XamlAnimatedGif
             image.Source = null;
             ClearAnimatorCore(image);
 
+            CancellationTokenSource ctx = new CancellationTokenSource();
+			image.Unloaded += (sender, args) => ctx.Cancel();
             try
             {
                 var stream = GetSourceStream(image);
                 if (stream != null)
                 {
-                    InitAnimationAsync(image, stream.AsBuffered(), GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image));
+                    InitAnimationAsync(image, stream.AsBuffered(), GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image), ctx.Token);
                     return;
                 }
 
                 var uri = GetAbsoluteUri(image);
                 if (uri != null)
                 {
-                    InitAnimationAsync(image, uri, GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image));
+                    InitAnimationAsync(image, uri, GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image), ctx.Token);
                 }
             }
             catch (Exception ex)
@@ -467,7 +469,7 @@ namespace XamlAnimatedGif
             return uri;
         }
 
-        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory)
+        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory, CancellationToken cancellationToken)
         {
             if (!CheckDesignMode(image, sourceUri, null))
                 return;
@@ -475,7 +477,7 @@ namespace XamlAnimatedGif
             try
             {
                 var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
-                var animator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image, cacheFrameDataInMemory);
+                var animator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image, cacheFrameDataInMemory, cancellationToken);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
@@ -498,14 +500,14 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory)
+        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory, CancellationToken cancellationToken)
         {
             if (!CheckDesignMode(image, null, stream))
                 return;
 
             try
             {
-                var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image, cacheFrameDataInMemory);
+                var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image, cacheFrameDataInMemory, cancellationToken);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
