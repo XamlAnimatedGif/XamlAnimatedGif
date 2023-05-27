@@ -100,8 +100,11 @@ namespace XamlAnimatedGif
             }
             catch
             {
-                stream?.Dispose();
                 throw;
+            }
+            finally
+            {
+                stream?.Dispose();
             }
         }
 
