@@ -80,7 +80,7 @@ namespace XamlAnimatedGif
 
             if (uri.Scheme == Uri.UriSchemeFile)
             {
-                return Task.FromResult<Stream>(File.OpenRead(uri.LocalPath));
+                return Task.FromResult<Stream>(new MemoryStream(File.ReadAllBytes(uri.LocalPath)));
             }
 
             throw new NotSupportedException("Only pack:, file:, http: and https: URIs are supported");
