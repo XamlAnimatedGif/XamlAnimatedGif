@@ -28,7 +28,7 @@ namespace XamlAnimatedGif
         private readonly byte[] _indexStreamBuffer;
         private readonly TimingManager _timingManager;
         private readonly bool _cacheFrameDataInMemory;
-        private readonly byte[][][] _cachedFrameBytes;
+        private readonly byte[][] _cachedFrameBytes;
         private readonly Task _loadFramesDataTask;
         #region Constructor and factory methods
 
@@ -51,7 +51,7 @@ namespace XamlAnimatedGif
 
             if (cacheFrameDataInMemory)
             {
-                _cachedFrameBytes = new byte[_metadata.Frames.Count][][];
+                _cachedFrameBytes = new byte[_metadata.Frames.Count][];
                 _loadFramesDataTask = Task.Run(LoadFrames);
             }
         }
@@ -77,12 +77,9 @@ namespace XamlAnimatedGif
                 await GetIndexBytesAsync(frameIndex, indexCompressedBytes);
                 using var indexDecompressedStream =
                     new LzwDecompressStream(indexCompressedBytes, frame.ImageData.LzwMinimumCodeSize);
-                _cachedFrameBytes[frameIndex] = new byte[frame.Descriptor.Height][];
-                for (var row = 0; row < frame.Descriptor.Height; row++)
-                {
-                    _cachedFrameBytes[frameIndex][row] = new byte[frameDesc.Width];
-                    await indexDecompressedStream.ReadAllAsync(_cachedFrameBytes[frameIndex][row], 0, frameDesc.Width);
-                }
+                _cachedFrameBytes[frameIndex] = new byte[frameDesc.Width * frameDesc.Height];
+
+                await indexDecompressedStream.ReadAllAsync(_cachedFrameBytes[frameIndex], 0, frameDesc.Width * frameDesc.Height);
             }
         }
 
@@ -353,7 +350,7 @@ namespace XamlAnimatedGif
                     DisposePreviousFrame(frame);
 
                 int bufferLength = 4 * rect.Width;
-                byte[] indexBuffer = new byte[desc.Width];
+                byte[] indexBuffer;
                 byte[] lineBuffer = new byte[bufferLength];
 
                 var palette = _palettes[frameIndex];
@@ -363,17 +360,18 @@ namespace XamlAnimatedGif
                     ? InterlacedRows(rect.Height)
                     : NormalRows(rect.Height);
 
+                if (!_cacheFrameDataInMemory)
+                {
+                    indexBuffer = new byte[desc.Width * desc.Height];
+                    await indexStream.ReadAllAsync(indexBuffer, 0, indexBuffer.Length, cancellationToken);
+                }
+                else
+                {
+                    indexBuffer = _cachedFrameBytes[frameIndex];
+                }
+
                 foreach (int y in rows)
                 {
-                    if (!_cacheFrameDataInMemory)
-                    {
-                        await indexStream.ReadAllAsync(indexBuffer, 0, desc.Width, cancellationToken);
-                    }
-                    else
-                    {
-                        indexBuffer = _cachedFrameBytes[frameIndex][y];
-                    }
-
                     int offset = (desc.Top + y) * _stride + desc.Left * 4;
 
                     if (transparencyIndex >= 0)
@@ -383,7 +381,7 @@ namespace XamlAnimatedGif
 
                     for (int x = 0; x < rect.Width; x++)
                     {
-                        byte index = indexBuffer[x];
+                        byte index = indexBuffer[x + y * desc.Width];
                         int i = 4 * x;
                         if (index != transparencyIndex)
                         {
