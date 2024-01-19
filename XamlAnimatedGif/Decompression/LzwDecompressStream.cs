@@ -11,7 +11,7 @@ namespace XamlAnimatedGif.Decompression
         private const int MaxCodeLength = 12;
         private readonly BitReader _reader;
         private readonly CodeTable _codeTable;
-        private int _prevCode;
+        private int _prevCode = -1;
         private byte[] _remainingBytes;
         private bool _endOfStream;
 
