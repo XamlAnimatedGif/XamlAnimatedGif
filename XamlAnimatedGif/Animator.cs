@@ -357,8 +357,8 @@ namespace XamlAnimatedGif
                 int transparencyIndex = palette.TransparencyIndex ?? -1;
 
                 var rows = desc.Interlace
-                    ? InterlacedRows(rect.Height)
-                    : NormalRows(rect.Height);
+                    ? InterlacedRows(rect.Height).ToArray()
+                    : NormalRows(rect.Height).ToArray();
 
                 if (!_cacheFrameDataInMemory)
                 {
@@ -370,9 +370,9 @@ namespace XamlAnimatedGif
                     indexBuffer = _cachedFrameBytes[frameIndex];
                 }
 
-                foreach (int y in rows)
+                for (int y = 0; y < desc.Height; y++)
                 {
-                    int offset = (desc.Top + y) * _stride + desc.Left * 4;
+                    int offset = (desc.Top + rows[y]) * _stride + desc.Left * 4;
 
                     if (transparencyIndex >= 0)
                     {
