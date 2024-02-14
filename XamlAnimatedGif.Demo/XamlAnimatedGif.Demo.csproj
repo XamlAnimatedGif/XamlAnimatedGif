@@ -21,7 +21,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Images/*" />
+    <Resource Include="Images/*" Exclude="Images/siteoforigin.gif" />
+    <Content Include="Images/siteoforigin.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>

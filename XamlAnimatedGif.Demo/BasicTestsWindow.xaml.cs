@@ -7,7 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
-using XamlAnimatedGif;
+using Newtonsoft.Json;
 using XamlAnimatedGif.Decoding;
 using XamlAnimatedGif.Decompression;
 
@@ -95,6 +95,18 @@ namespace XamlAnimatedGif.Demo
             };
             animator.Play();
             window.ShowDialog();
+        }
+
+        private async void BtnDumpMetadata_OnClick(object sender, RoutedEventArgs e)
+        {
+            string fileName = txtFileName.Text;
+            if (string.IsNullOrEmpty(fileName))
+                return;
+            using var fileStream = File.OpenRead(fileName);
+            var gif = await GifDataStream.ReadAsync(fileStream);
+            var json = JsonConvert.SerializeObject(gif, Formatting.Indented);
+            var jsonFileName = fileName + ".json";
+            File.WriteAllText(jsonFileName, json);
         }
     }
 }

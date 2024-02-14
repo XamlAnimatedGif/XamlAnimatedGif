@@ -29,6 +29,7 @@ namespace XamlAnimatedGif.Demo
                           "images/not-a-gif.png",
                           "images/optimized-full-code-table.gif",
                           "images/corrupt-frame-size.gif",
+                          "images/interlaced.gif",
                           "http://i.imgur.com/rCK6xzh.gif",
                           "http://media.giphy.com/media/zW2pe7UscHiq4/giphy.gif",
                           "http://media.giphy.com/media/nWn6ko2ygIeEU/giphy.gif"

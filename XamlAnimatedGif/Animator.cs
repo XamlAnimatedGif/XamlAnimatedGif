@@ -370,7 +370,7 @@ namespace XamlAnimatedGif
                     indexBuffer = _cachedFrameBytes[frameIndex];
                 }
 
-                for (int y = 0; y < desc.Height; y++)
+                for (int y = 0; y < rect.Height; y++)
                 {
                     int offset = (desc.Top + rows[y]) * _stride + desc.Left * 4;
 

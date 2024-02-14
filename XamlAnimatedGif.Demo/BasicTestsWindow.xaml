@@ -6,6 +6,7 @@
         <TextBox Name="txtFileName" />
         <Button Name="btnBrowse" Content="Browse..." Click="BtnBrowse_OnClick" />
         <Button Name="btnTestLzw" Content="Test LZW decompression" Click="BtnTestLzw_OnClick" />
+        <Button Name="btnDumpMetadata" Content="Dump metadata" Click="BtnDumpMetadata_OnClick" />
         <Button Name="btnTestStream" Content="Using stream" Click="BtnTestStream_OnClick" />
         <Button Name="btnTestBrush" Content="Brush" Click="BtnTestBrush_OnClick" />
     </StackPanel>
