@@ -81,7 +81,8 @@ namespace XamlAnimatedGif.Demo
         private async void BtnTestBrush_OnClick(object sender, RoutedEventArgs e)
         {
             var uri = new Uri("pack://application:,,,/images/earth.gif");
-            using var animator = await BrushAnimator.CreateAsync(uri, RepeatBehavior.Forever);
+            var tempPath = System.IO.Path.GetTempPath();
+            using var animator = await BrushAnimator.CreateAsync(uri, tempPath, RepeatBehavior.Forever);
             var window = new Window
             {
                 Width = 500,
