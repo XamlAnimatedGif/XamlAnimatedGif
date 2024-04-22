@@ -158,6 +158,27 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region DownloadCacheLocation
+
+        public static string GetDownloadCacheLocation(DependencyObject obj)
+        {
+            return (string)obj.GetValue(DownloadCacheLocationProperty);
+        }
+
+        public static void SetDownloadCacheLocation(DependencyObject obj, string value)
+        {
+            obj.SetValue(DownloadCacheLocationProperty, value);
+        }
+
+        public static readonly DependencyProperty DownloadCacheLocationProperty =
+            DependencyProperty.RegisterAttached(
+                "DownloadCacheLocation",
+                typeof(string),
+                typeof(AnimationBehavior),
+                new PropertyMetadata(Path.GetTempPath()));
+
+        #endregion
+
         #region Animator
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -406,14 +427,14 @@ namespace XamlAnimatedGif
                 var stream = GetSourceStream(image);
                 if (stream != null)
                 {
-                    InitAnimationAsync(image, stream.AsBuffered(), GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image));
+                    InitAnimationAsync(image, stream.AsBuffered(), GetDownloadCacheLocation(image), GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image));
                     return;
                 }
 
                 var uri = GetAbsoluteUri(image);
                 if (uri != null)
                 {
-                    InitAnimationAsync(image, uri, GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image));
+                    InitAnimationAsync(image, uri, GetDownloadCacheLocation(image), GetRepeatBehavior(image), seqNum, GetCacheFramesInMemory(image));
                 }
             }
             catch (Exception ex)
@@ -467,7 +488,7 @@ namespace XamlAnimatedGif
             return uri;
         }
 
-        private static async void InitAnimationAsync(Image image, Uri sourceUri, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory)
+        private static async void InitAnimationAsync(Image image, Uri sourceUri, string tempPath, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory)
         {
             if (!CheckDesignMode(image, sourceUri, null))
                 return;
@@ -475,7 +496,7 @@ namespace XamlAnimatedGif
             try
             {
                 var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
-                var animator = await ImageAnimator.CreateAsync(sourceUri, repeatBehavior, progress, image, cacheFrameDataInMemory);
+                var animator = await ImageAnimator.CreateAsync(sourceUri, tempPath, repeatBehavior, progress, image, cacheFrameDataInMemory);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
@@ -498,14 +519,14 @@ namespace XamlAnimatedGif
             }
         }
 
-        private static async void InitAnimationAsync(Image image, Stream stream, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory)
+        private static async void InitAnimationAsync(Image image, Stream stream, string tempPath, RepeatBehavior repeatBehavior, int seqNum, bool cacheFrameDataInMemory)
         {
             if (!CheckDesignMode(image, null, stream))
                 return;
 
             try
             {
-                var animator = await ImageAnimator.CreateAsync(stream, repeatBehavior, image, cacheFrameDataInMemory);
+                var animator = await ImageAnimator.CreateAsync(stream, tempPath, repeatBehavior, image, cacheFrameDataInMemory);
                 // Check that the source hasn't changed while we were loading the animation
                 if (GetSeqNum(image) != seqNum)
                 {
@@ -569,7 +590,7 @@ namespace XamlAnimatedGif
             try
             {
                 var progress = new Progress<int>(percentage => OnDownloadProgress(image, percentage));
-                using var stream = await UriLoader.GetStreamFromUriAsync(sourceUri, progress);
+                using var stream = await UriLoader.GetStreamFromUriAsync(sourceUri, GetDownloadCacheLocation(image), progress);
                 SetStaticImageCore(image, stream);
             }
             catch (Exception ex)

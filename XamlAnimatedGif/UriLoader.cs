@@ -13,26 +13,26 @@ namespace XamlAnimatedGif
 {
     internal class UriLoader
     {
-        public static Task<Stream> GetStreamFromUriAsync(Uri uri, IProgress<int> progress)
+        public static Task<Stream> GetStreamFromUriAsync(Uri uri, string tempPath, IProgress<int> progress)
         {
             if (uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https"))
-                return GetNetworkStreamAsync(uri, progress);
+                return GetNetworkStreamAsync(uri, tempPath, progress);
             return GetStreamFromUriCoreAsync(uri);
         }
 
-        private static async Task<Stream> GetNetworkStreamAsync(Uri uri, IProgress<int> progress)
+        private static async Task<Stream> GetNetworkStreamAsync(Uri uri, string tempPath, IProgress<int> progress)
         {
             string cacheFileName = GetCacheFileName(uri);
-            var cacheStream = await OpenTempFileStreamAsync(cacheFileName);
+            var cacheStream = await OpenTempFileStreamAsync(tempPath, cacheFileName);
             if (cacheStream == null)
             {
-                await DownloadToCacheFileAsync(uri, cacheFileName, progress);
-                cacheStream = await OpenTempFileStreamAsync(cacheFileName);
+                await DownloadToCacheFileAsync(uri, tempPath, cacheFileName, progress);
+                cacheStream = await OpenTempFileStreamAsync(tempPath, cacheFileName);
             }
             progress.Report(100);
             return cacheStream;
         }
-        private static async Task DownloadToCacheFileAsync(Uri uri, string fileName, IProgress<int> progress)
+        private static async Task DownloadToCacheFileAsync(Uri uri, string tempPath, string fileName, IProgress<int> progress)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace XamlAnimatedGif
                 response.EnsureSuccessStatusCode();
                 long length = response.Content.Headers.ContentLength ?? 0;
                 using var responseStream = await response.Content.ReadAsStreamAsync();
-                using var fileStream = await CreateTempFileStreamAsync(fileName);
+                using var fileStream = await CreateTempFileStreamAsync(tempPath, fileName);
                 IProgress<long> absoluteProgress = null;
                 if (progress != null)
                 {
@@ -59,7 +59,7 @@ namespace XamlAnimatedGif
             }
             catch
             {
-                DeleteTempFile(fileName);
+                DeleteTempFile(tempPath, fileName);
                 throw;
             }
         }
@@ -86,9 +86,12 @@ namespace XamlAnimatedGif
             throw new NotSupportedException("Only pack:, file:, http: and https: URIs are supported");
         }
 
-        private static Task<Stream> OpenTempFileStreamAsync(string fileName)
+        private static Task<Stream> OpenTempFileStreamAsync(string tempPath, string fileName)
         {
-            string path = Path.Combine(Path.GetTempPath(), fileName);
+            if (!Directory.Exists(tempPath))
+                Directory.CreateDirectory(tempPath);
+
+            string path = Path.Combine(tempPath, fileName);
             Stream stream = null;
             try
             {
@@ -100,17 +103,17 @@ namespace XamlAnimatedGif
             return Task.FromResult(stream);
         }
 
-        private static Task<Stream> CreateTempFileStreamAsync(string fileName)
+        private static Task<Stream> CreateTempFileStreamAsync(string tempPath, string fileName)
         {
-            string path = Path.Combine(Path.GetTempPath(), fileName);
+            string path = Path.Combine(tempPath, fileName);
             Stream stream = File.OpenWrite(path);
             stream.SetLength(0);
             return Task.FromResult(stream);
         }
 
-        private static void DeleteTempFile(string fileName)
+        private static void DeleteTempFile(string tempPath, string fileName)
         {
-            string path = Path.Combine(Path.GetTempPath(), fileName);
+            string path = Path.Combine(tempPath, fileName);
             if (File.Exists(path))
                 File.Delete(path);
         }

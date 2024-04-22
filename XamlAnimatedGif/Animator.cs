@@ -85,11 +85,12 @@ namespace XamlAnimatedGif
 
         internal static async Task<TAnimator> CreateAsyncCore<TAnimator>(
             Uri sourceUri,
+            string tempPath,
             IProgress<int> progress,
             Func<Stream, GifDataStream, TAnimator> create)
             where TAnimator : Animator
         {
-            var stream = await UriLoader.GetStreamFromUriAsync(sourceUri, progress);
+            var stream = await UriLoader.GetStreamFromUriAsync(sourceUri, tempPath, progress);
             try
             {
                 // ReSharper disable once AccessToDisposedClosure

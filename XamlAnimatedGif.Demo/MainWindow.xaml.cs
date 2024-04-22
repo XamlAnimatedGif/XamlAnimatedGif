@@ -14,6 +14,9 @@ namespace XamlAnimatedGif.Demo
         public MainWindow()
         {
             InitializeComponent();
+
+            //AnimationBehavior.SetDownloadCacheLocation(img, @"C:\XamlCache"); //Path.GetTempPath()
+
             _images = new ObservableCollection<string>
                       {
                           "images/working.gif",
