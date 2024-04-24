@@ -14,6 +14,7 @@ namespace XamlAnimatedGif
     internal class UriLoader
     {
         public static string DownloadCacheLocation { get; set; } = Path.GetTempPath();
+        public static TimeSpan CacheTime { get; set; } = TimeSpan.FromHours(12);
 
         public static Task<Stream> GetStreamFromUriAsync(Uri uri, IProgress<int> progress)
         {
@@ -94,9 +95,16 @@ namespace XamlAnimatedGif
                 Directory.CreateDirectory(DownloadCacheLocation);
             string path = Path.Combine(DownloadCacheLocation, fileName);
             Stream stream = null;
+            DateTime time;
             try
             {
-                stream = File.OpenRead(path);
+                time = File.GetLastWriteTime(path);
+
+                if (DateTime.Now - time < CacheTime)
+                {
+                    stream = File.OpenRead(path);
+                }
+
             }
             catch (FileNotFoundException)
             {

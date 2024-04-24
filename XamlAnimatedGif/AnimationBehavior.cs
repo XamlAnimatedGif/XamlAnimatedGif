@@ -185,6 +185,20 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region CacheTime
+
+        public static TimeSpan GetCacheTime()
+        {
+            return UriLoader.CacheTime;
+        }
+
+        public static void SetCacheTime(TimeSpan value)
+        {
+            UriLoader.CacheTime = value;
+        }
+
+        #endregion
+
         #region Animator
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
