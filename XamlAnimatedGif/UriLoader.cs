@@ -13,6 +13,8 @@ namespace XamlAnimatedGif
 {
     internal class UriLoader
     {
+        public static string DownloadCacheLocation { get; set; } = Path.GetTempPath();
+
         public static Task<Stream> GetStreamFromUriAsync(Uri uri, IProgress<int> progress)
         {
             if (uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https"))
@@ -88,7 +90,9 @@ namespace XamlAnimatedGif
 
         private static Task<Stream> OpenTempFileStreamAsync(string fileName)
         {
-            string path = Path.Combine(Path.GetTempPath(), fileName);
+            if (!Directory.Exists(DownloadCacheLocation))
+                Directory.CreateDirectory(DownloadCacheLocation);
+            string path = Path.Combine(DownloadCacheLocation, fileName);
             Stream stream = null;
             try
             {
@@ -102,7 +106,7 @@ namespace XamlAnimatedGif
 
         private static Task<Stream> CreateTempFileStreamAsync(string fileName)
         {
-            string path = Path.Combine(Path.GetTempPath(), fileName);
+            string path = Path.Combine(DownloadCacheLocation, fileName);
             Stream stream = File.OpenWrite(path);
             stream.SetLength(0);
             return Task.FromResult(stream);
@@ -110,7 +114,7 @@ namespace XamlAnimatedGif
 
         private static void DeleteTempFile(string fileName)
         {
-            string path = Path.Combine(Path.GetTempPath(), fileName);
+            string path = Path.Combine(DownloadCacheLocation, fileName);
             if (File.Exists(path))
                 File.Delete(path);
         }
