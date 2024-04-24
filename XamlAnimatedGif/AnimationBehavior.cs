@@ -158,6 +158,20 @@ namespace XamlAnimatedGif
 
         #endregion
 
+        #region DownloadCacheLocation
+
+        public static string GetDownloadCacheLocation()
+        {
+            return UriLoader.DownloadCacheLocation;
+        }
+
+        public static void SetDownloadCacheLocation(string value)
+        {
+            UriLoader.DownloadCacheLocation = value;
+        }
+
+        #endregion
+
         #region Animator
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
