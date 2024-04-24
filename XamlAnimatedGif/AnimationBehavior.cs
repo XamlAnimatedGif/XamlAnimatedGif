@@ -10,7 +10,6 @@ using System.Windows.Markup;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
-
 namespace XamlAnimatedGif
 {
     public static class AnimationBehavior
@@ -163,6 +162,20 @@ namespace XamlAnimatedGif
         public static string GetDownloadCacheLocation()
         {
             return UriLoader.DownloadCacheLocation;
+        }
+
+        public static void ClearDownloadCacheLocation()
+        {
+            string cachePath = UriLoader.DownloadCacheLocation;
+            if (Directory.Exists(cachePath))
+                foreach (string cacheFile in Directory.GetFiles(cachePath))
+                {
+                    try
+                    {
+                        File.Delete(cacheFile);
+                    }
+                    catch { }
+                }
         }
 
         public static void SetDownloadCacheLocation(string value)
