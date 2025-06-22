@@ -503,24 +503,38 @@ namespace XamlAnimatedGif
 
         private async Task<Stream> GetIndexStreamAsync(GifFrame frame, CancellationToken cancellationToken)
         {
-            var data = frame.ImageData;
-            cancellationToken.ThrowIfCancellationRequested();
-            _sourceStream.Seek(data.CompressedDataStartOffset, SeekOrigin.Begin);
-            using (var ms = new MemoryStream(_indexStreamBuffer))
+            try
             {
-                await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, ms, cancellationToken).ConfigureAwait(false);
+                var data = frame.ImageData;
+                cancellationToken.ThrowIfCancellationRequested();
+                _sourceStream.Seek(data.CompressedDataStartOffset, SeekOrigin.Begin);
+                using (var ms = new MemoryStream(_indexStreamBuffer))
+                {
+                    await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, ms, cancellationToken).ConfigureAwait(false);
+                }
+                var lzwStream = new LzwDecompressStream(_indexStreamBuffer, data.LzwMinimumCodeSize);
+                return lzwStream;
             }
-            var lzwStream = new LzwDecompressStream(_indexStreamBuffer, data.LzwMinimumCodeSize);
-            return lzwStream;
+            catch (ObjectDisposedException)
+            {
+                return null;
+            }
         }
 
         private async Task GetIndexBytesAsync(int frameIndex, byte[] buffer)
         {
-            var startPosition = _metadata.Frames[frameIndex].ImageData.CompressedDataStartOffset;
+            try
+            {
+                var startPosition = _metadata.Frames[frameIndex].ImageData.CompressedDataStartOffset;
 
-            _sourceStream.Seek(startPosition, SeekOrigin.Begin);
-            using var memoryStream = new MemoryStream(buffer);
-            await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, memoryStream).ConfigureAwait(false);
+                _sourceStream.Seek(startPosition, SeekOrigin.Begin);
+                using var memoryStream = new MemoryStream(buffer);
+                await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, memoryStream).ConfigureAwait(false);
+            }
+            catch (ObjectDisposedException)
+            {
+                // Do nothing
+            }
         }
 
         internal BitmapSource Bitmap => _bitmap;
