@@ -30,6 +30,7 @@ namespace XamlAnimatedGif
         private readonly bool _cacheFrameDataInMemory;
         private readonly byte[][] _cachedFrameBytes;
         private readonly Task _loadFramesDataTask;
+        private readonly CancellationTokenSource _loadFramesCancellationSource;
         #region Constructor and factory methods
 
         internal Animator(Stream sourceStream, Uri sourceUri, GifDataStream metadata, RepeatBehavior repeatBehavior,
@@ -51,12 +52,14 @@ namespace XamlAnimatedGif
 
             if (cacheFrameDataInMemory)
             {
+                _loadFramesCancellationSource = new();
                 _cachedFrameBytes = new byte[_metadata.Frames.Count][];
-                _loadFramesDataTask = Task.Run(LoadFrames);
+                var cancellationToken = _loadFramesCancellationSource.Token;
+                _loadFramesDataTask = Task.Run(() => LoadFrames(cancellationToken), cancellationToken);
             }
         }
 
-        private async Task LoadFrames()
+        private async Task LoadFrames(CancellationToken cancellationToken)
         {
             var biggestFrameSize = 0L;
             for (var frameIndex = 0; frameIndex < _metadata.Frames.Count; frameIndex++)
@@ -69,17 +72,36 @@ namespace XamlAnimatedGif
                 biggestFrameSize = Math.Max(size, biggestFrameSize);
             }
 
-            byte[] indexCompressedBytes = new byte[biggestFrameSize];
-            for (var frameIndex = 0; frameIndex < _metadata.Frames.Count; frameIndex++)
+            try
             {
-                var frame = _metadata.Frames[frameIndex];
-                var frameDesc = _metadata.Frames[frameIndex].Descriptor;
-                await GetIndexBytesAsync(frameIndex, indexCompressedBytes);
-                using var indexDecompressedStream =
-                    new LzwDecompressStream(indexCompressedBytes, frame.ImageData.LzwMinimumCodeSize);
-                _cachedFrameBytes[frameIndex] = new byte[frameDesc.Width * frameDesc.Height];
+                byte[] indexCompressedBytes = new byte[biggestFrameSize];
+                for (var frameIndex = 0; frameIndex < _metadata.Frames.Count; frameIndex++)
+                {
+                    var frame = _metadata.Frames[frameIndex];
+                    var frameDesc = _metadata.Frames[frameIndex].Descriptor;
+                    await GetIndexBytesAsync(frameIndex, indexCompressedBytes, cancellationToken);
+                    using var indexDecompressedStream =
+                        new LzwDecompressStream(indexCompressedBytes, frame.ImageData.LzwMinimumCodeSize);
+                    _cachedFrameBytes[frameIndex] = new byte[frameDesc.Width * frameDesc.Height];
 
-                await indexDecompressedStream.ReadAllAsync(_cachedFrameBytes[frameIndex], 0, frameDesc.Width * frameDesc.Height);
+                    await indexDecompressedStream.ReadAllAsync(
+                        _cachedFrameBytes[frameIndex],
+                        0,
+                        frameDesc.Width * frameDesc.Height,
+                        cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ideally this would never happen, but Stream.Seek doesn't accept a CancellationToken, so there will
+                // always be a race condition where the stream could have been disposed right after we checked the
+                // cancellation token. Not much we can do about it.
+
+                // Ignore
             }
         }
 
@@ -121,7 +143,7 @@ namespace XamlAnimatedGif
         public int FrameCount => _metadata.Frames.Count;
 
         private bool _isStarted;
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _runCancellationSource;
 
         public async void Play()
         {
@@ -135,13 +157,13 @@ namespace XamlAnimatedGif
 
                 if (!_isStarted)
                 {
-                    _cancellationTokenSource?.Dispose();
-                    _cancellationTokenSource = new CancellationTokenSource();
+                    _runCancellationSource?.Dispose();
+                    _runCancellationSource = new CancellationTokenSource();
                     _isStarted = true;
                     OnAnimationStarted();
                     if (_timingManager.IsPaused)
                         _timingManager.Resume();
-                    await RunAsync(_cancellationTokenSource.Token);
+                    await RunAsync(_runCancellationSource.Token);
                 }
                 else if (_timingManager.IsPaused)
                 {
@@ -514,13 +536,16 @@ namespace XamlAnimatedGif
             return lzwStream;
         }
 
-        private async Task GetIndexBytesAsync(int frameIndex, byte[] buffer)
+        private async Task GetIndexBytesAsync(int frameIndex, byte[] buffer, CancellationToken cancellationToken)
         {
             var startPosition = _metadata.Frames[frameIndex].ImageData.CompressedDataStartOffset;
 
+            // Note: Seek doesn't accept a CancellationToken, so we check the CT manually before calling it, but there's
+            // still a race condition, because the stream could have been disposed right after we check the CT.
+            cancellationToken.ThrowIfCancellationRequested();
             _sourceStream.Seek(startPosition, SeekOrigin.Begin);
             using var memoryStream = new MemoryStream(buffer);
-            await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, memoryStream).ConfigureAwait(false);
+            await GifHelpers.CopyDataBlocksToStreamAsync(_sourceStream, memoryStream, cancellationToken).ConfigureAwait(false);
         }
 
         internal BitmapSource Bitmap => _bitmap;
@@ -577,7 +602,8 @@ namespace XamlAnimatedGif
             {
                 _disposing = true;
                 if (_timingManager != null) _timingManager.Completed -= TimingManagerCompleted;
-                _cancellationTokenSource?.Cancel();
+                _runCancellationSource?.Cancel();
+                _loadFramesCancellationSource?.Cancel();
                 if (_isSourceStreamOwner)
                 {
                     try
