@@ -143,7 +143,7 @@ namespace XamlAnimatedGif
         public int FrameCount => _metadata.Frames.Count;
 
         private bool _isStarted;
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _runCancellationSource;
 
         public async void Play()
         {
@@ -157,13 +157,13 @@ namespace XamlAnimatedGif
 
                 if (!_isStarted)
                 {
-                    _cancellationTokenSource?.Dispose();
-                    _cancellationTokenSource = new CancellationTokenSource();
+                    _runCancellationSource?.Dispose();
+                    _runCancellationSource = new CancellationTokenSource();
                     _isStarted = true;
                     OnAnimationStarted();
                     if (_timingManager.IsPaused)
                         _timingManager.Resume();
-                    await RunAsync(_cancellationTokenSource.Token);
+                    await RunAsync(_runCancellationSource.Token);
                 }
                 else if (_timingManager.IsPaused)
                 {
@@ -602,7 +602,7 @@ namespace XamlAnimatedGif
             {
                 _disposing = true;
                 if (_timingManager != null) _timingManager.Completed -= TimingManagerCompleted;
-                _cancellationTokenSource?.Cancel();
+                _runCancellationSource?.Cancel();
                 _loadFramesCancellationSource?.Cancel();
                 if (_isSourceStreamOwner)
                 {
