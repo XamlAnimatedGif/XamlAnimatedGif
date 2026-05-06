@@ -359,10 +359,19 @@ namespace XamlAnimatedGif
             var rect = GetFixedUpFrameRect(desc);
 
             Stream indexStream = null;
+            byte[] indexBuffer = null;
             if (!_cacheFrameDataInMemory)
             {
                 indexStream = await GetIndexStreamAsync(frame, cancellationToken);
+
+                indexBuffer = new byte[desc.Width * desc.Height];
+                await indexStream.ReadAllAsync(indexBuffer, 0, indexBuffer.Length, cancellationToken);
             }
+            else
+            {
+                indexBuffer = _cachedFrameBytes[frameIndex];
+            }
+
             using (indexStream)
             using (_bitmap.LockInScope())
             {
@@ -372,7 +381,6 @@ namespace XamlAnimatedGif
                     DisposePreviousFrame(frame);
 
                 int bufferLength = 4 * rect.Width;
-                byte[] indexBuffer;
                 byte[] lineBuffer = new byte[bufferLength];
 
                 var palette = _palettes[frameIndex];
@@ -381,16 +389,6 @@ namespace XamlAnimatedGif
                 var rows = desc.Interlace
                     ? InterlacedRows(rect.Height).ToArray()
                     : NormalRows(rect.Height).ToArray();
-
-                if (!_cacheFrameDataInMemory)
-                {
-                    indexBuffer = new byte[desc.Width * desc.Height];
-                    await indexStream.ReadAllAsync(indexBuffer, 0, indexBuffer.Length, cancellationToken);
-                }
-                else
-                {
-                    indexBuffer = _cachedFrameBytes[frameIndex];
-                }
 
                 for (int y = 0; y < rect.Height; y++)
                 {
