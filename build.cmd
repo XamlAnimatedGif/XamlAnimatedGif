@@ -1,1 +1,3 @@
-@dotnet run --project %~dp0\tools\build\build.csproj -- %*
+@pushd %~dp0
+@dotnet run %~dp0\tools\Build.cs -- %*
+@popd
