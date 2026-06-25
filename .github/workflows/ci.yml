@@ -1,0 +1,36 @@
+name: CI build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+  workflow_call:
+
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run build script
+        run: ./build.cmd
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-artifacts
+          path: artifacts/**/*
