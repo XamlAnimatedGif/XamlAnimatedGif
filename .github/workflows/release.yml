@@ -18,7 +18,7 @@ jobs:
       id-token: write # enable GitHub OIDC token issuance, needed for NuGet trusted publishing
     steps:
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: build-artifacts
         path: /tmp/artifacts
