@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using static Bullseye.Targets;
 using static SimpleExec.Command;
@@ -21,14 +22,14 @@ namespace build
 
         public string[] RemainingArguments { get; } = null;
 
-        public void OnExecute(CommandLineApplication app)
+        public async Task OnExecute(CommandLineApplication app)
         {
             if (ShowHelp)
             {
                 app.ShowHelp();
                 app.Out.WriteLine("Bullseye help:");
                 app.Out.WriteLine();
-                RunTargetsAndExit(new[] { "-h" });
+                await RunTargetsAndExitAsync(new[] { "-h" });
                 return;
             }
 
@@ -53,21 +54,21 @@ namespace build
 
             Target(
                 "build",
-                DependsOn("artifactDirectories"),
+                dependsOn: ["artifactDirectories"],
                 () => Run(
                     "dotnet",
                     $"build -c \"{Configuration}\" /bl:\"{buildLogFile}\" \"{solutionFile}\""));
 
             Target(
                 "pack",
-                DependsOn("artifactDirectories", "build"),
+                dependsOn: ["artifactDirectories", "build"],
                 () => Run(
                     "dotnet",
                     $"pack -c \"{Configuration}\" --no-build -o \"{packagesDir}\" \"{libraryProject}\""));
 
-            Target("default", DependsOn("pack"));
+            Target("default", dependsOn: ["pack"]);
 
-            RunTargetsAndExit(RemainingArguments);
+            await RunTargetsAndExitAsync(RemainingArguments);
         }
 
         private static string GetSolutionDirectory() =>
