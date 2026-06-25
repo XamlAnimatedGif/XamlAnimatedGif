@@ -1,29 +1,37 @@
-name: CI
+name: CI build
 
 on:
+  pull_request:
   push:
     branches:
       - master
-  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          dotnet-version: '5.0.x'
+          fetch-depth: 0
 
-      - name: Build
-        run: build.cmd
+      - name: Run build script
+        run: ./build.cmd
+        shell: pwsh
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: artifacts
+          name: build-artifacts
           path: artifacts/**/*
-          if-no-files-found: error
