@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # enable GitHub OIDC token issuance, needed for NuGet trusted publishing
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: /tmp/artifacts
+    - name: NuGet login
+      uses: NuGet/login@v1
+      id: nuget-login
+      with:
+        user: ${{ vars.NUGET_USER }}
+    - name: Publish to NuGet
+      env:
+        NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+      shell: pwsh
+      run: |
+        Get-ChildItem /tmp/artifacts/packages -Filter *.nupkg | ForEach-Object {
+          dotnet nuget push "$($_.FullName)" `
+            --api-key "$Env:NUGET_API_KEY" `
+            --source https://api.nuget.org/v3/index.json
+        }
